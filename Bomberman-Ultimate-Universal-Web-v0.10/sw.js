@@ -1,8 +1,8 @@
-const CACHE='bomberman-ultimate-v0130';
+const CACHE='bomberman-ultimate-v0131';
 const CORE=[
  './','./index.html','./manifest.webmanifest',
  './files/css/style.css?v=0119','./files/css/bootstrap.css',
- './files/app.js?v=0122','./files/hotfix-0117.js?v=0119','./files/online.js?v=0119','./files/mobile.js?v=0119',
+ './files/app.js?v=0119','./files/hotfix-0117.js?v=0119','./files/online.js?v=0119','./files/mobile.js?v=0119',
  './files/runtime-v0115.js?v=0116','./files/net-v0115-core.js?v=0116','./files/net-v0115-match.js?v=0116','./files/net-v0115-ui.js?v=0116',
  './files/runtime-v0116.js?v=0116','./files/runtime-v0116-fix.js?v=0118','./files/runtime-v0119.js?v=0119','./files/runtime-v0120.js?v=0120','./files/runtime-v0120-endfix.js?v=0120','./files/runtime-v0121.js?v=0121','./files/runtime-v0122.js?v=0122','./files/runtime-v0122-menufix.js?v=0122',
  './files/js/easeljs-0.8.1.min.js','./files/js/preloadjs-0.6.1.min.js','./files/js/soundjs-0.6.1.min.js',
