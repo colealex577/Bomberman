@@ -39,8 +39,6 @@ jobs:
           cat /tmp/headers.txt || true
           echo "HTML bytes: $(wc -c </tmp/page.html 2>/dev/null || echo 0)"
           grep -n "bomberman-build\|bootLoading\|app.js?v=0124\|hotfix-0117" /tmp/page.html | head -30 || true
-          echo "=== CURL LOG ==="
-          tail -80 /tmp/curl.log || true
 
           echo "=== CHROME CHECK ==="
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
@@ -48,16 +46,40 @@ jobs:
           if [ -n "$CHROME" ]; then
             timeout 40s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
               --virtual-time-budget=15000 --enable-logging=stderr --v=0 \
+              --log-net-log=/tmp/netlog.json --net-log-capture-mode=Everything \
               --dump-dom "$URL" >/tmp/dom.html 2>/tmp/chrome.log
             CHROME_EXIT=$?
             echo "chrome exit: $CHROME_EXIT"
             echo "DOM bytes: $(wc -c </tmp/dom.html 2>/dev/null || echo 0)"
-            echo "=== DOM SIGNALS ==="
-            grep -n "bootLoading\|buildVersion\|characterPanel\|v0.12.4\|Bomberman" /tmp/dom.html | head -80 || true
-            echo "=== CHROME ERRORS ==="
-            grep -Ei "uncaught|TypeError|ReferenceError|SyntaxError|failed|exception|net::ERR_" /tmp/chrome.log | tail -180 || true
+            echo "=== CHROME JS ERRORS ==="
+            grep -Ei "uncaught|TypeError|ReferenceError|SyntaxError|net::ERR_" /tmp/chrome.log | tail -180 || true
+            echo "=== NETLOG URL EVENTS ==="
+            python3 - <<'PY'
+import json, os
+p='/tmp/netlog.json'
+if not os.path.exists(p):
+    print('no netlog')
+    raise SystemExit
+try:
+    d=json.load(open(p,encoding='utf-8'))
+except Exception as e:
+    print('netlog parse error',e)
+    raise SystemExit
+types={v:k for k,v in d.get('constants',{}).get('logEventTypes',{}).items()}
+phases=d.get('constants',{}).get('logEventPhase',{})
+invphase={v:k for k,v in phases.items()}
+rows=[]
+for e in d.get('events',[]):
+    params=e.get('params') or {}
+    url=params.get('url') or params.get('original_url') or params.get('request_url')
+    if url:
+        rows.append((e.get('time',''), e.get('source',{}).get('id'), types.get(e.get('type'),e.get('type')), invphase.get(e.get('phase'),e.get('phase')), url))
+for row in rows[-160:]:
+    print('\t'.join(map(str,row)))
+print('URL event count:',len(rows))
+PY
             echo "=== CHROME LOG TAIL ==="
-            tail -180 /tmp/chrome.log || true
+            tail -120 /tmp/chrome.log || true
           fi
 
       - name: Upload smoke diagnostics
@@ -71,4 +93,5 @@ jobs:
             /tmp/curl.log
             /tmp/dom.html
             /tmp/chrome.log
+            /tmp/netlog.json
           if-no-files-found: ignore
