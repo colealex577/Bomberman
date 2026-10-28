@@ -1,72 +1,10 @@
-const LOCAL_MESSAGES = {
-    Player1: "Player 1",
-    Player2: "Player 2",
-    move: "move",
-    bomb: "plant the bomb",
-    mute: "mute / unmute sound",
-    restart: "restart",
-    menu: "menu"
-};
-let getLocalsMessage = (messagename) => LOCAL_MESSAGES[messagename] || messagename;
-
+const LOCAL_MESSAGES={Player1:'Player 1',Player2:'Player 2',move:'move',bomb:'plant the bomb',mute:'mute / unmute sound',restart:'restart',menu:'menu'};
+let getLocalsMessage=(name)=>LOCAL_MESSAGES[name]||name;
 function GUILocalization(){
-    document.querySelector("#player1").textContent = getLocalsMessage("Player1");
-    document.querySelector("#player2").textContent = getLocalsMessage("Player2");
-    document.querySelector("#movement1").textContent = getLocalsMessage("move");
-    document.querySelector("#bomb1").textContent = getLocalsMessage("bomb");
-    document.querySelector("#movement2").textContent = getLocalsMessage("move");
-    document.querySelector("#bomb2").textContent = getLocalsMessage("bomb");
-    document.querySelector("#mute").textContent = getLocalsMessage("mute");
-    document.querySelector("#restart").textContent = getLocalsMessage("restart");
-    document.querySelector("#menu").textContent = getLocalsMessage("menu");
+ document.querySelector('#player1').textContent=getLocalsMessage('Player1');document.querySelector('#player2').textContent=getLocalsMessage('Player2');document.querySelector('#movement1').textContent=getLocalsMessage('move');document.querySelector('#bomb1').textContent=getLocalsMessage('bomb');document.querySelector('#movement2').textContent=getLocalsMessage('move');document.querySelector('#bomb2').textContent=getLocalsMessage('bomb');document.querySelector('#mute').textContent=getLocalsMessage('mute');document.querySelector('#restart').textContent=getLocalsMessage('restart');document.querySelector('#menu').textContent=getLocalsMessage('menu');
 }
-
-let Storage = {
-    setValue : (key, value) => { localStorage[key] = JSON.stringify(value); },
-    getValue : (key) => {
-        let result = undefined;
-        try {
-            if (localStorage[key]) result = JSON.parse(localStorage[key]);
-        } catch (e) {
-            throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`);
-        }
-        return result; 
-    }
-};
-
-class StorageError extends Error {
-    constructor(_msg){
-        super();
-        this.name = 'StorageError';
-        this.message = _msg || 'Storage Error';
-        this.stack = (new Error()).stack;
-    }
-}
-
-function ensureBuildVersion(){
-    let badge = document.getElementById('buildVersion');
-    if (!badge) {
-        badge = document.createElement('div');
-        badge.id = 'buildVersion';
-        badge.className = 'build_version';
-        document.body.appendChild(badge);
-    }
-    badge.textContent = 'v0.11.8';
-}
-
-function loadV0118Compatibility(){
-    if (document.getElementById('runtime-v0118-fix-loader')) return;
-    const s = document.createElement('script');
-    s.id = 'runtime-v0118-fix-loader';
-    s.src = './files/runtime-v0116-fix.js?v=0118';
-    document.head.appendChild(s);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    ensureBuildVersion();
-    loadV0118Compatibility();
-	GUILocalization();
-	gGameEngine.load();
-});
-setInterval(ensureBuildVersion, 1200);
-window.addEventListener('pageshow', ensureBuildVersion, {passive:true});
+let Storage={setValue:(key,value)=>{localStorage[key]=JSON.stringify(value)},getValue:(key)=>{let result;try{if(localStorage[key])result=JSON.parse(localStorage[key])}catch(e){throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`)}return result}};
+class StorageError extends Error{constructor(msg){super();this.name='StorageError';this.message=msg||'Storage Error';this.stack=(new Error()).stack}}
+function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
+function loadCompatibility(){loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',()=>loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119'))}
+document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
