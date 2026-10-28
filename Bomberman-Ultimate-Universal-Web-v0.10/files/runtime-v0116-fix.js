@@ -1,7 +1,8 @@
 (function(){
 'use strict';
-var VERSION='v0.11.7', patched=false, duelPhase='', duelAttackAt=0, oldBotUpdate=null;
+var VERSION='v0.11.8', patched=false, duelPhase='', duelAttackAt=0, oldBotUpdate=null, simMatchStarted=false;
 var FINAL_LINES=['ur dead','time to finish this','just you and me now','alright, no more hiding','this ends now','final round 😈'];
+var SIM_NAMES=["liam","noah","oliver","james","elijah","mateo","theodore","henry","lucas","william","benjamin","levi","sebastian","jack","ezra","michael","daniel","leo","owen","samuel","hudson","alexander","asher","luca","ethan","john","david","jackson","joseph","mason","luke","matthew","julian","dylan","elias","jacob","maverick","gabriel","logan","aiden","thomas","isaac","miles","grayson","santiago","anthony","wyatt","carter","jayden","ezekiel","jay553","mike22","ben77","max404","tommy8","alex17","nate52","luke91","eli33","sam204","josh62","dan11","zach88","chris45","matt310","ry82","drew16","tyler67","jake29","cole93","nick58","adam24","evan73","ryan14","joey88","cody32","ian27","sean66","gabe19","noah55"];
 
 function version(){
   var v=document.getElementById('buildVersion');
@@ -18,21 +19,31 @@ function watchVersion(){
 }
 function mobile(){try{return document.body.classList.contains('touch-ui')||navigator.maxTouchPoints>0||matchMedia('(pointer: coarse)').matches||innerWidth<=700}catch(e){return innerWidth<=700}}
 function style(){
-  if(document.getElementById('v0117-runtime-style'))return;
-  var st=document.createElement('style');st.id='v0117-runtime-style';st.textContent='.chat_panel.chat_docked{position:relative!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;z-index:1200!important;width:min(96vw,545px)!important;max-height:150px!important;margin:6px auto 0!important;border-radius:8px!important;box-shadow:none!important;backdrop-filter:none!important;background:rgba(25,11,19,.82)!important}.chat_panel.chat_docked .chat_header{padding:5px 8px}.chat_panel.chat_docked .chat_header button{display:none!important}.chat_panel.chat_docked .chat_messages{min-height:44px!important;max-height:70px!important;padding:6px 8px!important}.chat_panel.chat_docked .chat_form{padding:5px 6px!important}.chat_panel.chat_docked .chat_form input{padding:6px 8px!important}body.touch-ui .chat_toast{display:none!important}body.touch-ui #localStage,body.touch-ui #remoteStage{overflow:visible!important}@media(orientation:landscape){body.touch-ui .chat_panel.chat_docked{width:min(76vw,545px)!important;max-height:112px!important}body.touch-ui .chat_panel.chat_docked .chat_messages{max-height:44px!important;min-height:32px!important}}';
+  if(document.getElementById('v0118-runtime-style'))return;
+  var st=document.createElement('style');st.id='v0118-runtime-style';st.textContent='.chat_panel.chat_docked{position:relative!important;top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;z-index:1200!important;width:min(96vw,545px)!important;max-height:150px!important;margin:6px auto 0!important;border-radius:8px!important;box-shadow:none!important;backdrop-filter:none!important;background:rgba(25,11,19,.82)!important}.chat_panel.chat_docked .chat_header{padding:5px 8px}.chat_panel.chat_docked .chat_header button{display:none!important}.chat_panel.chat_docked .chat_messages{min-height:44px!important;max-height:70px!important;padding:6px 8px!important}.chat_panel.chat_docked .chat_form{padding:5px 6px!important}.chat_panel.chat_docked .chat_form input{padding:6px 8px!important}body.touch-ui .chat_toast{display:none!important}body.touch-ui #localStage,body.touch-ui #remoteStage{overflow:visible!important}@media(orientation:landscape){body.touch-ui .chat_panel.chat_docked{width:min(76vw,545px)!important;max-height:112px!important}body.touch-ui .chat_panel.chat_docked .chat_messages{max-height:44px!important;min-height:32px!important}}';
   document.head.appendChild(st);
+}
+function matchChatActive(S){
+  if(!S)return false;
+  if(S.role==='simulated')return !!simMatchStarted;
+  return !!((S.role==='host'||S.role==='guest')&&S.started);
 }
 function dockChat(){
   var S=window.B115;if(!S||!S.els||!S.els.chatPanel)return;
-  var panel=S.els.chatPanel,toggle=S.els.chatToggle;
+  var panel=S.els.chatPanel,toggle=S.els.chatToggle,toast=S.els.chatToast;
+  if(!matchChatActive(S)){
+    panel.hidden=true;if(toggle)toggle.hidden=true;if(toast)toast.hidden=true;
+    return;
+  }
   if(mobile()){
     panel.classList.add('chat_docked');
     var active=(S.role==='guest'?(S.els.remoteStage||document.getElementById('remoteStage')):(S.els.localStage||document.getElementById('localStage')));
     if(active&&active.nextElementSibling!==panel)active.insertAdjacentElement('afterend',panel);
-    if(S.role==='host'||S.role==='guest'||S.role==='simulated'){panel.hidden=false;if(toggle)toggle.hidden=true}
+    panel.hidden=false;if(toggle)toggle.hidden=true;
   }else{
     panel.classList.remove('chat_docked');
     if(panel.parentNode!==document.body)document.body.appendChild(panel);
+    if(toggle)toggle.hidden=false;
   }
 }
 function ready(){
@@ -43,6 +54,7 @@ function resetDuel(){duelPhase='';duelAttackAt=0}
 function patch(){
   if(patched||!ready())return false;patched=true;style();version();
   var S=window.B115;
+  S.SIM_NAMES=SIM_NAMES.slice();
 
   S.startFallback=function(){
     if(S.fallback)clearInterval(S.fallback);var end=Date.now()+5000;
@@ -53,12 +65,30 @@ function patch(){
     },250);
   };
   S.startSimulated=function(){
-    if(S.kind!=='public'||!S.online())return;S.readName();S.remoteName=S.SIM_NAMES[Math.floor(Math.random()*S.SIM_NAMES.length)];S.destroyNetwork();S.kind='public';S.setRole('simulated');S.els.lobby.hidden=true;S.els.remoteStage.hidden=true;S.els.localStage.hidden=false;S.els.matchBar.hidden=false;S.els.matchStatus.textContent='PUBLIC • '+S.localName+' vs '+S.remoteName;resetDuel();
-    if(window.gGameEngine){gGameEngine.playerNames=[S.localName,S.remoteName];gGameEngine.lobbyOpen=false;gGameEngine.simulatedOpponentMode=true;gGameEngine.menu.setMode('simulated');S.ensureMusic();S.chatVisibility();dockChat();setTimeout(function(){if(S.role==='simulated'){dockChat();S.simSay(S.SIM_START)}},2800+Math.random()*1900)}
+    if(S.kind!=='public'||!S.online())return;
+    S.readName();S.remoteName=S.SIM_NAMES[Math.floor(Math.random()*S.SIM_NAMES.length)];
+    S.destroyNetwork();S.kind='public';simMatchStarted=false;S.setRole('simulated');
+    S.els.lobby.hidden=true;S.els.remoteStage.hidden=true;S.els.localStage.hidden=false;S.els.matchBar.hidden=false;
+    S.els.matchStatus.textContent='PUBLIC • '+S.localName+' vs '+S.remoteName;resetDuel();
+    if(window.gGameEngine){
+      gGameEngine.playerNames=[S.localName,S.remoteName];gGameEngine.lobbyOpen=false;gGameEngine.simulatedOpponentMode=true;
+      gGameEngine.__v0118OpeningHold=true;
+      gGameEngine.menu.setMode('simulated');
+      var sim=gGameEngine.simulatedOpponent;if(sim)sim.__v0118OpeningHold=true;
+      simMatchStarted=true;S.ensureMusic();S.chatVisibility();dockChat();
+      setTimeout(function(){
+        if(S.role!=='simulated'){gGameEngine.__v0118OpeningHold=false;return}
+        try{dockChat();S.simSay(S.SIM_START)}
+        finally{
+          gGameEngine.__v0118OpeningHold=false;
+          if(gGameEngine.simulatedOpponent)gGameEngine.simulatedOpponent.__v0118OpeningHold=false;
+        }
+      },2800+Math.random()*1900)
+    }
   };
 
   var oldVis=S.chatVisibility;S.chatVisibility=function(){if(oldVis)oldVis.apply(S,arguments);dockChat()};
-  var oldAppend=S.appendChat;S.appendChat=function(name,text,self,system){dockChat();if(mobile()&&S.els.chatPanel)S.els.chatPanel.hidden=false;return oldAppend.call(S,name,text,self,system)};
+  var oldAppend=S.appendChat;S.appendChat=function(name,text,self,system){var r=oldAppend.call(S,name,text,self,system);dockChat();return r};
   if(S.els.chatClose)S.els.chatClose.onclick=function(){if(!mobile())S.els.chatPanel.hidden=true};
   window.addEventListener('resize',dockChat,{passive:true});window.addEventListener('orientationchange',function(){setTimeout(dockChat,100)},{passive:true});
 
@@ -67,6 +97,9 @@ function patch(){
   if(!Bot.prototype.__v0117PauseFix){
     Bot.prototype.__v0117PauseFix=true;oldBotUpdate=Bot.prototype.update;
     Bot.prototype.update=function(){
+      if(this.simulatedHuman&&(this.__v0118OpeningHold||(window.gGameEngine&&gGameEngine.__v0118OpeningHold))){
+        this.setAttackMarkerVisible(false);this.animate('idle');if(this.handleFireDamage&&this.handleFireDamage())this.die();return
+      }
       if(this.simulatedHuman&&this.__v0117PauseUntil&&Date.now()<this.__v0117PauseUntil){this.setAttackMarkerVisible(false);this.animate('idle');if(this.handleFireDamage&&this.handleFireDamage())this.die();return}
       return oldBotUpdate.apply(this,arguments)
     };
@@ -78,6 +111,13 @@ function patch(){
     GameEngine.prototype.spawnBots=function(){var r=oldSpawn.apply(this,arguments);if(this.simulatedOpponentMode&&this.simulatedOpponent){var pos=this.getSpawnSlotPosition?this.getSpawnSlotPosition(1):{x:1,y:this.tilesY-2};this.simulatedOpponent.statSlot=1;this.simulatedOpponent.id=1;this.simulatedOpponent.position={x:pos.x,y:pos.y};var bp=Utils.convertToBitmapPosition(pos);this.simulatedOpponent.bmp.x=bp.x;this.simulatedOpponent.bmp.y=bp.y;this.simulatedOpponent.targetPosition={x:pos.x,y:pos.y};this.simulatedOpponent.targetBitmapPosition={x:bp.x,y:bp.y};if(this.simulatedOpponent.updatePosition)this.simulatedOpponent.updatePosition()}resetDuel();return r};
   }
   dockChat();return true;
+}
+function syncOpeningState(){
+  if(!window.B115||B115.role!=='simulated'){
+    simMatchStarted=false;
+    if(window.gGameEngine)gGameEngine.__v0118OpeningHold=false;
+  }
+  dockChat();
 }
 function finalTick(){
   if(!patched||!window.B115||B115.role!=='simulated'||!window.gGameEngine||!gGameEngine.simulatedOpponentMode)return;
@@ -95,5 +135,5 @@ function finalTick(){
     gGameEngine.aiCombatState={attacker:sim,target:human,until:9007199254740991,nextRollAt:9007199254740991,serial:serial+1,finalDuel:true};sim.combatTarget=human;sim.combatRole='attack';if(sim.setAttackMarkerVisible)sim.setAttackMarkerVisible(true)
   }
 }
-watchVersion();style();var tries=0,t=setInterval(function(){if(patch()||++tries>400)clearInterval(t)},50);setInterval(version,400);setInterval(finalTick,80);setInterval(dockChat,700);['pageshow','focus','visibilitychange'].forEach(function(ev){window.addEventListener(ev,function(){version();dockChat()},{passive:true})});
+watchVersion();style();var tries=0,t=setInterval(function(){if(patch()||++tries>400)clearInterval(t)},50);setInterval(version,400);setInterval(finalTick,80);setInterval(syncOpeningState,250);['pageshow','focus','visibilitychange'].forEach(function(ev){window.addEventListener(ev,function(){version();dockChat()},{passive:true})});
 })();
