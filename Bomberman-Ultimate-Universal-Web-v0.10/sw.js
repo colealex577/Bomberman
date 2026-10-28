@@ -1,12 +1,12 @@
-const CACHE = 'bomberman-ultimate-v0118';
+const CACHE = 'bomberman-ultimate-v0120';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
-  './files/css/style.css?v=0117', './files/css/bootstrap.css',
-  './files/app.js?v=0117', './files/hotfix-0117.js?v=0117', './files/online.js?v=0117', './files/mobile.js?v=0117',
+  './files/css/style.css?v=0119', './files/css/bootstrap.css',
+  './files/app.js?v=0119', './files/hotfix-0117.js?v=0119', './files/online.js?v=0119', './files/mobile.js?v=0119',
   './files/js/easeljs-0.8.1.min.js', './files/js/preloadjs-0.6.1.min.js', './files/js/soundjs-0.6.1.min.js',
   './files/js/core.js', './files/js/Utils.js', './files/js/Entity.js', './files/js/Player.js',
   './files/js/Bonus.js', './files/js/Tile.js', './files/js/Fire.js', './files/js/Bomb.js', './files/js/Menu.js',
-  './files/js/InputEngine.js', './files/js/GameEngine.js?v=0117', './files/js/Bot.js?v=0117',
+  './files/js/InputEngine.js', './files/js/GameEngine.js?v=0119', './files/js/Bot.js?v=0119',
   './files/sound/game.mp3', './files/sound/bomb.mp3',
   './icons/icon192.png', './icons/icon512.png'
 ];
