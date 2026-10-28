@@ -23,11 +23,27 @@
     <script src="./files/js/Menu.js"></script>
     <script src="./files/js/InputEngine.js"></script>
     <script src="./files/js/GameEngine.js"></script>
-    <script src="./files/online.js"></script>
-    <script src="./files/mobile.js"></script>
-    <script src="./files/app.js"></script>
+    <script src="./files/online.js?v=0111"></script>
+    <script src="./files/mobile.js?v=0111"></script>
+    <script src="./files/app.js?v=0111"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="./files/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0111" />
+    <style id="ios-v0111-hotfix">
+    @media (hover: none), (pointer: coarse) {
+      body:not(.desktop-ui) .mobile_controls {
+        position: fixed; z-index: 3000;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        display: flex !important; align-items: flex-end; justify-content: space-between;
+        pointer-events: none; touch-action: none;
+      }
+      body:not(.desktop-ui) .mobile_joystick,
+      body:not(.desktop-ui) .mobile_action_cluster,
+      body:not(.desktop-ui) .touch_btn,
+      body:not(.desktop-ui) .touch_small { pointer-events: auto; }
+    }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -39,7 +55,6 @@
                 <button id="onlineDisconnectBtn" type="button">Disconnect</button>
             </div>
         </div>
-
         <div id="localStage">
             <div id="game">
                 <canvas id="canvas" width="545" height="416"></canvas>
@@ -52,142 +67,80 @@
                 <div class="wrapper">
                     <div class="panel">
                         <div class="panel_header"><p class="panel_header_title" id="player1"></p></div>
-                        <div class="control_element_movement">
-                            <div class="control_element_ico"><img src="./files/img/i-control-01.svg" class="i_control01"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="movement1"></p></div>
-                        </div>
-                        <div class="control_element_bomb">
-                            <div class="control_element_ico"><img src="./files/img/i-control-001.svg" class="i_control001"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="bomb1"></p></div>
-                        </div>
+                        <div class="control_element_movement"><div class="control_element_ico"><img src="./files/img/i-control-01.svg" class="i_control01"></div><div class="control_element_desc"><p class="control_element_title" id="movement1"></p></div></div>
+                        <div class="control_element_bomb"><div class="control_element_ico"><img src="./files/img/i-control-001.svg" class="i_control001"></div><div class="control_element_desc"><p class="control_element_title" id="bomb1"></p></div></div>
                     </div>
                     <div class="panel">
                         <div class="panel_header"><p class="panel_header_title" id="player2"></p></div>
-                        <div class="control_element_movement">
-                            <div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control01"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="movement2"></p></div>
-                        </div>
-                        <div class="control_element_bomb">
-                            <div class="control_element_ico"><img src="./files/img/i-control-002.svg" class="i_control001"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="bomb2"></p></div>
-                        </div>
+                        <div class="control_element_movement"><div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control01"></div><div class="control_element_desc"><p class="control_element_title" id="movement2"></p></div></div>
+                        <div class="control_element_bomb"><div class="control_element_ico"><img src="./files/img/i-control-002.svg" class="i_control001"></div><div class="control_element_desc"><p class="control_element_title" id="bomb2"></p></div></div>
                     </div>
                     <div class="panel">
                         <div class="panel_header"><p class="panel_header_title" id="common">Common</p></div>
-                        <div class="control_element_mute">
-                            <div class="control_element_ico"><img src="./files/img/i-key-m.svg" class="i_key_m"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="mute"></p></div>
-                        </div>
-                        <div class="control_element_menu">
-                            <div class="control_element_ico"><img src="./files/img/i-key-esc.svg" class="i_key_esc"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="menu"></p></div>
-                        </div>
-                        <div class="control_element_restart">
-                            <div class="control_element_ico"><img src="./files/img/i-key-enter.svg" class="i_key_enter"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="restart"></p></div>
-                        </div>
+                        <div class="control_element_mute"><div class="control_element_ico"><img src="./files/img/i-key-m.svg" class="i_key_m"></div><div class="control_element_desc"><p class="control_element_title" id="mute"></p></div></div>
+                        <div class="control_element_menu"><div class="control_element_ico"><img src="./files/img/i-key-esc.svg" class="i_key_esc"></div><div class="control_element_desc"><p class="control_element_title" id="menu"></p></div></div>
+                        <div class="control_element_restart"><div class="control_element_ico"><img src="./files/img/i-key-enter.svg" class="i_key_enter"></div><div class="control_element_desc"><p class="control_element_title" id="restart"></p></div></div>
                     </div>
                 </div>
             </div>
         </div>
-
         <div id="remoteStage" hidden>
             <video id="remoteVideo" autoplay playsinline muted></video>
             <div class="remote_caption">LIVE FROM HOST • PLAYER 2</div>
-            <div id="remoteSpectatorBanner" class="spectator_banner" hidden>
-                <strong id="remoteSpectatorTitle">GAME OVER</strong>
-                <span id="remoteSpectatorSubtitle">SPECTATING MATCH</span>
-            </div>
+            <div id="remoteSpectatorBanner" class="spectator_banner" hidden><strong id="remoteSpectatorTitle">GAME OVER</strong><span id="remoteSpectatorSubtitle">SPECTATING MATCH</span></div>
         </div>
         <audio id="guestMusic" src="./files/sound/game.mp3" preload="auto" loop></audio>
-
+        <audio id="mobileMusicFallback" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
         <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
-            <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application">
-                <div class="joystick_ring"></div>
-                <div id="mobileJoystickKnob" class="joystick_knob"></div>
-            </div>
+            <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application"><div class="joystick_ring"></div><div id="mobileJoystickKnob" class="joystick_knob"></div></div>
             <div class="mobile_action_cluster">
                 <button class="touch_btn bomb_btn" data-action="bomb" aria-label="Plant bomb">💣</button>
-                <div class="mobile_small_actions">
-                    <button id="mobileMuteBtn" class="touch_small" type="button">Sound</button>
-                    <button id="mobileMenuBtn" class="touch_small" type="button">Menu</button>
-                </div>
+                <div class="mobile_small_actions"><button id="mobileMuteBtn" class="touch_small" type="button">Sound</button><button id="mobileMenuBtn" class="touch_small" type="button">Menu</button></div>
             </div>
         </div>
     </div>
-
     <div id="multiplayerLobby" class="multiplayer_lobby" hidden>
         <div class="lobby_card">
-            <div class="lobby_heading">
-                <div>
-                    <h2>Multiplayer</h2>
-                    <p>Play locally or connect to a friend over the internet.</p>
-                </div>
-                <button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button>
-            </div>
-
-
-            <div class="lobby_name_row">
-                <label for="playerNameInput">Your name</label>
-                <input id="playerNameInput" type="text" maxlength="14" autocomplete="nickname" spellcheck="false" placeholder="Player name">
-                <small>Shown above your character in online matches.</small>
-            </div>
-
-            <div class="lobby_mode_row">
-                <span>Game mode</span>
-                <button id="ultimateLobbyBtn" class="ultimate_mode_btn compact" type="button">ULTIMATE MODE: OFF</button>
-            </div>
-
+            <div class="lobby_heading"><div><h2>Multiplayer</h2><p>Play locally or connect to a friend over the internet.</p></div><button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button></div>
+            <div class="lobby_name_row"><label for="playerNameInput">Your name</label><input id="playerNameInput" type="text" maxlength="14" autocomplete="nickname" spellcheck="false" placeholder="Player name"><small>Shown above your character in online matches.</small></div>
+            <div class="lobby_mode_row"><span>Game mode</span><button id="ultimateLobbyBtn" class="ultimate_mode_btn compact" type="button">ULTIMATE MODE: OFF</button></div>
             <div id="lobbyChoice" class="lobby_choice">
                 <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for your friend to join • simulated opponent after a short wait</small></button>
                 <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Find the waiting host automatically • simulated opponent if none is available</small></button>
                 <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
             </div>
-
             <div id="onlineHostControls" class="lobby_section" hidden>
-                <div class="lobby_state_icon">⌁</div>
-                <h3>Hosting game</h3>
-                <p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. If nobody connects, a simulated player will join automatically.</p>
-
-                <div class="host_customization" id="hostCustomization">
-                    <div class="host_customization_header">
-                        <div>
-                            <strong>Item drop rate</strong>
-                            <small>Chance that a destroyed wood block contains a power-up</small>
-                        </div>
-                        <span id="dropRateValue" class="drop_rate_value">16% · DEFAULT</span>
-                    </div>
-                    <input id="dropRateSlider" class="drop_rate_slider" type="range" min="16" max="100" step="1" value="16" aria-label="Item drop rate">
-                    <div class="drop_rate_scale"><span>Default · 16%</span><span>100%</span></div>
-                    <div id="dropRateNote" class="drop_rate_note">Normal power-up strength. ULTIMATE MODE overrides drops to 100%.</div>
-                </div>
-
-                <div id="onlineStatus" class="online_status working">Opening host slot…</div>
-                <button id="hostCancelBtn" class="lobby_secondary" type="button">Stop Hosting</button>
+                <div class="lobby_state_icon">⌁</div><h3>Hosting game</h3><p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. If nobody connects, a simulated player will join automatically.</p>
+                <div class="host_customization" id="hostCustomization"><div class="host_customization_header"><div><strong>Item drop rate</strong><small>Chance that a destroyed wood block contains a power-up</small></div><span id="dropRateValue" class="drop_rate_value">16% · DEFAULT</span></div><input id="dropRateSlider" class="drop_rate_slider" type="range" min="16" max="100" step="1" value="16" aria-label="Item drop rate"><div class="drop_rate_scale"><span>Default · 16%</span><span>100%</span></div><div id="dropRateNote" class="drop_rate_note">Normal power-up strength. ULTIMATE MODE overrides drops to 100%.</div></div>
+                <div id="onlineStatus" class="online_status working">Opening host slot…</div><button id="hostCancelBtn" class="lobby_secondary" type="button">Stop Hosting</button>
             </div>
-
             <div id="onlineJoinControls" class="lobby_section" hidden>
-                <div class="lobby_state_icon">⌁</div>
-                <h3>Finding host…</h3>
-                <p>Searching for a waiting Bomberman host. If none is available, a simulated opponent will be created automatically.</p>
-                <div id="joinStatus" class="online_status working">Searching…</div>
-                <button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
+                <div class="lobby_state_icon">⌁</div><h3>Finding host…</h3><p>Searching for a waiting Bomberman host. If none is available, a simulated opponent will be created automatically.</p><div id="joinStatus" class="online_status working">Searching…</div><button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
             </div>
         </div>
     </div>
-
-
 <script>
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
-}
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) { window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); }); }
 </script>
 <script>
-(function () {
-  if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
-  function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); }
-  heartbeat();
-  setInterval(heartbeat, 5000);
+(function () { if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return; function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); } heartbeat(); setInterval(heartbeat, 5000); })();
+</script>
+<script>
+(function(){
+  function touchish(){ var ua=/iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent||''); var pts=Number(navigator.maxTouchPoints||0); var coarse=false; try{coarse=matchMedia('(pointer: coarse)').matches}catch(e){} return ua||pts>0||('ontouchstart' in window)||coarse; }
+  function apply(){ if(!document.body)return; var t=touchish(); document.body.classList.toggle('touch-ui',t); document.body.classList.toggle('desktop-ui',!t); }
+  function unlock(){
+    apply();
+    try{ var ctx=null; if(window.createjs&&createjs.Sound&&createjs.Sound.activePlugin) ctx=createjs.Sound.activePlugin.context||createjs.Sound.activePlugin._context; if(!ctx&&window.createjs&&createjs.WebAudioPlugin) ctx=createjs.WebAudioPlugin.context||createjs.WebAudioPlugin._context; if(ctx&&ctx.state==='suspended'&&ctx.resume) ctx.resume().catch(function(){}); }catch(e){}
+    try{ if(window.gGameEngine){ gGameEngine.mute=false; if(window.Storage){Storage.setValue('muted',false);Storage.setValue('soundPreferenceSet',true);} if(gGameEngine.soundtrackLoaded&&!gGameEngine.soundtrackPlaying&&gGameEngine.playSoundtrack) gGameEngine.playSoundtrack(); if(gGameEngine.soundtrack) gGameEngine.soundtrack.paused=false; } }catch(e){}
+    var f=document.getElementById('mobileMusicFallback');
+    if(f&&!(window.BomberOnline&&BomberOnline.isGuest&&BomberOnline.isGuest())){ try{f.loop=true;f.playbackRate=(window.gGameEngine&&gGameEngine.ultimateMode)?1.5:1;f.volume=0;var p=f.play();if(p&&p.catch)p.catch(function(){}); setTimeout(function(){ var ok=false;try{var x=window.gGameEngine&&gGameEngine.soundtrack;var c=window.createjs&&createjs.Sound&&createjs.Sound.activePlugin&&(createjs.Sound.activePlugin.context||createjs.Sound.activePlugin._context);ok=!!(x&&!x.paused&&(!c||c.state==='running'));}catch(e){} try{if(ok){f.pause();f.currentTime=0;}else{f.volume=1;f.play().catch(function(){});}}catch(e){} },180);}catch(e){} }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply); else apply();
+  window.addEventListener('pageshow',apply);
+  document.addEventListener('touchstart',unlock,{passive:true,capture:true});
+  document.addEventListener('pointerdown',unlock,{passive:true,capture:true});
+  document.addEventListener('click',unlock,{passive:true,capture:true});
 })();
 </script>
 </body>
