@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#21111a">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./icons/icon192.png">
+    <script src="./files/js/easeljs-0.8.1.min.js"></script>
+    <script src="./files/js/preloadjs-0.6.1.min.js"></script>
+    <script src="./files/js/soundjs-0.6.1.min.js"></script>
+    <script src="./files/js/core.js"></script>
+    <script src="./files/js/Utils.js"></script>
+    <script src="./files/js/Entity.js"></script>
+    <script src="./files/js/Player.js"></script>
+    <script src="./files/js/Bot.js"></script>
+    <script src="./files/js/Bonus.js"></script>
+    <script src="./files/js/Tile.js"></script>
+    <script src="./files/js/Fire.js"></script>
+    <script src="./files/js/Bomb.js"></script>
+    <script src="./files/js/Menu.js"></script>
+    <script src="./files/js/InputEngine.js"></script>
+    <script src="./files/js/GameEngine.js"></script>
+    <script src="./files/online.js"></script>
+    <script src="./files/mobile.js"></script>
+    <script src="./files/app.js"></script>
+    <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="./files/css/style.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="game_toolbar">
+            <button id="ultimateModeBtn" class="ultimate_mode_btn" type="button" aria-pressed="false">ULTIMATE MODE: OFF</button>
+            <span id="ultimateModeHint" class="ultimate_mode_hint">100% block drops • power-ups 5× stronger</span>
+            <div id="onlineMatchBar" class="online_match_bar" hidden>
+                <span id="onlineMatchStatus">ONLINE</span>
+                <button id="onlineDisconnectBtn" type="button">Disconnect</button>
+            </div>
+        </div>
+
+        <div id="localStage">
+            <div id="game">
+                <canvas id="canvas" width="545" height="416"></canvas>
+            </div>
+            <div class="control_panel">
+                <div class="wrapper">
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="player1"></p></div>
+                        <div class="control_element_movement">
+                            <div class="control_element_ico"><img src="./files/img/i-control-01.svg" class="i_control01"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="movement1"></p></div>
+                        </div>
+                        <div class="control_element_bomb">
+                            <div class="control_element_ico"><img src="./files/img/i-control-001.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb1"></p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="player2"></p></div>
+                        <div class="control_element_movement">
+                            <div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control01"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="movement2"></p></div>
+                        </div>
+                        <div class="control_element_bomb">
+                            <div class="control_element_ico"><img src="./files/img/i-control-002.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb2"></p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="common">Common</p></div>
+                        <div class="control_element_mute">
+                            <div class="control_element_ico"><img src="./files/img/i-key-m.svg" class="i_key_m"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="mute"></p></div>
+                        </div>
+                        <div class="control_element_menu">
+                            <div class="control_element_ico"><img src="./files/img/i-key-esc.svg" class="i_key_esc"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="menu"></p></div>
+                        </div>
+                        <div class="control_element_restart">
+                            <div class="control_element_ico"><img src="./files/img/i-key-enter.svg" class="i_key_enter"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="restart"></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="remoteStage" hidden>
+            <video id="remoteVideo" autoplay playsinline muted></video>
+            <div class="remote_caption">LIVE FROM HOST • PLAYER 2</div>
+        </div>
+        <audio id="guestMusic" src="./files/sound/game.mp3" preload="auto" loop></audio>
+
+        <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
+            <div class="mobile_dpad">
+                <button class="touch_btn dpad_up" data-action="up" aria-label="Move up">▲</button>
+                <button class="touch_btn dpad_left" data-action="left" aria-label="Move left">◀</button>
+                <button class="touch_btn dpad_down" data-action="down" aria-label="Move down">▼</button>
+                <button class="touch_btn dpad_right" data-action="right" aria-label="Move right">▶</button>
+            </div>
+            <div class="mobile_action_cluster">
+                <button class="touch_btn bomb_btn" data-action="bomb" aria-label="Plant bomb">💣</button>
+                <div class="mobile_small_actions">
+                    <button id="mobileMuteBtn" class="touch_small" type="button">Sound</button>
+                    <button id="mobileMenuBtn" class="touch_small" type="button">Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="multiplayerLobby" class="multiplayer_lobby" hidden>
+        <div class="lobby_card">
+            <div class="lobby_heading">
+                <div>
+                    <h2>Multiplayer</h2>
+                    <p>Play locally or connect to a friend over the internet.</p>
+                </div>
+                <button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button>
+            </div>
+
+            <div class="lobby_mode_row">
+                <span>Game mode</span>
+                <button id="ultimateLobbyBtn" class="ultimate_mode_btn compact" type="button">ULTIMATE MODE: OFF</button>
+            </div>
+
+            <div id="lobbyChoice" class="lobby_choice">
+                <button id="onlineHostBtn" class="lobby_primary" type="button">Create Online Room<small>Get a code to send your friend</small></button>
+                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Room<small>Enter the code your friend sent you</small></button>
+                <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
+            </div>
+
+            <div id="onlineHostControls" class="lobby_section" hidden>
+                <div class="lobby_state_icon">⌁</div>
+                <h3>Room ready</h3>
+                <p>Send this code to Player 2. The match will start automatically when they connect.</p>
+
+                <div class="host_customization" id="hostCustomization">
+                    <div class="host_customization_header">
+                        <div>
+                            <strong>Item drop rate</strong>
+                            <small>Chance that a destroyed wood block contains a power-up</small>
+                        </div>
+                        <span id="dropRateValue" class="drop_rate_value">16% · DEFAULT</span>
+                    </div>
+                    <input id="dropRateSlider" class="drop_rate_slider" type="range" min="16" max="100" step="1" value="16" aria-label="Item drop rate">
+                    <div class="drop_rate_scale"><span>Default · 16%</span><span>100%</span></div>
+                    <div id="dropRateNote" class="drop_rate_note">Normal power-up strength. ULTIMATE MODE overrides drops to 100%.</div>
+                </div>
+
+                <div class="room_code_row">
+                    <input id="onlineRoomCode" readonly aria-label="Room code">
+                    <button id="onlineCopyBtn" type="button">Copy Code</button>
+                </div>
+                <div id="onlineStatus" class="online_status working">Creating room…</div>
+                <button id="hostCancelBtn" class="lobby_secondary" type="button">Cancel Room</button>
+            </div>
+
+            <div id="onlineJoinControls" class="lobby_section" hidden>
+                <h3>Join a friend</h3>
+                <p>Enter the room code exactly as it appears on the host's screen.</p>
+                <input id="onlineJoinCode" class="join_code_large" maxlength="8" autocomplete="off" spellcheck="false" placeholder="ROOM CODE">
+                <button id="onlineJoinBtn" class="lobby_primary simple" type="button">Join Game</button>
+                <div id="joinStatus" class="online_status"></div>
+                <button id="joinBackBtn" class="lobby_secondary" type="button">Back</button>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
