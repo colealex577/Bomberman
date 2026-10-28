@@ -34,10 +34,6 @@ let Storage = {
     }
 };
 
-/**
- * StorageError
- * @param   string      _msg    Error message    
- */
 class StorageError extends Error {
     constructor(_msg){
         super();
@@ -53,45 +49,24 @@ function ensureBuildVersion(){
         badge = document.createElement('div');
         badge.id = 'buildVersion';
         badge.className = 'build_version';
-        (document.body || document.documentElement).appendChild(badge);
+        document.body.appendChild(badge);
     }
-    badge.textContent = 'v0.11.6';
-    badge.setAttribute('aria-label', 'Game version');
-    const s = badge.style;
-    const imp = (key, value) => { try { s.setProperty(key, value, 'important'); } catch (e) { s[key] = value; } };
-    imp('position','fixed');
-    imp('top','calc(env(safe-area-inset-top, 0px) + 5px)');
-    imp('left','calc(env(safe-area-inset-left, 0px) + 6px)');
-    imp('right','auto');
-    imp('bottom','auto');
-    imp('z-index','2147483647');
-    imp('display','block');
-    imp('visibility','visible');
-    imp('opacity','1');
-    imp('transform','none');
-    imp('margin','0');
-    imp('padding','2px 5px');
-    imp('border-radius','4px');
-    imp('background','rgba(0,0,0,.62)');
-    imp('color','rgba(255,255,255,.92)');
-    imp('font','700 9px/1.25 Arial,sans-serif');
-    imp('pointer-events','none');
+    badge.textContent = 'v0.11.7';
 }
 
-function loadV0116Compatibility(){
-    if (document.getElementById('runtime-v0116-fix-loader')) return;
+function loadV0117Compatibility(){
+    if (document.getElementById('runtime-v0117-fix-loader')) return;
     const s = document.createElement('script');
-    s.id = 'runtime-v0116-fix-loader';
-    s.src = './files/runtime-v0116-fix.js?v=0116';
+    s.id = 'runtime-v0117-fix-loader';
+    s.src = './files/runtime-v0116-fix.js?v=0117';
     document.head.appendChild(s);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     ensureBuildVersion();
-    loadV0116Compatibility();
+    loadV0117Compatibility();
 	GUILocalization();
 	gGameEngine.load();
 });
-
 setInterval(ensureBuildVersion, 1200);
 window.addEventListener('pageshow', ensureBuildVersion, {passive:true});
