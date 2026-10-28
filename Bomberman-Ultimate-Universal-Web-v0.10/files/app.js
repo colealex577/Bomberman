@@ -51,20 +51,20 @@ function ensureBuildVersion(){
         badge.className = 'build_version';
         document.body.appendChild(badge);
     }
-    badge.textContent = 'v0.11.7';
+    badge.textContent = 'v0.11.8';
 }
 
-function loadV0117Compatibility(){
-    if (document.getElementById('runtime-v0117-fix-loader')) return;
+function loadV0118Compatibility(){
+    if (document.getElementById('runtime-v0118-fix-loader')) return;
     const s = document.createElement('script');
-    s.id = 'runtime-v0117-fix-loader';
-    s.src = './files/runtime-v0116-fix.js?v=0117';
+    s.id = 'runtime-v0118-fix-loader';
+    s.src = './files/runtime-v0116-fix.js?v=0118';
     document.head.appendChild(s);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     ensureBuildVersion();
-    loadV0117Compatibility();
+    loadV0118Compatibility();
 	GUILocalization();
 	gGameEngine.load();
 });
