@@ -1,4 +1,4 @@
-const CACHE = 'bomberman-ultimate-v0111';
+const CACHE = 'bomberman-ultimate-v0112';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './files/css/style.css?v=0111', './files/css/bootstrap.css',
@@ -14,7 +14,15 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({type: 'window'}))
+      .then(clients => Promise.all(clients.map(client => {
+        try { return client.navigate(client.url); } catch (e) { return null; }
+      })))
+  );
 });
 self.addEventListener('fetch', event => {
   const req = event.request;
@@ -29,7 +37,10 @@ self.addEventListener('fetch', event => {
     return;
   }
   event.respondWith(caches.match(req).then(cached => cached || fetch(req).then(res => {
-    if (res && res.ok) caches.open(CACHE).then(cache => cache.put(req, res.clone()));
+    if (res && res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then(cache => cache.put(req, copy));
+    }
     return res;
   })));
 });
