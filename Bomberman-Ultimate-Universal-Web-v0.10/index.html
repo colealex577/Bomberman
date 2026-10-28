@@ -15,20 +15,19 @@
     <script src="./files/js/Utils.js"></script>
     <script src="./files/js/Entity.js"></script>
     <script src="./files/js/Player.js"></script>
-    <script src="./files/js/Bot.js?v=0117"></script>
+    <script src="./files/js/Bot.js?v=0119"></script>
     <script src="./files/js/Bonus.js"></script>
     <script src="./files/js/Tile.js"></script>
     <script src="./files/js/Fire.js"></script>
     <script src="./files/js/Bomb.js"></script>
     <script src="./files/js/Menu.js"></script>
     <script src="./files/js/InputEngine.js"></script>
-    <script src="./files/js/GameEngine.js?v=0117"></script>
-    <script src="./files/online.js?v=0117"></script>
-    <script src="./files/mobile.js?v=0117"></script>
-    <script src="./files/app.js?v=0117"></script>
-    <script src="./files/hotfix-0117.js?v=0117"></script>
+    <script src="./files/js/GameEngine.js?v=0119"></script>
+    <script src="./files/online.js?v=0119"></script>
+    <script src="./files/mobile.js?v=0119"></script>
+    <script src="./files/app.js?v=0119"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0117" />
+    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
 
     <style id="ios-v0111-hotfix">
     @media (hover: none), (pointer: coarse) {
@@ -117,8 +116,7 @@
                 <span id="remoteSpectatorSubtitle">SPECTATING MATCH</span>
             </div>
         </div>
-        <audio id="guestMusic" src="./files/sound/game.mp3" preload="auto" loop></audio>
-        <audio id="mobileMusicFallback" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
+        <audio id="gameMusic" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
 
         <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
             <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application">
@@ -144,6 +142,7 @@
                 </div>
                 <button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button>
             </div>
+
 
             <div class="lobby_name_row">
                 <label for="playerNameInput">Your name</label>
@@ -194,9 +193,10 @@
         </div>
     </div>
 
+
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js?v=0117').catch(function () {}); });
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js?v=0119').catch(function () {}); });
 }
 </script>
 <script>
@@ -207,6 +207,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   setInterval(heartbeat, 5000);
 })();
 </script>
+
 
 </body>
 </html>
