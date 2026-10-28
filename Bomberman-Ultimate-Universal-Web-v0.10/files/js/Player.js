@@ -36,6 +36,9 @@ Player = Entity.extend({
 
     alive: true,
     isBot: false,
+    simulatedHuman: false,
+    displayName: '',
+    nameLabel: null,
 
     bombs: [],
 
@@ -64,7 +67,7 @@ Player = Entity.extend({
         }
 
         var img = gGameEngine.playerBoyImg;
-        if (this instanceof Bot) {
+        if (this instanceof Bot && !this.simulatedHuman) {
             if (gGameEngine.ultimateMode && gGameEngine.botDarkImg) {
                 img = gGameEngine.botDarkImg;
             }
@@ -96,6 +99,18 @@ Player = Entity.extend({
         this.bmp.y = pixels.y;
 
         gGameEngine.stage.addChild(this.bmp);
+
+        // Human players (including the simulated human opponent) get a small
+        // gamer-name label that follows the sprite without covering the board.
+        if (!(this instanceof Bot) || this.simulatedHuman) {
+            var names = gGameEngine.playerNames || [];
+            this.displayName = String(names[this.id] || ('Player ' + (this.id + 1))).slice(0, 14);
+            this.nameLabel = new createjs.Text(this.displayName, "bold 9px Helvetica", "#ffffff");
+            this.nameLabel.textAlign = 'center';
+            this.nameLabel.shadow = new createjs.Shadow('rgba(0,0,0,0.95)', 0, 1, 2);
+            gGameEngine.stage.addChild(this.nameLabel);
+            this.updateNameLabel();
+        }
 
         this.bombs = [];
         this.setBombsListener();
@@ -242,11 +257,18 @@ Player = Entity.extend({
         }
     },
 
+    updateNameLabel: function() {
+        if (!this.nameLabel || !this.bmp) return;
+        this.nameLabel.x = this.bmp.x + this.size.w / 2 - 10;
+        this.nameLabel.y = this.bmp.y - 10;
+    },
+
     /**
      * Calculates and updates entity position according to its actual bitmap position
      */
     updatePosition: function() {
         this.position = Utils.convertToEntityPosition(this.bmp);
+        this.updateNameLabel();
     },
 
     /**
@@ -359,6 +381,7 @@ Player = Entity.extend({
 
     die: function() {
         this.alive = false;
+        if (this.nameLabel) this.nameLabel.visible = false;
 
         // Humans no longer end a multiplayer round immediately when they die.
         // The authoritative game keeps running so the eliminated player can spectate.
