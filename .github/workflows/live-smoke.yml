@@ -11,19 +11,34 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
       - name: Check deployed HTML and browser boot
         shell: bash
         run: |
           set +e
           URL="https://colealex577.github.io/Bomberman/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${GITHUB_SHA}"
+
+          echo "=== WAIT FOR CURRENT PAGES DEPLOY ==="
+          DEPLOYED=0
+          for i in $(seq 1 30); do
+            curl -Ls --max-time 10 -o /tmp/page.html "$URL"
+            if grep -q "app.js?v=0123" /tmp/page.html 2>/dev/null; then
+              DEPLOYED=1
+              echo "v0.12.3 HTML is live on attempt $i"
+              break
+            fi
+            sleep 2
+          done
+          echo "deployed marker: $DEPLOYED"
+
           echo "=== HTTP CHECK ==="
           curl -Lsv --max-time 30 -D /tmp/headers.txt -o /tmp/page.html "$URL" 2>/tmp/curl.log
-          echo "curl exit: $?"
+          CURL_EXIT=$?
+          echo "curl exit: $CURL_EXIT"
           cat /tmp/headers.txt || true
           echo "HTML bytes: $(wc -c </tmp/page.html 2>/dev/null || echo 0)"
-          grep -n "bootLoading\|app.js\|hotfix-0117" /tmp/page.html | head -20 || true
+          grep -n "bootLoading\|app.js?v=0123\|hotfix-0117" /tmp/page.html | head -20 || true
           echo "=== CURL LOG ==="
           tail -80 /tmp/curl.log || true
 
@@ -31,17 +46,18 @@ jobs:
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           echo "Chrome: $CHROME"
           if [ -n "$CHROME" ]; then
-            "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            timeout 40s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
               --virtual-time-budget=15000 --enable-logging=stderr --v=0 \
               --dump-dom "$URL" >/tmp/dom.html 2>/tmp/chrome.log
-            echo "chrome exit: $?"
+            CHROME_EXIT=$?
+            echo "chrome exit: $CHROME_EXIT"
             echo "DOM bytes: $(wc -c </tmp/dom.html 2>/dev/null || echo 0)"
             echo "=== DOM SIGNALS ==="
-            grep -n "bootLoading\|buildVersion\|characterPanel\|Bomberman" /tmp/dom.html | head -40 || true
+            grep -n "bootLoading\|buildVersion\|characterPanel\|v0.12.3\|Bomberman" /tmp/dom.html | head -60 || true
             echo "=== CHROME ERRORS ==="
-            grep -Ei "uncaught|error|failed|exception|net::|ERR_" /tmp/chrome.log | tail -120 || true
+            grep -Ei "uncaught|error|failed|exception|net::|ERR_" /tmp/chrome.log | tail -160 || true
             echo "=== CHROME LOG TAIL ==="
-            tail -120 /tmp/chrome.log || true
+            tail -160 /tmp/chrome.log || true
           fi
 
       - name: Upload smoke diagnostics
