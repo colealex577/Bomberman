@@ -21,11 +21,11 @@ jobs:
 
           echo "=== WAIT FOR CURRENT PAGES DEPLOY ==="
           DEPLOYED=0
-          for i in $(seq 1 30); do
+          for i in $(seq 1 45); do
             curl -Ls --max-time 10 -o /tmp/page.html "$URL"
-            if grep -q "app.js?v=0123" /tmp/page.html 2>/dev/null; then
+            if grep -q "app.js?v=0124" /tmp/page.html 2>/dev/null; then
               DEPLOYED=1
-              echo "v0.12.3 HTML is live on attempt $i"
+              echo "v0.12.4 HTML is live on attempt $i"
               break
             fi
             sleep 2
@@ -38,7 +38,7 @@ jobs:
           echo "curl exit: $CURL_EXIT"
           cat /tmp/headers.txt || true
           echo "HTML bytes: $(wc -c </tmp/page.html 2>/dev/null || echo 0)"
-          grep -n "bootLoading\|app.js?v=0123\|hotfix-0117" /tmp/page.html | head -20 || true
+          grep -n "bomberman-build\|bootLoading\|app.js?v=0124\|hotfix-0117" /tmp/page.html | head -30 || true
           echo "=== CURL LOG ==="
           tail -80 /tmp/curl.log || true
 
@@ -53,11 +53,11 @@ jobs:
             echo "chrome exit: $CHROME_EXIT"
             echo "DOM bytes: $(wc -c </tmp/dom.html 2>/dev/null || echo 0)"
             echo "=== DOM SIGNALS ==="
-            grep -n "bootLoading\|buildVersion\|characterPanel\|v0.12.3\|Bomberman" /tmp/dom.html | head -60 || true
+            grep -n "bootLoading\|buildVersion\|characterPanel\|v0.12.4\|Bomberman" /tmp/dom.html | head -80 || true
             echo "=== CHROME ERRORS ==="
-            grep -Ei "uncaught|error|failed|exception|net::|ERR_" /tmp/chrome.log | tail -160 || true
+            grep -Ei "uncaught|TypeError|ReferenceError|SyntaxError|failed|exception|net::ERR_" /tmp/chrome.log | tail -180 || true
             echo "=== CHROME LOG TAIL ==="
-            tail -160 /tmp/chrome.log || true
+            tail -180 /tmp/chrome.log || true
           fi
 
       - name: Upload smoke diagnostics
