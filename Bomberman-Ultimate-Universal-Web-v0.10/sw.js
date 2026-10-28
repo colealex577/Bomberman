@@ -1,4 +1,4 @@
-const CACHE = 'bomberman-ultimate-v010';
+const CACHE = 'bomberman-ultimate-v011';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './files/css/style.css', './files/css/bootstrap.css',
