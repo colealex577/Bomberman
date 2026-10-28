@@ -11,50 +11,28 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
     steps:
-      - name: Check deployed HTML and browser boot
+      - uses: actions/checkout@v4
+      - name: Verify deployed Bomberman with Chrome DevTools
         shell: bash
         run: |
-          set +e
+          set -e
           URL="https://colealex577.github.io/Bomberman/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${GITHUB_SHA}"
-          echo "=== WAIT FOR CURRENT PAGES DEPLOY ==="
           for i in $(seq 1 45); do
-            curl -Ls --max-time 10 -o /tmp/page.html "$URL"
-            if grep -q "app.js?v=0124" /tmp/page.html 2>/dev/null; then echo "v0.12.4 HTML live on attempt $i"; break; fi
+            if curl -Ls --max-time 10 "$URL" | grep -q "app.js?v=0124"; then
+              echo "v0.12.4 is live"
+              break
+            fi
             sleep 2
           done
-          echo "=== HTTP CHECK ==="
-          curl -Lsv --max-time 30 -D /tmp/headers.txt -o /tmp/page.html "$URL" 2>/tmp/curl.log
-          echo "curl exit: $?"
-          echo "HTML bytes: $(wc -c </tmp/page.html 2>/dev/null || echo 0)"
-          grep -n "bomberman-build\|bootLoading\|app.js?v=0124" /tmp/page.html | head -30 || true
-          echo "=== CHROME CHECK ==="
-          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          if [ -n "$CHROME" ]; then
-            timeout 40s "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
-              --virtual-time-budget=15000 --enable-logging=stderr --v=0 \
-              --log-net-log=/tmp/netlog.json --net-log-capture-mode=Everything \
-              --dump-dom "$URL" >/tmp/dom.html 2>/tmp/chrome.log
-            echo "chrome exit: $?"
-            echo "DOM bytes: $(wc -c </tmp/dom.html 2>/dev/null || echo 0)"
-            echo "=== CHROME JS ERRORS ==="
-            grep -Ei "uncaught|TypeError|ReferenceError|SyntaxError|net::ERR_" /tmp/chrome.log | tail -180 || true
-            echo "=== NETLOG URL EVENTS ==="
-            python3 -c 'import json,os; p="/tmp/netlog.json"; d=json.load(open(p,encoding="utf-8")) if os.path.exists(p) else {"events":[],"constants":{}}; types={v:k for k,v in d.get("constants",{}).get("logEventTypes",{}).items()}; phases={v:k for k,v in d.get("constants",{}).get("logEventPhase",{}).items()}; rows=[(e.get("time",""),e.get("source",{}).get("id"),types.get(e.get("type"),e.get("type")),phases.get(e.get("phase"),e.get("phase")),u) for e in d.get("events",[]) for p0 in [e.get("params") or {}] for u in [p0.get("url") or p0.get("original_url") or p0.get("request_url")] if u]; print("\n".join("\t".join(map(str,r)) for r in rows[-160:])); print("URL event count:",len(rows))' || true
-            echo "=== CHROME LOG TAIL ==="
-            tail -120 /tmp/chrome.log || true
-          fi
+          export TEST_URL="$URL"
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node .github/scripts/live-smoke.mjs | tee /tmp/cdp-smoke.log
       - name: Upload smoke diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bomberman-live-smoke
-          path: |
-            /tmp/headers.txt
-            /tmp/page.html
-            /tmp/curl.log
-            /tmp/dom.html
-            /tmp/chrome.log
-            /tmp/netlog.json
+          name: bomberman-cdp-smoke
+          path: /tmp/cdp-smoke.log
           if-no-files-found: ignore
