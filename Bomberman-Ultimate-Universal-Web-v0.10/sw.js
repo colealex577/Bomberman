@@ -1,10 +1,10 @@
-const CACHE = 'bomberman-ultimate-v0122';
+const CACHE = 'bomberman-ultimate-v0123';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './files/css/style.css?v=0119', './files/css/bootstrap.css',
   './files/app.js?v=0119', './files/hotfix-0117.js?v=0119', './files/online.js?v=0119', './files/mobile.js?v=0119',
   './files/runtime-v0115.js?v=0116', './files/net-v0115-core.js?v=0116', './files/net-v0115-match.js?v=0116', './files/net-v0115-ui.js?v=0116',
-  './files/runtime-v0116.js?v=0116', './files/runtime-v0116-fix.js?v=0116',
+  './files/runtime-v0116.js?v=0116', './files/runtime-v0116-fix.js?v=0117',
   './files/js/easeljs-0.8.1.min.js', './files/js/preloadjs-0.6.1.min.js', './files/js/soundjs-0.6.1.min.js',
   './files/js/core.js', './files/js/Utils.js', './files/js/Entity.js', './files/js/Player.js',
   './files/js/Bonus.js', './files/js/Tile.js', './files/js/Fire.js', './files/js/Bomb.js', './files/js/Menu.js',
