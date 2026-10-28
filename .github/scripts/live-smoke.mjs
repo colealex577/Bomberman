@@ -68,3 +68,4 @@ try{
   try{chrome.kill('SIGKILL')}catch{}
   if(chromeLog) console.log('CHROME STDERR TAIL:',chromeLog.slice(-6000));
 }
+process.exit(0);
