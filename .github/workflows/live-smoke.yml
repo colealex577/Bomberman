@@ -1,0 +1,58 @@
+name: Bomberman live smoke test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check deployed HTML and browser boot
+        shell: bash
+        run: |
+          set +e
+          URL="https://colealex577.github.io/Bomberman/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${GITHUB_SHA}"
+          echo "=== HTTP CHECK ==="
+          curl -Lsv --max-time 30 -D /tmp/headers.txt -o /tmp/page.html "$URL" 2>/tmp/curl.log
+          echo "curl exit: $?"
+          cat /tmp/headers.txt || true
+          echo "HTML bytes: $(wc -c </tmp/page.html 2>/dev/null || echo 0)"
+          grep -n "bootLoading\|app.js\|hotfix-0117" /tmp/page.html | head -20 || true
+          echo "=== CURL LOG ==="
+          tail -80 /tmp/curl.log || true
+
+          echo "=== CHROME CHECK ==="
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          echo "Chrome: $CHROME"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+              --virtual-time-budget=15000 --enable-logging=stderr --v=0 \
+              --dump-dom "$URL" >/tmp/dom.html 2>/tmp/chrome.log
+            echo "chrome exit: $?"
+            echo "DOM bytes: $(wc -c </tmp/dom.html 2>/dev/null || echo 0)"
+            echo "=== DOM SIGNALS ==="
+            grep -n "bootLoading\|buildVersion\|characterPanel\|Bomberman" /tmp/dom.html | head -40 || true
+            echo "=== CHROME ERRORS ==="
+            grep -Ei "uncaught|error|failed|exception|net::|ERR_" /tmp/chrome.log | tail -120 || true
+            echo "=== CHROME LOG TAIL ==="
+            tail -120 /tmp/chrome.log || true
+          fi
+
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bomberman-live-smoke
+          path: |
+            /tmp/headers.txt
+            /tmp/page.html
+            /tmp/curl.log
+            /tmp/dom.html
+            /tmp/chrome.log
+          if-no-files-found: ignore
