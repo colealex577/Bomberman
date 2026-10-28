@@ -2,6 +2,22 @@ Menu = Class.extend({
     visible: true,
 
     views: [],
+    onlineCountView: null,
+    onlineCountValue: null,
+    onlineCountNextAt: 0,
+
+    getSimulatedOnlineCount: function() {
+        var now = Date.now();
+        if (this.onlineCountValue == null || now >= this.onlineCountNextAt) {
+            var hour = (new Date()).getHours();
+            var overnight = hour < 7 || hour >= 23;
+            var min = overnight ? 1 : 8;
+            var max = overnight ? 3 : 26;
+            this.onlineCountValue = min + Math.floor(Math.random() * (max - min + 1));
+            this.onlineCountNextAt = now + 45000 + Math.floor(Math.random() * 75000);
+        }
+        return this.onlineCountValue;
+    },
 
     init: function() {
         gGameEngine.botsCount = 4;
@@ -28,6 +44,9 @@ Menu = Class.extend({
 
     update: function() {
         if (this.visible) {
+            if (this.onlineCountView) {
+                this.onlineCountView.text = "online: " + this.getSimulatedOnlineCount();
+            }
             for (var i = 0; i < this.views.length; i++) {
                 gGameEngine.moveToFront(this.views[i]);
             }
@@ -46,8 +65,13 @@ Menu = Class.extend({
     setMode: function(mode) {
         this.hide();
 
+        gGameEngine.simulatedOpponentMode = false;
         if (mode == 'single') {
             gGameEngine.botsCount = 3;
+            gGameEngine.playersCount = 1;
+        } else if (mode == 'simulated') {
+            gGameEngine.simulatedOpponentMode = true;
+            gGameEngine.botsCount = 2;
             gGameEngine.playersCount = 1;
         } else {
             gGameEngine.botsCount = 2;
@@ -61,18 +85,15 @@ Menu = Class.extend({
     draw: function(text) {
         var that = this;
 
-        // semi-transparent black background
         var bgGraphics = new createjs.Graphics().beginFill("rgba(0, 0, 0, 0.5)").drawRect(0, 0, gGameEngine.size.w, gGameEngine.size.h);
         var bg = new createjs.Shape(bgGraphics);
         gGameEngine.stage.addChild(bg);
         this.views.push(bg);
 
-        // game title
         text = text || [{text: 'Bomber', color: '#ffffff'}, {text: 'man', color: '#ff4444'}];
 
         var title1 = new createjs.Text(text[0].text, "bold 35px Helvetica", text[0].color);
         var title2 = new createjs.Text(text[1].text, "bold 35px Helvetica", text[1].color);
-
         var titleWidth = title1.getMeasuredWidth() + title2.getMeasuredWidth();
 
         title1.x = gGameEngine.size.w / 2 - titleWidth / 2;
@@ -81,33 +102,37 @@ Menu = Class.extend({
         this.views.push(title1);
 
         title2.x = title1.x + title1.getMeasuredWidth();
-        title2.y = gGameEngine.size.h / 2 - title1.getMeasuredHeight() / 2 - 80;
+        title2.y = title1.y;
         gGameEngine.stage.addChild(title2);
         this.views.push(title2);
 
         if (gGameEngine.ultimateMode) {
-            var ultimateLabel = new createjs.Text("ULTIMATE MODE • 100% DROPS • 5X POWER", "bold 12px Helvetica", "#ffd166");
+            var ultimateLabel = new createjs.Text("ULTIMATE MODE • 100% DROPS • 5X CORE POWER", "bold 12px Helvetica", "#ffd166");
             ultimateLabel.x = gGameEngine.size.w / 2 - ultimateLabel.getMeasuredWidth() / 2;
             ultimateLabel.y = title1.y + 37;
             gGameEngine.stage.addChild(ultimateLabel);
             this.views.push(ultimateLabel);
         }
 
-        // modes buttons
+        var onlineCount = new createjs.Text("online: " + this.getSimulatedOnlineCount(), "bold 11px Helvetica", "#99cc00");
+        onlineCount.textAlign = "right";
+        onlineCount.x = gGameEngine.size.w - 9;
+        onlineCount.y = 8;
+        gGameEngine.stage.addChild(onlineCount);
+        this.views.push(onlineCount);
+        this.onlineCountView = onlineCount;
+
         var modeSize = 110;
         var modesDistance = 20;
         var modesY = title1.y + title1.getMeasuredHeight() + 40;
 
-        // singleplayer button
         var singleX = gGameEngine.size.w / 2 - modeSize - modesDistance;
         var singleBgGraphics = new createjs.Graphics().beginFill("rgba(0, 0, 0, 0.5)").drawRect(singleX, modesY, modeSize, modeSize);
         var singleBg = new createjs.Shape(singleBgGraphics);
         gGameEngine.stage.addChild(singleBg);
         this.views.push(singleBg);
         this.setHandCursor(singleBg);
-        singleBg.addEventListener('click', function() {
-            that.setMode('single');
-        });
+        singleBg.addEventListener('click', function() { that.setMode('single'); });
 
         var singleTitle1 = new createjs.Text("single", "16px Helvetica", "#ff4444");
         var singleTitle2 = new createjs.Text("player", "16px Helvetica", "#ffffff");
@@ -117,12 +142,12 @@ Menu = Class.extend({
         singleTitle1.x = singleX + (modeSize - singleTitleWidth) / 2;
         singleTitle1.y = modeTitlesY;
         gGameEngine.stage.addChild(singleTitle1);
-        this.views.push(singleTitle1)
+        this.views.push(singleTitle1);
 
         singleTitle2.x = singleTitle1.x + singleTitle1.getMeasuredWidth();
         singleTitle2.y = modeTitlesY;
         gGameEngine.stage.addChild(singleTitle2);
-        this.views.push(singleTitle2)
+        this.views.push(singleTitle2);
 
         var iconsY = modesY + 13;
         var singleIcon = new createjs.Bitmap("./files/img/george.png");
@@ -132,7 +157,6 @@ Menu = Class.extend({
         gGameEngine.stage.addChild(singleIcon);
         this.views.push(singleIcon);
 
-        // multiplayer button
         var multiX = gGameEngine.size.w / 2 + modesDistance;
         var multiBgGraphics = new createjs.Graphics().beginFill("rgba(0, 0, 0, 0.5)").drawRect(multiX, modesY, modeSize, modeSize);
         var multiBg = new createjs.Shape(multiBgGraphics);
@@ -140,26 +164,20 @@ Menu = Class.extend({
         this.views.push(multiBg);
         this.setHandCursor(multiBg);
         multiBg.addEventListener('click', function() {
-            if (window.BomberOnline && typeof BomberOnline.openLobby === 'function') {
-                BomberOnline.openLobby();
-            } else {
-                that.setMode('multi');
-            }
+            if (window.BomberOnline && typeof BomberOnline.openLobby === 'function') BomberOnline.openLobby();
+            else that.setMode('multi');
         });
 
-        var multiTitle1 = new createjs.Text("multi", "16px Helvetica", "#99cc00");
-        var multiTitle2 = new createjs.Text("player", "16px Helvetica", "#ffffff");
-        var multiTitleWidth = multiTitle1.getMeasuredWidth() + multiTitle2.getMeasuredWidth();
-
-        multiTitle1.x = multiX + (modeSize - multiTitleWidth) / 2;
-        multiTitle1.y = modeTitlesY;
+        var multiTitle1 = new createjs.Text("online", "14px Helvetica", "#99cc00");
+        var multiTitle2 = new createjs.Text("multiplayer", "13px Helvetica", "#ffffff");
+        multiTitle1.x = multiX + (modeSize - multiTitle1.getMeasuredWidth()) / 2;
+        multiTitle1.y = modeTitlesY - 7;
         gGameEngine.stage.addChild(multiTitle1);
-        this.views.push(multiTitle1)
-
-        multiTitle2.x = multiTitle1.x + multiTitle1.getMeasuredWidth();
-        multiTitle2.y = modeTitlesY;
+        this.views.push(multiTitle1);
+        multiTitle2.x = multiX + (modeSize - multiTitle2.getMeasuredWidth()) / 2;
+        multiTitle2.y = modeTitlesY + 10;
         gGameEngine.stage.addChild(multiTitle2);
-        this.views.push(multiTitle2)
+        this.views.push(multiTitle2);
 
         var multiIconGirl = new createjs.Bitmap("./files/img/george.png");
         multiIconGirl.sourceRect = new createjs.Rectangle(0, 0, 48, 48);
