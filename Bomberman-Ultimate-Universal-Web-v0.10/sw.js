@@ -1,4 +1,4 @@
-const CACHE = 'bomberman-ultimate-v0120';
+const CACHE = 'bomberman-ultimate-v0121';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
   './files/css/style.css?v=0119', './files/css/bootstrap.css',
@@ -30,7 +30,8 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.includes('__bomberman_')) return;
   const hot = url.pathname.endsWith('/') || url.pathname.endsWith('/index.html') || /\/(online|mobile|app|hotfix-0117|GameEngine|Bot)\.js$/.test(url.pathname) || url.pathname.endsWith('/files/css/style.css');
   if (hot) {
-    event.respondWith(fetch(req).then(res => {
+    const freshReq = new Request(req, {cache: 'no-store'});
+    event.respondWith(fetch(freshReq).then(res => {
       if (res && res.ok) caches.open(CACHE).then(cache => cache.put(req, res.clone()));
       return res;
     }).catch(() => caches.match(req)));
