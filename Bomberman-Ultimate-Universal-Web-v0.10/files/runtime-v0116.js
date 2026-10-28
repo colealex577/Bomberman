@@ -16,7 +16,7 @@ ensureVersionBadge();setInterval(ensureVersionBadge,1200);
 var S=window.B115;
 if(S){
   var oldWaiting=S.waiting,oldStatus=S.status;
-  function scrub(t){t=String(t||'');if(/simulated/i.test(t)){if(/host/i.test(t)||/waiting/i.test(t))return'Waiting for public player…';if(/search/i.test(t)||/join/i.test(t))return'Searching public matches…';return'Public matchmaking…'}return t}
+  function scrub(t){t=String(t||'');if(!/simulated/i.test(t))return t;if(/private/i.test(t))return'Looking for your friend. Private rooms wait only for the matching access code.';if(/host/i.test(t)||/waiting/i.test(t))return'Waiting for public player…';if(/search/i.test(t)||/join/i.test(t))return'Searching public matches…';return'Public matchmaking…'}
   S.waiting=function(t,b){return oldWaiting.call(S,t,scrub(b))};
   S.status=function(t,k){return oldStatus.call(S,scrub(t),k)};
   S.startFallback=function(){if(S.fallback)clearInterval(S.fallback);var end=Date.now()+17000;S.fallback=setInterval(function(){if(S.started||!S.online()){if(S.fallback)clearInterval(S.fallback);S.fallback=null;return}S.status(S.host()?'Waiting for public player…':'Searching public matches…','working');if(Date.now()>=end){clearInterval(S.fallback);S.fallback=null;S.startSimulated()}},1000)};
