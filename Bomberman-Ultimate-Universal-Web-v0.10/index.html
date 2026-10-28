@@ -8,27 +8,27 @@
     <meta name="theme-color" content="#21111a">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="apple-touch-icon" href="./icons/icon192.png">
-    <script src="./files/js/easeljs-0.8.1.min.js"></script>
-    <script src="./files/js/preloadjs-0.6.1.min.js"></script>
-    <script src="./files/js/soundjs-0.6.1.min.js"></script>
-    <script src="./files/js/core.js"></script>
-    <script src="./files/js/Utils.js"></script>
-    <script src="./files/js/Entity.js"></script>
-    <script src="./files/js/Player.js"></script>
-    <script src="./files/js/Bot.js?v=0119"></script>
-    <script src="./files/js/Bonus.js"></script>
-    <script src="./files/js/Tile.js"></script>
-    <script src="./files/js/Fire.js"></script>
-    <script src="./files/js/Bomb.js"></script>
-    <script src="./files/js/Menu.js"></script>
-    <script src="./files/js/InputEngine.js"></script>
-    <script src="./files/js/GameEngine.js?v=0119"></script>
-    <script src="./files/online.js?v=0119"></script>
-    <script src="./files/mobile.js?v=0119"></script>
-    <script src="./files/app.js?v=0119"></script>
-    <script src="./files/hotfix-0117.js?v=0119"></script>
+    <script defer src="./files/js/easeljs-0.8.1.min.js"></script>
+    <script defer src="./files/js/preloadjs-0.6.1.min.js"></script>
+    <script defer src="./files/js/soundjs-0.6.1.min.js"></script>
+    <script defer src="./files/js/core.js"></script>
+    <script defer src="./files/js/Utils.js"></script>
+    <script defer src="./files/js/Entity.js"></script>
+    <script defer src="./files/js/Player.js"></script>
+    <script defer src="./files/js/Bot.js?v=0123"></script>
+    <script defer src="./files/js/Bonus.js"></script>
+    <script defer src="./files/js/Tile.js"></script>
+    <script defer src="./files/js/Fire.js"></script>
+    <script defer src="./files/js/Bomb.js"></script>
+    <script defer src="./files/js/Menu.js"></script>
+    <script defer src="./files/js/InputEngine.js"></script>
+    <script defer src="./files/js/GameEngine.js?v=0123"></script>
+    <script defer src="./files/online.js?v=0123"></script>
+    <script defer src="./files/mobile.js?v=0123"></script>
+    <script defer src="./files/app.js?v=0123"></script>
+    <script defer src="./files/hotfix-0117.js?v=0123"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
+    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0123" />
 
     <style id="ios-v0111-hotfix">
     @media (hover: none), (pointer: coarse) {
@@ -45,9 +45,18 @@
       body:not(.desktop-ui) .touch_btn,
       body:not(.desktop-ui) .touch_small { pointer-events: auto; }
     }
+    #bootLoading {
+      position: fixed; inset: 0; z-index: 2147483000;
+      display: flex; align-items: center; justify-content: center;
+      background: #21111a; color: #fff;
+      font: 700 16px/1.4 Helvetica, Arial, sans-serif;
+      letter-spacing: .02em;
+    }
+    #bootLoading[hidden] { display: none !important; }
     </style>
 </head>
 <body>
+    <div id="bootLoading" aria-live="polite">Loading Bomberman…</div>
     <div class="container">
         <div class="game_toolbar">
             <button id="ultimateModeBtn" class="ultimate_mode_btn" type="button" aria-pressed="false">ULTIMATE MODE: OFF</button>
@@ -117,7 +126,7 @@
                 <span id="remoteSpectatorSubtitle">SPECTATING MATCH</span>
             </div>
         </div>
-        <audio id="gameMusic" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
+        <audio id="gameMusic" src="./files/sound/game.mp3" preload="none" loop playsinline></audio>
 
         <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
             <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application">
@@ -194,12 +203,24 @@
     </div>
 
 <script>
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js?v=0120').catch(function () {}); });
-}
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.getRegistrations().then(function (regs) {
+    regs.forEach(function (reg) { reg.unregister().catch(function () {}); });
+  }).catch(function () {});
+  if ('caches' in window) {
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.filter(function (k) { return k.indexOf('bomberman-ultimate-') === 0; }).map(function (k) { return caches.delete(k); }));
+    }).catch(function () {});
+  }
+})();
 </script>
 <script>
 (function () {
+  var boot = document.getElementById('bootLoading');
+  setTimeout(function () {
+    if (boot && !boot.hidden) boot.textContent = 'Still loading Bomberman…';
+  }, 8000);
   if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
   function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); }
   heartbeat();
