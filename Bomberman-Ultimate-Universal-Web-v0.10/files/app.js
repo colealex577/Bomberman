@@ -47,7 +47,51 @@ class StorageError extends Error {
     }
 }
 
+function ensureBuildVersion(){
+    let badge = document.getElementById('buildVersion');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'buildVersion';
+        badge.className = 'build_version';
+        (document.body || document.documentElement).appendChild(badge);
+    }
+    badge.textContent = 'v0.11.6';
+    badge.setAttribute('aria-label', 'Game version');
+    const s = badge.style;
+    const imp = (key, value) => { try { s.setProperty(key, value, 'important'); } catch (e) { s[key] = value; } };
+    imp('position','fixed');
+    imp('top','calc(env(safe-area-inset-top, 0px) + 5px)');
+    imp('left','calc(env(safe-area-inset-left, 0px) + 6px)');
+    imp('right','auto');
+    imp('bottom','auto');
+    imp('z-index','2147483647');
+    imp('display','block');
+    imp('visibility','visible');
+    imp('opacity','1');
+    imp('transform','none');
+    imp('margin','0');
+    imp('padding','2px 5px');
+    imp('border-radius','4px');
+    imp('background','rgba(0,0,0,.62)');
+    imp('color','rgba(255,255,255,.92)');
+    imp('font','700 9px/1.25 Arial,sans-serif');
+    imp('pointer-events','none');
+}
+
+function loadV0116Compatibility(){
+    if (document.getElementById('runtime-v0116-fix-loader')) return;
+    const s = document.createElement('script');
+    s.id = 'runtime-v0116-fix-loader';
+    s.src = './files/runtime-v0116-fix.js?v=0116';
+    document.head.appendChild(s);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    ensureBuildVersion();
+    loadV0116Compatibility();
 	GUILocalization();
 	gGameEngine.load();
 });
+
+setInterval(ensureBuildVersion, 1200);
+window.addEventListener('pageshow', ensureBuildVersion, {passive:true});
