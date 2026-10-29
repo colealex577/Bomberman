@@ -19,16 +19,25 @@ jobs:
         run: |
           set -e
           URL="https://colealex577.github.io/Bomberman/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${GITHUB_SHA}"
-          for i in $(seq 1 45); do
-            if curl -Ls --max-time 10 "$URL" | grep -q "app.js?v=0124"; then
-              echo "v0.12.4 is live"
+          LIVE=0
+          for i in $(seq 1 60); do
+            if curl -Ls --max-time 10 "$URL" | grep -q "app.js?v=0125"; then
+              echo "v0.12.5 is live"
+              LIVE=1
               break
             fi
             sleep 2
           done
+          if [ "$LIVE" != "1" ]; then
+            echo "v0.12.5 did not deploy before smoke-test deadline"
+            exit 1
+          fi
           export TEST_URL="$URL"
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           node .github/scripts/live-smoke.mjs | tee /tmp/cdp-smoke.log
+          if grep -q "Runtime.evaluate timed out" /tmp/cdp-smoke.log; then exit 1; fi
+          if grep -q "SMOKE_ERROR:" /tmp/cdp-smoke.log; then exit 1; fi
+          if ! grep -q "MILESTONE: inspect-returned" /tmp/cdp-smoke.log; then exit 1; fi
       - name: Upload smoke diagnostics
         if: always()
         uses: actions/upload-artifact@v4
