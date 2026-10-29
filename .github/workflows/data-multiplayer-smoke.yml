@@ -11,13 +11,15 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check data sync
         run: |
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0120-data.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
+          node --check .github/scripts/data-smoke.mjs
+          node --check .github/scripts/data-match-test.mjs
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -30,10 +32,16 @@ jobs:
           done
           cat /tmp/bm-http.log
           exit 1
-      - name: Chrome boot smoke
+      - name: Chrome boot A/B smoke
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           "$CHROME_PATH" --version
           node .github/scripts/data-smoke.mjs
+      - name: Two-client data match integration
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 120s node .github/scripts/data-match-test.mjs
