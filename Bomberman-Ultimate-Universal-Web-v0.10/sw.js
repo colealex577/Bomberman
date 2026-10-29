@@ -1,10 +1,10 @@
-const CACHE='bomberman-ultimate-v0127-2';
+const CACHE='bomberman-ultimate-v0128-1';
 const CORE=[
  './','./index.html','./manifest.webmanifest',
  './files/css/style.css?v=0119','./files/css/bootstrap.css',
- './files/app.js?v=0127d','./files/hotfix-0117.js?v=0119','./files/online.js?v=0119','./files/mobile.js?v=0119',
+ './files/app.js?v=0128','./files/hotfix-0117.js?v=0119','./files/online.js?v=0119','./files/mobile.js?v=0119',
  './files/runtime-v0115.js?v=0116','./files/net-v0115-core.js?v=0116','./files/net-v0115-match.js?v=0116','./files/net-v0115-ui.js?v=0116',
- './files/runtime-v0116.js?v=0116','./files/runtime-v0116-fix.js?v=0118','./files/runtime-v0119.js?v=0119','./files/net-v0120-data.js?v=0120','./files/runtime-v0120-qol.js?v=0120','./files/runtime-v0120-qol-fix.js?v=0120c','./files/runtime-v0123.js?v=0123','./files/runtime-v0123-fix.js?v=0123b','./files/runtime-v0123-final.js?v=0123c','./files/runtime-v0123-polish.js?v=0123d','./files/runtime-v0124.js?v=0124','./files/runtime-v0125-core.js?v=0125','./files/runtime-v0125-net.js?v=0125','./files/runtime-v0125-connect.js?v=0125','./files/runtime-v0126-ai.js?v=0126','./files/runtime-v0127.js?v=0127','./files/runtime-v0127-fix.js?v=0127b','./files/runtime-v0127-leaderboard.js?v=0127c','./files/runtime-v0127-menu-fix.js?v=0127d',
+ './files/runtime-v0116.js?v=0116','./files/runtime-v0116-fix.js?v=0118','./files/runtime-v0119.js?v=0119','./files/net-v0120-data.js?v=0120','./files/runtime-v0120-qol.js?v=0120','./files/runtime-v0120-qol-fix.js?v=0120c','./files/runtime-v0123.js?v=0123','./files/runtime-v0123-fix.js?v=0123b','./files/runtime-v0123-final.js?v=0123c','./files/runtime-v0123-polish.js?v=0123d','./files/runtime-v0124.js?v=0124','./files/runtime-v0125-core.js?v=0125','./files/runtime-v0125-net.js?v=0125','./files/runtime-v0125-connect.js?v=0125','./files/runtime-v0126-ai.js?v=0126','./files/runtime-v0127.js?v=0127','./files/runtime-v0127-fix.js?v=0127b','./files/runtime-v0127-leaderboard.js?v=0128','./files/runtime-v0127-menu-fix.js?v=0127d',
  './files/js/easeljs-0.8.1.min.js','./files/js/preloadjs-0.6.1.min.js','./files/js/soundjs-0.6.1.min.js',
  './files/js/core.js','./files/js/Utils.js','./files/js/Entity.js','./files/js/Player.js','./files/js/Bonus.js','./files/js/Tile.js','./files/js/Fire.js','./files/js/Bomb.js','./files/js/Menu.js','./files/js/InputEngine.js','./files/js/GameEngine.js?v=0119','./files/js/Bot.js?v=0119',
  './files/sound/game.mp3','./files/sound/bomb.mp3','./icons/icon192.png','./icons/icon512.png'
