@@ -11,7 +11,10 @@ body.v127_lb_open #mainCustomizeTile,body.v127_lb_open #mainLeaderboardTile,body
 }
 function stabilizeName(){var n='Player';try{n=String(localStorage.getItem('BombermanPlayerName')||'Player').replace(/[<>]/g,'').replace(/\s+/g,' ').trim()||'Player'}catch(e){}n=n.slice(0,14);if(window.B115&&B115.role==='offline')B115.localName=n;var t=$('mainCustomizeTile');if(t){var x=t.querySelector('.customize_name');if(x)x.textContent=n}var input=$('characterName'),preview=$('characterPreviewName');if(preview)preview.textContent=(input&&String(input.value||'').trim())||n}
 function panelClasses(){var lb=$('v127LeaderboardPanel'),sp=$('v127SettingsPanel');document.body.classList.toggle('v127_lb_open',!!(lb&&!lb.hidden));document.body.classList.toggle('v127_settings_open',!!(sp&&!sp.hidden))}
-function syncSettingsVisibility(){var g=G(),t=$('mainSettingsTile'),lb=$('v127LeaderboardPanel'),sp=$('v127SettingsPanel'),cp=$('characterPanel');if(!g||!g.menu||!t)return;var show=!!(g.menu.visible&&!g.lobbyOpen&&(!lb||lb.hidden)&&(!sp||sp.hidden)&&(!cp||cp.hidden));t.style.display=show?'block':'none'}
+function syncSettingsVisibility(){
+ var g=G(),t=$('mainSettingsTile'),lb=$('v127LeaderboardPanel'),sp=$('v127SettingsPanel'),cp=$('characterPanel');if(!g||!g.menu||!t)return;var show=!!(g.menu.visible&&!g.lobbyOpen&&(!lb||lb.hidden)&&(!sp||sp.hidden)&&(!cp||cp.hidden));t.style.display=show?'block':'none';if(!show)return;
+ var c=$('canvas'),r=c&&c.getBoundingClientRect();if(!r||!r.width||!r.height)return;var scale=Math.max(.65,Math.min(1.2,r.width/(g.size&&g.size.w||544))),w=82*scale,h=52*scale;t.style.width=w+'px';t.style.height=h+'px';t.style.left=(r.left+9*scale)+'px';t.style.top=(r.bottom-h-7*scale)+'px';t.style.pointerEvents='auto'
+}
 function sync(){installStyle();stabilizeName();panelClasses();syncSettingsVisibility()}
 sync();setTimeout(sync,0);setTimeout(sync,40);setInterval(sync,100);
 })();
