@@ -86,10 +86,23 @@ try{
   if(moveDist>8)throw new Error('host did not follow guest-owned movement closely: '+moveDist);
   console.log('SMOOTH_MOVE PASS',JSON.stringify(ys));
 
-  // Freeze movement transmission so host is deliberately one tile behind; bomb must still use guest press-time tile.
-  await D.page.evaluate(()=>{BomberV125.pauseMoveForTest=true});
-  await D.page.keyboard.down('ArrowUp');await sleep(340);await D.page.keyboard.up('ArrowUp');await sleep(50);
-  const intended=await D.page.evaluate(()=>({x:gGameEngine.players[1].position.x,y:gGameEngine.players[1].position.y,px:gGameEngine.players[1].bmp.x,py:gGameEngine.players[1].bmp.y}));
+  // Freeze movement transmission and move the guest locally to a guaranteed open adjacent tile.
+  // This creates deterministic host/guest disagreement independent of the random wood layout.
+  const intended=await D.page.evaluate(()=>{
+    BomberV125.pauseMoveForTest=true;
+    const p=gGameEngine.players[1],from={x:p.position.x,y:p.position.y};
+    const dirs=[{dx:0,dy:-1,key:'ArrowUp'},{dx:0,dy:1,key:'ArrowDown'},{dx:-1,dy:0,key:'ArrowLeft'},{dx:1,dy:0,key:'ArrowRight'}];
+    const free=q=>gGameEngine.getTileMaterial(q)==='grass'&&!gGameEngine.bombs.some(b=>b&&!b.exploded&&b.position.x===q.x&&b.position.y===q.y);
+    for(const d of dirs){
+      const mid={x:from.x+d.dx,y:from.y+d.dy};if(!free(mid))continue;
+      for(const e of dirs){
+        const next={x:mid.x+e.dx,y:mid.y+e.dy};if((next.x===from.x&&next.y===from.y)||!free(next))continue;
+        const bp=Utils.convertToBitmapPosition(mid);p.bmp.x=bp.x;p.bmp.y=bp.y;p.updatePosition();
+        return{x:mid.x,y:mid.y,px:p.bmp.x,py:p.bmp.y,escapeKey:e.key,escapeDx:e.dx,escapeDy:e.dy};
+      }
+    }
+    throw new Error('no deterministic two-tile open path available for bomb test');
+  });
   const staleHost=await C.page.evaluate(()=>({x:gGameEngine.players[1].position.x,y:gGameEngine.players[1].position.y}));
   if(intended.x===staleHost.x&&intended.y===staleHost.y)throw new Error('test failed to create stale host position');
   await D.page.keyboard.down('Shift');await sleep(65);await D.page.keyboard.up('Shift');
@@ -97,7 +110,8 @@ try{
   if(!bombOK){const [x,y]=await Promise.all([state(C.page),state(D.page)]);throw new Error('bomb did not use press-time guest tile. intended='+JSON.stringify(intended)+' staleHost='+JSON.stringify(staleHost)+' host='+JSON.stringify(x.bombs)+' guest='+JSON.stringify(y.bombs))}
   b=await state(D.page);const ownBomb=b.bombs.find(z=>z.x===intended.x&&z.y===intended.y);if(!ownBomb||b.players[1].escape!==ownBomb.id)throw new Error('guest own bomb did not grant escape-through protection');
   await D.page.evaluate(()=>{BomberV125.pauseMoveForTest=false;BomberV125.sendMove()});
-  const beforeEscape=(await state(D.page)).players[1].y;await D.page.keyboard.down('ArrowUp');await sleep(230);await D.page.keyboard.up('ArrowUp');await sleep(150);const afterEscape=(await state(D.page)).players[1].y;if(!(afterEscape<beforeEscape-2))throw new Error('guest got stuck behind own bomb after placement');
+  const beforeEscape=(await state(D.page)).players[1];await D.page.keyboard.down(intended.escapeKey);await sleep(230);await D.page.keyboard.up(intended.escapeKey);await sleep(150);const afterEscape=(await state(D.page)).players[1];
+  const escaped=(intended.escapeDx&&(afterEscape.x-beforeEscape.x)*intended.escapeDx>2)||(intended.escapeDy&&(afterEscape.y-beforeEscape.y)*intended.escapeDy>2);if(!escaped)throw new Error('guest got stuck behind own bomb after placement');
   console.log('PRESS_TILE_BOMB_ESCAPE PASS');
   await waitFor(async()=>{const [x,y]=await Promise.all([state(C.page),state(D.page)]);return x.bombs.length===0&&y.bombs.length===0},5500,100);
 
