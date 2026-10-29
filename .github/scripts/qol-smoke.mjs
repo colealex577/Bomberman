@@ -13,7 +13,7 @@ const browser=await puppeteer.launch({
 const context=await browser.createBrowserContext();
 const page=await context.newPage();
 const errors=[];
-page.on('pageerror',e=>errors.push(String(e&&e.message||e)));
+page.on('pageerror',e=>errors.push(String(e&&e.stack||e&&e.message||e)));
 page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
 await page.evaluateOnNewDocument(()=>{
   try{localStorage.setItem('BombermanPlayerName','QOLCI')}catch(e){}
