@@ -8,8 +8,9 @@ await page.evaluateOnNewDocument(()=>{try{localStorage.setItem('BombermanPlayerN
 try{
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
  await page.waitForFunction(()=>window.BomberCharacter&&document.getElementById('buildVersion123')?.textContent==='v0.12.3'&&window.BomberQOL?.bottomRightOpponent&&gGameEngine?.menu&&Menu.prototype.__v123HitAreaFix,{timeout:16000});
+ await page.evaluate(()=>{if(!gGameEngine.menu.views.length)gGameEngine.menu.show()});await sleep(100);
  const menu=await page.evaluate(()=>({version:document.getElementById('buildVersion123')?.textContent,characterPanel:!!document.getElementById('characterPanel'),rating:BomberCharacter.getRating(),menuViews:gGameEngine.menu.views.length}));
- console.log('CHAR_BOOT',JSON.stringify(menu));if(menu.version!=='v0.12.3'||!menu.characterPanel||menu.rating!==500)throw new Error('character/rating runtime did not boot');
+ console.log('CHAR_BOOT',JSON.stringify(menu));if(menu.version!=='v0.12.3'||!menu.characterPanel||menu.rating!==500||menu.menuViews<1)throw new Error('character/rating runtime did not boot');
  const hit=await page.evaluate(()=>{const shapes=gGameEngine.menu.views.filter(v=>v instanceof createjs.Shape&&v._listeners?.click?.length);const cards=gGameEngine.menu.views.filter(v=>v instanceof createjs.Container&&v._listeners?.click?.length);return{shapeX:shapes.map(v=>v.x),cardX:cards.map(v=>v.x)}});
  console.log('MENU_HIT_AREAS',JSON.stringify(hit));if(hit.shapeX.length<2||hit.shapeX[0]!==-50||hit.shapeX[1]!==50||hit.cardX.length<1)throw new Error('Single/Online/Character hit areas are not separated');
  await page.evaluate(()=>{const shapes=gGameEngine.menu.views.filter(v=>v instanceof createjs.Shape&&v._listeners?.click?.length);shapes[1].dispatchEvent('click')});await sleep(100);const onlineOpen=await page.evaluate(()=>!B115.els.lobby.hidden);if(!onlineOpen)throw new Error('Online multiplayer menu hit area did not open lobby');
