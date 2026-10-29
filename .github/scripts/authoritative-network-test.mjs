@@ -33,6 +33,7 @@ try{
  // Prepare a host-owned open lane and one destructible block in the blast.
  await h.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bonuses.slice())b.destroy();const p=g.players[1];p.bmp.x=13*32;p.bmp.y=11*32;p.updatePosition();p.bombStrength=2;const t=new Tile('wood',{x:12,y:11});g.tiles.push(t);g.stage.addChild(t.bmp);BomberMultiplayer.publish()});await sleep(400);await equalWorld(h,g);
  const press=await g.evaluate(()=>({...gGameEngine.players[1].position}));
+ await g.evaluate(()=>{const send=B115.send;B115.send=function(d){const r=send.call(B115,d);if(d?.type==='auth129'&&d.kind==='input'&&d.cmd?.bomb)send.call(B115,d);return r}});
  await g.keyboard.down('Shift');await sleep(20);await g.keyboard.up('Shift');
  await wait(async()=>{const x=await state(g);return x.world.bombs.length===1},'authoritative bomb missing');
  await equalWorld(h,g);const bomb=(await state(h)).world.bombs[0];assert.equal(bomb.x,press.x);assert.equal(bomb.y,press.y);assert.ok(bomb.id);
@@ -60,6 +61,7 @@ try{
  await g.evaluate(()=>BomberV127.requestRematch());await wait(()=>h.evaluate(()=>!document.getElementById('qolRematchPrompt').hidden),'rematch prompt missing');await h.click('#qolRematchAccept');
  await wait(async()=>(await state(g)).roundId!==stale.roundId,'round ID did not change');await equalWorld(h,g);
  const fresh=await state(g);await g.evaluate(s=>B115.guestData({type:'auth129',kind:'snapshot',session:s.roundId.split(':')[0],roundId:s.roundId,worldRevision:999999,world:s.world}),stale);assert.deepEqual(await state(g),fresh);
+ await g.evaluate(s=>B115.guestData({type:'auth129',kind:'actors',session:s.roundId.split(':')[0],roundId:s.roundId,q:999999,ack:999999,actors:[{x:0,y:0},{x:0,y:0}]}),stale);assert.deepEqual(await state(g),fresh);
  console.log('DEATH_SCORING_REMATCH_OLD_ROUND PASS');
  // A fresh AI-on match verifies that guests never invoke Bot.update, including lightning.
  await h.evaluate(()=>{B115.destroyNetwork();B115.started=false});await g.evaluate(()=>{B115.destroyNetwork();B115.started=false});
@@ -74,5 +76,7 @@ try{
  const sim=await g.evaluate(()=>{const p=BomberLeaderboard127.profile(B115.remoteName),b=gGameEngine.simulatedOpponent;return {p,score:b.rating,rank:b.leaderboardRank,appearance:b.characterAppearance}});
  assert.equal(sim.score,sim.p.score);assert.equal(sim.rank,sim.p.displayRank);assert.ok(sim.appearance);
  await g.evaluate(()=>{window.oldSim=gGameEngine.simulatedOpponent;BomberV127.requestRematch()});await sleep(1100);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),true);await sleep(1200);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),false);
+ await g.evaluate(()=>{localStorage.setItem('BombermanRatingV1','995');B115.kind='public';B115.setRole('host');const random=Math.random;try{Math.random=()=>0;B115.startSimulated()}finally{Math.random=random}});await sleep(250);
+ assert.ok(await g.evaluate(()=>gGameEngine.simulatedOpponent.leaderboardRank<=50),'top 50 cannot be matched');
  assert.deepEqual(errors,[]);console.log('AUTHORITATIVE_NETWORK_TEST PASS');
 }finally{await Promise.all(clients.map(c=>c.close()));await browser.close()}
