@@ -157,7 +157,7 @@ N.afterFrame=publish;
 function newRound(){
  N.roundNumber++;N.roundId=session+':'+N.roundNumber;N.worldRevision=0;N.actorSequence=0;N.lastActorSequence=0;N.lastProcessedInput=0;N.inputSequence=0;lastQueued=0;serial=0;commands=[];pending=[];lastWorld=null;budget=200;budgetTime=performance.now();
 }
-function initPacket(type){announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
+function initPacket(type){announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,profile:{type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()},names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
 function begin(d){
  if(retiredSessions.has(d.session))return;
  if(d.session===previousSession&&d.roundNumber<=lastSeenRound)return;
@@ -170,6 +170,8 @@ function begin(d){
  building=d;N.mirror=copy(d.world);
  try{if(d.startType==='start')g.menu.setMode('multi');else oldGuest.call(S,{type:'v127RematchStart'})}finally{building=null}
  renderWorld();receiveActors(d.actors);
+ if(d.profile)oldGuest.call(S,d.profile);
+ S.send({type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()});
  if(d.startType==='start')oldGuest.call(S,{type:'start',names:d.names,ultimate:d.ultimate,dropRate:d.dropRate});
  S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.ensureMusic();S.chatVisibility();
 }
