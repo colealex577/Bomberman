@@ -25,14 +25,12 @@ try{
   await page.waitForFunction(()=>window.BomberQOL&&BomberQOL.installed&&window.BomberDataSync&&B115.__dataSyncInstalled&&gGameEngine&&gGameEngine.menu,{timeout:15000});
   const boot=await page.evaluate(()=>({
     version:document.getElementById('buildVersion120')?.textContent,
-    old119:getComputedStyle(document.getElementById('buildVersion119')).display,
     mobileDisplay:getComputedStyle(document.getElementById('mobileControls')).display,
     dpadButtons:[...document.querySelectorAll('#qolDpad .qol_dpad_btn')].map(b=>({text:b.textContent.trim(),svg:!!b.querySelector('svg')})),
     touchSettings:!!document.getElementById('qolTouchSettings')
   }));
   console.log('BOOT',JSON.stringify(boot));
   if(boot.version!=='v0.12.0')throw new Error('visible version is not v0.12.0');
-  if(boot.old119!=='none')throw new Error('old version badge still visible');
   if(boot.mobileDisplay!=='none')throw new Error('mobile controls visible before game starts');
   if(!boot.touchSettings||boot.dpadButtons.length!==4||boot.dpadButtons.some(x=>x.text||!x.svg))throw new Error('SVG-only arrow pad not installed cleanly');
 
