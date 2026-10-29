@@ -4,7 +4,7 @@ var S=window.B115,Q=window.BomberQOL;
 if(!S||!Q)return;
 
 var SCORE_KEY='BombermanRatingV1',WINS_KEY='BombermanPlayerWinsV1',LOSSES_KEY='BombermanPlayerLossesV1';
-var POPULATION_SIZE=600,POSITIVE_COUNT=520,LIVE_BUCKET_MS=300000,DAY_MS=86400000,CAREER_EPOCH=Date.UTC(2026,0,1);
+var POPULATION_SIZE=599,POSITIVE_COUNT=520,LIVE_BUCKET_MS=300000,DAY_MS=86400000,CAREER_EPOCH=Date.UTC(2026,0,1);
 var installed=false,seedRoster=[],roster=[],top50=[],byName={},lastBucket=-1,matchedProfile=null;
 
 var GAMER_PREFIX=['Neon','Pixel','Turbo','Ghost','Nova','Night','Vapor','Cyber','Echo','Astro','Crimson','Volt','Hyper','Rapid','Bomb','Arcade','Grid','Retro','Fuse','Shadow'];
@@ -168,7 +168,7 @@ function style(){
 function ensureLeaderboard(){
  style();var p=$('v127LeaderboardPanel');if(!p){
   p=document.createElement('div');p.id='v127LeaderboardPanel';p.hidden=true;
-  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Simulated Leaderboard</h2><p>Top 50 of a 600-player simulated population. Names, scores and records are deterministic across devices at the same time; standings move gradually as simulated players gain and lose points.</p></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div><div class="v127_lb_note">The population mixes gamer tags, ordinary male first names, and name-number handles. Your row uses your actual competitive human/fake-human record on this device.</div></div>';
+  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Simulated Leaderboard</h2><p>Top 50 of a roughly 600-player simulated population. Names, scores and records are deterministic across devices at the same time; standings move gradually as simulated players gain and lose points.</p></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div><div class="v127_lb_note">The population mixes gamer tags, ordinary male first names, and name-number handles. Your row uses your actual competitive human/fake-human record on this device.</div></div>';
   document.body.appendChild(p);p.querySelector('.v127_lb_close').onclick=function(){p.hidden=true;syncTiles()}
  }
  var tile=$('mainLeaderboardTile');if(!tile){
