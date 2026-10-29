@@ -69,7 +69,7 @@ try{
  assert.equal(await g.evaluate(()=>window.botCalls),0);assert.ok(await g.evaluate(()=>gGameEngine.bots.every(b=>b.hyperAggressive&&b.__v126Marker?.visible)));
  console.log('HOST_ONLY_AI_ATTACK_MIRROR PASS');
  // Simulated opponent identity, visual randomization and two-second rematch.
- await g.evaluate(()=>{B115.destroyNetwork();B115.started=false;B115.setRole('host');B115.startSimulated()});await sleep(700);
+ await g.evaluate(()=>{B115.destroyNetwork();B115.started=false;B115.kind='public';B115.setRole('host');B115.startSimulated()});await sleep(700);
  const sim=await g.evaluate(()=>{const p=BomberLeaderboard127.profile(B115.remoteName),b=gGameEngine.simulatedOpponent;return {p,score:b.rating,rank:b.leaderboardRank,appearance:b.characterAppearance}});
  assert.equal(sim.score,sim.p.score);assert.equal(sim.rank,sim.p.displayRank);assert.ok(sim.appearance);
  await g.evaluate(()=>{window.oldSim=gGameEngine.simulatedOpponent;BomberV127.requestRematch()});await sleep(1100);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),true);await sleep(1200);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),false);

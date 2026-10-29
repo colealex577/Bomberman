@@ -9,6 +9,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 try{
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
  await page.waitForFunction(()=>window.BomberAI126&&BomberAI126.version==='v0.12.6'&&window.Bot&&gGameEngine?.menu&&document.getElementById('buildVersion126')?.textContent==='v0.12.6',{timeout:18000});
+ await page.waitForFunction(()=>window.BomberMultiplayer?.ready&&gGameEngine.stage?.canvas,{timeout:30000});
  await page.evaluate(()=>gGameEngine.menu.setMode('single'));await sleep(350);
  let single=await page.evaluate(()=>({players:gGameEngine.players.length,bots:gGameEngine.bots.length,version:document.getElementById('buildVersion126')?.textContent}));
  assert(single.players===1&&single.bots>0,'single-player AI did not start');assert(single.version==='v0.12.6','version badge missing');

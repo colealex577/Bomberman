@@ -24,7 +24,7 @@ let oldHost,oldGuest,oldSend,baseMove,previousSession='',lastSeenRound=0;
 let budget=200,budgetTime=0, applying=false;
 const retiredSessions=new Set();
 const legacyWire=/^(dataState|dataWorld|dataBombSpawn|dataBombExplode|v125Move|v125BombRequest|v125BombAck|v125Pickup|key|bomb|streamRetry|streamAck)$/;
-const controls=/^(v127DuelResolved|v127AIBonus|v127RematchRequest|v127RematchResponse|spectate|matchEnd|qolOpponentLeft)$/;
+const controls=/^(v127DuelResolved|v127AIBonus|v127RematchRequest|v127RematchResponse|v123Profile|spectate|matchEnd|qolOpponentLeft)$/;
 function raw(d){if(S.conn&&S.conn.open)oldSend.call(S,d)}
 function send(kind,data){raw(Object.assign({type:'auth129',kind,roundId:N.roundId,roundNumber:N.roundNumber,session},data))}
 function stats(e){return {v:e.velocity,bm:e.bombsMax,bs:e.bombStrength,h:e.hearts||0,c:copy(e.bonusCounts||{})}}
@@ -96,7 +96,7 @@ function direction(){const a=gInputEngine.actions;return a.up2?'up':a.down2?'dow
 // Shared movement only. No pickup, death, bomb, AI or world updates are reachable here.
 function move(p,dir,dt){
  if(!p||!p.alive)return;
- const v=p.velocity*Math.min(dt,34)/(1000/60),dx=dir==='left'?-1:dir==='right'?1:0,dy=dir==='up'?-1:dir==='down'?1:0;
+ const v=p.velocity*Math.min(dt,34)/(1000/G().fps),dx=dir==='left'?-1:dir==='right'?1:0,dy=dir==='up'?-1:dir==='down'?1:0;
  animate(p,dir);if(!dx&&!dy)return;
  // Substeps prevent high-speed pickups from tunnelling through a wall or bomb.
  const steps=Math.max(1,Math.ceil(v/2));
@@ -182,7 +182,7 @@ function receive(d,isHost){
    const c=d.cmd;if(!c||c.player!==1||!Number.isSafeInteger(c.seq)||c.seq<=lastQueued||!Number.isFinite(c.dt)||c.dt<0||c.dt>34||!['up','down','left','right','idle'].includes(c.dir)||commands.length>=180)return true;
    lastQueued=c.seq;commands.push(c);
   }else if(d.kind==='recover')recovery();
-  else if(d.kind==='control'&&d.q>lastControl&&/^(v127RematchRequest|v127RematchResponse|qolOpponentLeft)$/.test(d.packet.type)){lastControl=d.q;oldHost.call(S,d.packet)}
+  else if(d.kind==='control'&&d.q>lastControl&&/^(v127RematchRequest|v127RematchResponse|v123Profile|qolOpponentLeft)$/.test(d.packet.type)){lastControl=d.q;oldHost.call(S,d.packet)}
   return true;
  }
  if(d.kind==='actors')receiveActors(d);
@@ -233,6 +233,8 @@ function install(){
  for(const type of ['keydown','keyup'])window.addEventListener(type,e=>{if(!guest()||!keys[e.code]||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.target.isContentEditable)return;S.remoteAction(keys[e.code],type==='keydown');e.preventDefault();e.stopPropagation()},true);
  BomberOnline.sendTouchAction=function(a,down){if(guest())S.remoteAction({up:'up2',down:'down2',left:'left2',right:'right2',bomb:'bomb2'}[a]||a,down)};
  BomberOnline.isDataMatch=()=>DS.active;BomberOnline.broadcastBomb=function(){};
+ const badge=document.createElement('div');badge.id='buildVersion129';badge.textContent=N.version;badge.setAttribute('aria-label','Game version');badge.style.cssText='position:fixed;top:5px;left:6px;z-index:2147483647;background:#21111a;color:white;padding:2px 5px;font:bold 9px Arial;pointer-events:none';document.body.appendChild(badge);
+ const style=document.createElement('style');style.textContent='#buildVersion127{display:none!important}';document.head.appendChild(style);
  BomberV125.netInstalled=true;N.ready=true;
  N.inspect=()=>({roundId:N.roundId,worldRevision:N.worldRevision,world:world(),checksum:checksum(world())});
  N.recovery=recovery;N.publish=publish;
