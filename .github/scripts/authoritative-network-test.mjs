@@ -82,5 +82,6 @@ try{
  await g.evaluate(()=>gGameEngine.simulatedOpponent.die());await sleep(350);
  const rankedAfter=await g.evaluate(()=>({p:BomberLeaderboard127.profile(B115.remoteName),score:gGameEngine.simulatedOpponent.rating}));
  assert.equal(rankedAfter.p.score,Math.max(0,rankedBefore.score-10));assert.equal(rankedAfter.score,rankedAfter.p.score);assert.equal(rankedAfter.p.losses,rankedBefore.losses+1);
+ const floor=await g.evaluate(()=>{const p=BomberLeaderboard127.population().find(p=>p.score===0);BomberLeaderboard127.recordResult(p.name,-10);return BomberLeaderboard127.recordResult(p.name,10).score});assert.equal(floor,10,'zero score accumulated hidden loss debt');
  assert.deepEqual(errors,[]);console.log('AUTHORITATIVE_NETWORK_TEST PASS');
 }finally{await Promise.all(clients.map(c=>c.close()));await browser.close()}
