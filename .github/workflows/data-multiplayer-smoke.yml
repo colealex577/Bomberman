@@ -11,13 +11,15 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check data sync
         run: |
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0120-data.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
+      - name: Install browser test helper
+        run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
         run: |
           python3 -m http.server 8080 --bind 127.0.0.1 >/tmp/bm-http.log 2>&1 &
@@ -33,4 +35,5 @@ jobs:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$CHROME_PATH" --version
           node .github/scripts/data-smoke.mjs
