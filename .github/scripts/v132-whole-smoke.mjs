@@ -1,0 +1,38 @@
+import puppeteer from 'puppeteer-core';
+import assert from 'node:assert/strict';
+const base=process.env.TEST_URL,exe=process.env.CHROME_PATH;if(!base||!exe)throw Error('TEST_URL/CHROME_PATH missing');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
+const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];
+p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text()))errors.push(m.text())});
+await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','WholeTest');localStorage.setItem('BombermanRatingV1','120');localStorage.setItem('BombermanScoreV1Initialized','1');localStorage.setItem('BombermanBestOfV130','5');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
+try{
+ await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
+ await p.waitForFunction(()=>window.BomberWhole132?.version==='v0.13.2'&&window.BomberPolish131&&window.BomberSocial130&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
+ const profile=await p.evaluate(()=>{const a=BomberWhole132.personality('Nathan',850),b=BomberWhole132.personality('Nathan',850),lo=BomberWhole132.personality('Nathan',150),hi=BomberWhole132.personality('Nathan',950),styles=['Nathan','Carter695','NeonFox','mike22','BlastWolf','Jordan'].map(n=>BomberWhole132.personality(n,600).style);return{a,b,lo,hi,styles}});
+ assert.deepEqual(profile.a,profile.b,'same opponent did not keep a deterministic personality');
+ assert.ok(profile.hi.prediction>profile.lo.prediction,'higher score did not improve prediction');
+ assert.ok(profile.hi.mistake<profile.lo.mistake,'higher score did not reduce mistakes');
+ assert.ok(new Set(profile.styles).size>=3,'opponent population lacks style variety');
+ const pools=await p.evaluate(()=>({start:B115.SIM_START.slice(),death:B115.SIM_DEATH.slice(),kill:B115.SIM_KILL.slice()}));
+ assert.ok(pools.start.length>=45&&pools.death.length>=50&&pools.kill.length>=50,'social message pools were not expanded');
+ for(const x of [...pools.start,...pools.death,...pools.kill])assert.equal(x,x.toLowerCase(),'non-lowercase public-player message: '+x);
+ const phases=await p.evaluate(()=>({mp:BomberWhole132.phaseFor({bestOf:5,localWins:2,opponentWins:1,complete:false}),final:BomberWhole132.phaseFor({bestOf:5,localWins:2,opponentWins:2,complete:false}),opp:BomberWhole132.phaseFor({bestOf:3,localWins:0,opponentWins:1,complete:false}),won:BomberWhole132.phaseFor({bestOf:3,localWins:2,opponentWins:1,complete:true})}));
+ assert.deepEqual(phases,{mp:'match point',final:'final round',opp:'opponent match point',won:'set won'});
+ await p.evaluate(()=>{BomberPolish131.debug.forceTarget(900);B115.kind='public';B115.setRole('host');B115.startSimulated()});
+ await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent&&gGameEngine.simulatedOpponent.__v132Personality,{timeout:10000});await sleep(400);
+ const live1=await p.evaluate(()=>{const b=gGameEngine.simulatedOpponent,p=BomberLeaderboard127.profile(B115.remoteName);BomberWhole132.applyPersonality(b);b.updateEndgameAggression();return{name:B115.remoteName,score:b.rating,rank:b.leaderboardRank,style:b.__v132Personality.style,pred:b.__v132Personality.prediction,mistake:b.__v132Personality.mistake,weight:b.attackWeight,threshold:b.__v132AggroThreshold,profileScore:p&&p.score}});
+ assert.equal(live1.score,live1.profileScore);assert.ok(live1.rank>0);assert.ok(live1.threshold>=5&&live1.threshold<=52);assert.ok(live1.pred>.55);
+ await sleep(650);const live2=await p.evaluate(()=>{const b=gGameEngine.simulatedOpponent;return{weight:b.attackWeight,style:b.__v132Personality&&b.__v132Personality.style}});
+ assert.equal(live2.style,live1.style);assert.ok(Math.abs(live2.weight-live1.weight)<1e-9,'personality weights drifted over time');
+ const lane=await p.evaluate(()=>{const b=gGameEngine.simulatedOpponent,t=gGameEngine.players[0];b.hyperAggressive=true;let path=null;for(let i=0;i<10&&!path;i++)path=BomberWhole132.debug.smartLane(b,t);return path&&path.map(q=>({x:q.x,y:q.y}))});
+ if(lane)assert.ok(lane.length>=1,'smart trap lane returned an invalid path');
+ await p.waitForFunction(()=>{const x=document.getElementById('v132MatchSummary');return x&&getComputedStyle(x).display!=='none'&&/best of 5/i.test(x.textContent)},{timeout:4000});
+ await p.evaluate(()=>BomberSocial130.debug.setRival(3,2));await sleep(300);
+ const hud=await p.evaluate(()=>({text:document.getElementById('v132MatchSummary').textContent,old:getComputedStyle(document.getElementById('v130SetHud')).display}));
+ assert.match(hud.text,/best of 5/i);assert.match(hud.text,/rivalry 3–2/i);assert.equal(hud.old,'none');
+ await p.evaluate(()=>{BomberWhole132.debug.forceMessage('death');BomberWhole132.debug.forceMessage('death')});await sleep(1100);
+ const recent=await p.evaluate(()=>BomberWhole132.debug.recent());assert.ok(recent.length>=2,'forced casual messages did not run');assert.equal(new Set(recent.slice(-2)).size,2,'opponent repeated the same recent message');
+ if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+ console.log('V132_WHOLE_SMOKE PASS',JSON.stringify({live:live1,hud,lane:lane&&lane.length,recent:recent.slice(-3)}));
+}finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
