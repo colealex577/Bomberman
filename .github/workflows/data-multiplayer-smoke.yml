@@ -1,7 +1,7 @@
 name: Data multiplayer branch smoke
 on:
   push:
-    branches: [authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131]
+    branches: [authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132]
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        test: [data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke]
+        test: [data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke, v132-whole-smoke]
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
