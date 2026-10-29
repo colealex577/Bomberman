@@ -41,10 +41,10 @@ function profile(name){try{return window.BomberLeaderboard127&&BomberLeaderboard
 function skillFor(score){try{return window.BomberCharacter&&BomberCharacter.skillFromRating?BomberCharacter.skillFromRating(score):Math.max(.08,Math.min(1,(Number(score)-350)/650))}catch(e){return .5}}
 function applyOpponent(name,p){
  var g=G();name=clean(name);p=p||profile(name);if(!g||!name)return false;
- var rating=p?Number(p.score)||0:Number(g.simulatedRating||S.simulatedRating||500),a=appearanceFor(name);
+ var rating=p?Number(p.score)||0:Number(g.simulatedRating||S.simulatedRating||500),a=appearanceFor(name),token=name+'|'+rating+'|'+a.gender+'|'+a.skin+'|'+(a.glasses?1:0)+'|'+a.hat+'|'+a.shoes;
  S.remoteName=name;S.simulatedRating=rating;g.simulatedRating=rating;g.simulatedAppearance=a;
  function sync(){var gg=G(),sim=gg&&gg.simulatedOpponent;if(!sim)return;sim.displayName=name;if(sim.nameLabel)sim.nameLabel.text=name;sim.rating=rating;sim.humanRating=rating;sim.humanSkill=skillFor(rating);if(p)sim.leaderboardRank=p.displayRank||p.rank}
- [0,40,140,420,900].forEach(function(ms){setTimeout(sync,ms)});return true
+ if(g.__v136OpponentToken!==token){g.__v136OpponentToken=token;[0,40,140,420,900].forEach(function(ms){setTimeout(sync,ms)})}else sync();return true
 }
 function patchSimulated(){
  if(S.__v136Simulated)return false;S.__v136Simulated=true;var old=S.startSimulated;
