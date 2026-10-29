@@ -17,10 +17,9 @@ function visitCount(bot,p){var h=bot&&bot.__v135RecentPositions||[],k=key(p),n=0
 function rawSet(bot,p){var fn=bot&&bot.__v134OldSetNextTile;if(typeof fn!=='function')return false;var from=key(bot.position),r=fn.call(bot,p),to=key(bot.targetPosition);bot.__v135LastTransition={from:from,to:to};bot.__v135ReverseStreak=0;bot.__v136PassThroughs=(bot.__v136PassThroughs||0)+1;return r===undefined?true:r}
 function loopPassThrough(bot){
  if(!bot||bot.alive===false||bot.escapeMode||!bot.isSafe(bot.position)||!recentLoop(bot))return false;
- var dirs=[[1,0],[-1,0],[0,1],[0,-1]],occupied=[],all=[];
- for(var i=0;i<dirs.length;i++){var p={x:bot.position.x+dirs[i][0],y:bot.position.y+dirs[i][1]};if(!safeGrass(bot,p))continue;all.push(p);if(occupant(bot,p,true))occupied.push(p)}
- var pool=occupied.length?occupied:[];if(!pool.length)return false;
- pool.sort(function(a,b){return visitCount(bot,a)-visitCount(bot,b)});bot.__v136LoopPasses=(bot.__v136LoopPasses||0)+1;rawSet(bot,pool[0]);return true
+ var dirs=[[1,0],[-1,0],[0,1],[0,-1]],occupied=[];
+ for(var i=0;i<dirs.length;i++){var p={x:bot.position.x+dirs[i][0],y:bot.position.y+dirs[i][1]};if(!safeGrass(bot,p))continue;if(occupant(bot,p,true))occupied.push(p)}
+ if(!occupied.length)return false;occupied.sort(function(a,b){return visitCount(bot,a)-visitCount(bot,b)});bot.__v136LoopPasses=(bot.__v136LoopPasses||0)+1;rawSet(bot,occupied[0]);return true
 }
 function patchAI(){
  if(!window.Bot||Bot.prototype.__v136PassThrough)return false;Bot.prototype.__v136PassThrough=true;
@@ -70,8 +69,12 @@ function ensureStyle(){
 @media(max-width:560px){#v127LeaderboardPanel .v127_lb_columns,#v127LeaderboardPanel .v127_lb_row{grid-template-columns:28px minmax(74px,1fr) 45px 54px 58px 62px!important}.v136_challenge_btn{font-size:7px;padding:4px 3px}}';document.head.appendChild(st)
 }
 function rowName(row){var n=row&&row.querySelector('.name');if(!n)return'';return clean(String(n.textContent||'').replace(/\s*\(You\)\s*$/i,''))}
+function humanizeLabels(){
+ var panel=document.getElementById('v127LeaderboardPanel');if(panel){var h=panel.querySelector('.v127_lb_head h2'),p=panel.querySelector('.v127_lb_head p'),n=panel.querySelector('.v127_lb_note');if(h)h.textContent='Leaderboard';if(p)p.textContent='Top 50 of a roughly 600-player population. Scores and records move gradually as players gain and lose points.';if(n)n.textContent='Challenge any listed player. Availability changes over time, and accepted challenges use that player’s rating and difficulty.'}
+ var m=S.els&&S.els.matchStatus;if(m&&/^SIMULATED\s*•/i.test(m.textContent||''))m.textContent=(m.textContent||'').replace(/^SIMULATED\s*•/i,'ONLINE •');
+}
 function decorateLeaderboard(){
- var panel=document.getElementById('v127LeaderboardPanel');if(!panel)return false;ensureStyle();
+ var panel=document.getElementById('v127LeaderboardPanel');if(!panel)return false;ensureStyle();humanizeLabels();
  var cols=panel.querySelector('.v127_lb_columns');if(cols&&!cols.querySelector('.v136_challenge_col')){var c=document.createElement('span');c.className='v136_challenge_col';c.textContent='Challenge';cols.appendChild(c)}
  var rows=panel.querySelectorAll('.v127_lb_row');for(var i=0;i<rows.length;i++){
   var row=rows[i];if(row.querySelector('.v136_challenge_btn,.v136_challenge_self'))continue;
@@ -79,13 +82,14 @@ function decorateLeaderboard(){
   var name=rowName(row);if(!name)continue;var b=document.createElement('button');b.type='button';b.className='v136_challenge_btn';b.textContent='Challenge';b.setAttribute('data-player',name);b.title='Challenge '+name+' if they are online and accept';b.onclick=function(ev){ev.preventDefault();ev.stopPropagation();startChallenge(this.getAttribute('data-player'),false)};row.appendChild(b)
  }return true
 }
+function watchMatchStatus(){var m=S.els&&S.els.matchStatus;if(!m||m.__v136Observed)return;m.__v136Observed=true;new MutationObserver(function(){humanizeLabels()}).observe(m,{childList:true,characterData:true,subtree:true})}
 function badge(){var b=document.getElementById('buildVersion136');if(!b){b=document.createElement('div');b.id='buildVersion136';document.body.appendChild(b)}b.textContent=VERSION}
 function install(){
  if(installed)return true;if(!window.Bot||!window.BomberPolish135||!window.BomberLeaderboard127||!window.BomberCharacter||!G()||!S.startSimulated)return false;
- patchAI();patchSimulated();ensureStyle();decorateLeaderboard();badge();installed=true;
+ patchAI();patchSimulated();ensureStyle();decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();installed=true;
  window.BomberChallenge136={version:VERSION,availability:availability,appearanceFor:appearanceFor,challenge:startChallenge,active:function(){return activeChallenge},applyOpponent:applyOpponent};
  if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberChallenge136.debug={occupant:occupant,safeGrass:safeGrass,recentLoop:recentLoop,loopPassThrough:loopPassThrough,forceChallenge:function(name){return startChallenge(name,true)},setPending:function(name){var p=profile(name);pendingChallenge=p?{name:name,profile:p,appearance:appearanceFor(name)}:null;return pendingChallenge},femaleRate:function(names){var f=0;for(var i=0;i<names.length;i++)if(appearanceFor(names[i]).gender==='female')f++;return names.length?f/names.length:0}};
  return true
 }
-var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(!installed)return;decorateLeaderboard();badge();if(S.role==='simulated'&&S.remoteName)applyOpponent(S.remoteName,profile(S.remoteName))},180);window.addEventListener('resize',decorateLeaderboard,{passive:true});
+var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(!installed)return;decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();if(S.role==='simulated'&&S.remoteName)applyOpponent(S.remoteName,profile(S.remoteName))},180);window.addEventListener('resize',decorateLeaderboard,{passive:true});
 })();
