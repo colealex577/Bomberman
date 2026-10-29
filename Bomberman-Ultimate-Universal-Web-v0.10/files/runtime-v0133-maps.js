@@ -27,6 +27,7 @@ function getSelection(ctx){return ctx==='multi'?read(MULTI_KEY):read(SINGLE_KEY)
 function setSelection(ctx,v,remote){v=write(ctx==='multi'?MULTI_KEY:SINGLE_KEY,v);if(ctx==='multi'&&!remote){remoteSelection=null;remoteActive=null;if(S&&S.role==='host'&&S.conn&&S.conn.open)try{S.send({type:'v133Map',selection:v,active:null})}catch(e){}}syncUI();return v}
 function mapInfo(id){for(var i=0;i<MAPS.length;i++)if(MAPS[i].id===id)return MAPS[i];return MAPS[0]}
 function mapLabel(id){return id==='shuffle'?'Random Shuffle':mapInfo(id).label}
+function syncUI(){try{syncMainTile()}catch(e){}try{syncMultiUI()}catch(e){}}
 function safeCorner(x,y,g){return(y<=2&&x<=2)||(y>=g.tilesY-3&&x>=g.tilesX-3)||(y<=2&&x>=g.tilesX-3)||(y>=g.tilesY-3&&x<=2)}
 function border(x,y,g){return x===0||y===0||x===g.tilesX-1||y===g.tilesY-1}
 function material(id,x,y,g){
