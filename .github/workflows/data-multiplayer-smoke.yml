@@ -2,7 +2,7 @@ name: Data multiplayer branch smoke
 
 on:
   push:
-    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123]
+    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124]
   workflow_dispatch:
 
 permissions:
@@ -22,6 +22,7 @@ jobs:
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js; fi
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js; fi
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js; fi
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0124.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0124.js; fi
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
@@ -30,6 +31,7 @@ jobs:
           node --check .github/scripts/hud-flow-smoke.mjs
           if [ -f .github/scripts/character-rating-smoke.mjs ]; then node --check .github/scripts/character-rating-smoke.mjs; fi
           if [ -f .github/scripts/profile-sync-smoke.mjs ]; then node --check .github/scripts/profile-sync-smoke.mjs; fi
+          if [ -f .github/scripts/v124-multiplayer-smoke.mjs ]; then node --check .github/scripts/v124-multiplayer-smoke.mjs; fi
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -87,3 +89,10 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 120s node .github/scripts/qol-rematch-test.mjs
+      - name: v0.12.4 multiplayer regression
+        if: ${{ hashFiles('.github/scripts/v124-multiplayer-smoke.mjs') != '' }}
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 180s node .github/scripts/v124-multiplayer-smoke.mjs
