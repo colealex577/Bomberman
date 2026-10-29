@@ -12,7 +12,7 @@ try{
  const layouts=await p.evaluate(()=>{
   const api=BomberMaps133,W=17,H=13,spawns=[[1,1],[15,1],[1,11],[15,11]],out=[];
   function connected(id){const open=new Set();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(api.material(id,x,y)!=='wall')open.add(x+','+y);const q=[spawns[0]],seen=new Set([spawns[0].join(',')]);while(q.length){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const k=(x+dx)+','+(y+dy);if(open.has(k)&&!seen.has(k)){seen.add(k);q.push([x+dx,y+dy])}}}return spawns.every(s=>seen.has(s.join(',')))&&seen.size===open.size}
-  for(const m of api.maps){let wall=0,wood=0,grass=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=api.material(m.id,x,y);if(v==='wall')wall++;else if(v==='wood')wood++;else grass++}out.push({id:m.id,sig:api.signature(m.id),wall,wood,grass,connected:connected(m.id),spawn:spawns.map(([x,y])=>api.material(m.id,x,y))})}return out
+  for(const m of api.maps){let wall=0,wood=0,grass=0,sig='';for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=api.material(m.id,x,y);sig+=v==='wall'?'#':v==='wood'?'w':'.';if(v==='wall')wall++;else if(v==='wood')wood++;else grass++}out.push({id:m.id,sig,wall,wood,grass,connected:connected(m.id),spawn:spawns.map(([x,y])=>api.material(m.id,x,y))})}return out
  });
  assert.equal(layouts.length,12);assert.equal(new Set(layouts.map(x=>x.sig)).size,12,'map layouts are not distinct');
  for(const x of layouts){assert.equal(x.connected,true,x.id+' has disconnected hard-wall regions');assert.deepEqual(x.spawn,['grass','grass','grass','grass'],x.id+' has blocked spawn');assert.ok(x.wood>=50,x.id+' has too little destructible cover: '+x.wood)}
