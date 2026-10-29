@@ -1,7 +1,8 @@
 (function(){
 'use strict';
-var S=window.B115,installed=false;
+var S=window.B115,installed=false,observer=null,cleaning=false;
 if(!S)return;
+function sanitizeNow(){if(cleaning||!window.BomberSocial130)return;cleaning=true;try{BomberSocial130.sanitize()}finally{cleaning=false}}
 function install(){
  if(installed||!window.BomberSocial130||!window.BomberMultiplayer||!BomberMultiplayer.ready)return false;
  installed=true;
@@ -13,6 +14,8 @@ function install(){
   }
   return guest.apply(S,[d]);
  };
+ sanitizeNow();
+ if(window.MutationObserver&&document.body){observer=new MutationObserver(function(){sanitizeNow()});observer.observe(document.body,{subtree:true,childList:true,characterData:true})}
  return true;
 }
 var n=0,t=setInterval(function(){if(install()||++n>500)clearInterval(t)},40);
