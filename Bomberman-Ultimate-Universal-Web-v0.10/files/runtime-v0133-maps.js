@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var VERSION='v0.13.3',S=window.B115,installed=false,wireInstalled=false,bypass=false;
+var VERSION='v0.13.3',S=window.B115,installed=false,wireInstalled=false;
 var SINGLE_KEY='BombermanSingleMapV133',MULTI_KEY='BombermanMultiMapV133';
 var activeMap='classic',remoteActive=null,remoteSelection=null,lastShuffle={single:null,multi:null};
 var MAPS=[
@@ -24,7 +24,7 @@ function valid(v){return CHOICES.indexOf(String(v||''))>=0?String(v):'classic'}
 function read(key){try{return valid(localStorage.getItem(key)||'classic')}catch(e){return'classic'}}
 function write(key,v){v=valid(v);try{localStorage.setItem(key,v)}catch(e){}return v}
 function getSelection(ctx){return ctx==='multi'?read(MULTI_KEY):read(SINGLE_KEY)}
-function setSelection(ctx,v,remote){v=write(ctx==='multi'?MULTI_KEY:SINGLE_KEY,v);if(ctx==='multi'&&!remote){remoteSelection=null;if(S&&S.role==='host'&&S.conn&&S.conn.open)try{S.send({type:'v133Map',selection:v,active:null})}catch(e){}}syncUI();return v}
+function setSelection(ctx,v,remote){v=write(ctx==='multi'?MULTI_KEY:SINGLE_KEY,v);if(ctx==='multi'&&!remote){remoteSelection=null;remoteActive=null;if(S&&S.role==='host'&&S.conn&&S.conn.open)try{S.send({type:'v133Map',selection:v,active:null})}catch(e){}}syncUI();return v}
 function mapInfo(id){for(var i=0;i<MAPS.length;i++)if(MAPS[i].id===id)return MAPS[i];return MAPS[0]}
 function mapLabel(id){return id==='shuffle'?'Random Shuffle':mapInfo(id).label}
 function safeCorner(x,y,g){return(y<=2&&x<=2)||(y>=g.tilesY-3&&x>=g.tilesX-3)||(y<=2&&x>=g.tilesX-3)||(y>=g.tilesY-3&&x<=2)}
@@ -71,7 +71,7 @@ function context(){var g=G();if(!g||!g.playersCount)return'menu';if(S&&(S.role==
 function chooseShuffle(ctx){var pool=IDS.filter(function(id){return id!==lastShuffle[ctx]});var id=pool[Math.floor(Math.random()*pool.length)]||'classic';lastShuffle[ctx]=id;return id}
 function chooseRoundMap(ctx){
  if(ctx==='menu')return'classic';if(ctx==='multi'&&S&&S.role==='guest'&&remoteActive&&IDS.indexOf(remoteActive)>=0){activeMap=remoteActive;return activeMap}
- var sel=ctx==='multi'?(remoteSelection||getSelection('multi')):getSelection('single');activeMap=sel==='shuffle'?chooseShuffle(ctx):sel;return activeMap
+ var sel=ctx==='multi'?((S&&S.role==='guest'&&remoteSelection)||getSelection('multi')):getSelection('single');activeMap=sel==='shuffle'?chooseShuffle(ctx):sel;return activeMap
 }
 function drawCustom(g,id){
  for(var y=0;y<g.tilesY;y++)for(var x=0;x<g.tilesX;x++){
@@ -106,9 +106,9 @@ function syncVersion(){var v=$('buildVersion133');if(!v){v=document.createElemen
 function patchWire(){
  if(wireInstalled||!S||!S.send||!S.guestData)return false;wireInstalled=true;var oldSend=S.send,oldGuest=S.guestData;
  S.send=function(d){if(d&&S.role==='host'&&(d.type==='start'||d.type==='v127RematchStart')){try{oldSend.call(S,{type:'v133Map',selection:getSelection('multi'),active:(G()&&G().__v133Map)||activeMap})}catch(e){}}return oldSend.apply(S,arguments)};
- S.guestData=function(d){if(d&&d.type==='v133Map'){remoteSelection=valid(d.selection||'classic');if(d.active&&IDS.indexOf(d.active)>=0)remoteActive=d.active;write(MULTI_KEY,remoteSelection);syncMultiUI();return}return oldGuest.apply(S,arguments)};return true
+ S.guestData=function(d){if(d&&d.type==='v133Map'){remoteSelection=valid(d.selection||'classic');remoteActive=d.active&&IDS.indexOf(d.active)>=0?d.active:null;syncMultiUI();return}return oldGuest.apply(S,arguments)};return true
 }
-function signature(id){var g=G()||{tilesX:17,tilesY:13},s='';for(var y=0;y<g.tilesY;y++)for(var x=0;x<g.tilesX;x++)s+=material(id,x,y,g).charAt(0);return s}
+function signature(id){var g=G()||{tilesX:17,tilesY:13},s='';for(var y=0;y<g.tilesY;y++)for(var x=0;x<g.tilesX;x++){var m=material(id,x,y,g);s+=m==='wall'?'#':(m==='wood'?'w':'.')}return s}
 function install(){if(installed)return true;if(!window.GameEngine||!window.Tile||!G()||!window.Menu)return false;ensureStyle();ensureSingleUI();ensureMultiUI();if(!patchTiles())return false;patchWire();installed=true;syncVersion();window.BomberMaps133={version:VERSION,maps:MAPS.slice(),choices:CHOICES.slice(),getSelection:getSelection,setSelection:setSelection,active:function(){return(G()&&G().__v133Map)||activeMap},material:function(id,x,y){return material(id,x,y,G()||{tilesX:17,tilesY:13})},signature:signature,mapLabel:mapLabel,openSinglePanel:openSinglePanel,closeSinglePanel:closeSinglePanel};if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberMaps133.debug={pickShuffle:function(ctx){return chooseShuffle(ctx==='multi'?'multi':'single')},setRemote:function(selection,active){remoteSelection=valid(selection);remoteActive=IDS.indexOf(active)>=0?active:null;syncMultiUI()}};return true}
 ensureStyle();var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(installed){syncVersion();ensureSingleUI();ensureMultiUI();syncMainTile();syncMultiUI();patchWire()}},160);window.addEventListener('resize',syncMainTile,{passive:true});
 })();
