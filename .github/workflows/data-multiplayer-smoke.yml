@@ -21,6 +21,7 @@ jobs:
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol-fix.js
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js; fi
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js; fi
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js; fi
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
