@@ -48,12 +48,12 @@ function applyOpponent(name,p){
 }
 function patchSimulated(){
  if(S.__v136Simulated)return false;S.__v136Simulated=true;var old=S.startSimulated;
- S.startSimulated=function(){var ch=pendingChallenge,r=old.apply(S,arguments),name=ch?ch.name:S.remoteName,p=ch?ch.profile:profile(name);if(ch){activeChallenge=ch;pendingChallenge=null}applyOpponent(name,p);return r};return true
+ S.startSimulated=function(){var ch=pendingChallenge,r=old.apply(S,arguments),name=ch?ch.name:S.remoteName,p=ch?ch.profile:profile(name);if(ch&&S.role==='simulated'){activeChallenge=ch;pendingChallenge=null}applyOpponent(name,p);return r};return true
 }
 function availability(name,now){var bucket=Math.floor(Number(now||Date.now())/300000);return(hash('v136|online|'+clean(name)+'|'+bucket)%100)<30}
 function ensureToast(){var t=document.getElementById('v136ChallengeToast');if(t)return t;t=document.createElement('div');t.id='v136ChallengeToast';t.hidden=true;t.style.cssText='position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:12000;padding:10px 14px;border-radius:10px;background:rgba(18,14,18,.94);border:1px solid rgba(255,255,255,.2);color:#fff;font:700 12px/1.3 Arial,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.45);pointer-events:none';document.body.appendChild(t);return t}
 var toastTimer=null;function toast(msg){var t=ensureToast();t.textContent=msg;t.hidden=false;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
-function launchChallenge(){if(!pendingChallenge||typeof S.startSimulated!=='function')return false;if(S.role!=='host'&&S.role!=='guest'&&typeof S.setRole==='function')S.setRole('host');S.startSimulated();return S.role==='simulated'}
+function launchChallenge(){if(!pendingChallenge||typeof S.startSimulated!=='function')return false;S.kind='public';if(S.role!=='host'&&S.role!=='guest'&&typeof S.setRole==='function')S.setRole('host');S.startSimulated();return S.role==='simulated'}
 function startChallenge(name,force){
  name=clean(name);var p=profile(name);if(!p)return false;
  if(!force&&!availability(name)){toast(name+' is offline or declined the challenge.');return false}
@@ -72,7 +72,7 @@ function ensureStyle(){
 function rowName(row){var n=row&&row.querySelector('.name');if(!n)return'';return clean(String(n.textContent||'').replace(/\s*\(You\)\s*$/i,''))}
 function humanizeLabels(){
  var panel=document.getElementById('v127LeaderboardPanel');if(panel){var h=panel.querySelector('.v127_lb_head h2'),p=panel.querySelector('.v127_lb_head p'),n=panel.querySelector('.v127_lb_note');if(h)h.textContent='Leaderboard';if(p)p.textContent='Top 50 of a roughly 600-player population. Scores and records move gradually as players gain and lose points.';if(n)n.textContent='Challenge any listed player. Availability changes over time, and accepted challenges use that player’s rating and difficulty.'}
- var m=S.els&&S.els.matchStatus;if(m&&/^SIMULATED\s*•/i.test(m.textContent||''))m.textContent=(m.textContent||'').replace(/^SIMULATED\s*•/i,'ONLINE •');
+ var m=S.els&&S.els.matchStatus;if(m&&/SIMULATED/i.test(m.textContent||'')){m.textContent=(m.textContent||'').replace(/^PUBLIC\s*•\s*SIMULATED\s*•/i,'ONLINE •').replace(/^SIMULATED\s*•/i,'ONLINE •').replace(/\s*•\s*SIMULATED\s*•/ig,' • ')}
 }
 function decorateLeaderboard(){
  var panel=document.getElementById('v127LeaderboardPanel');if(!panel)return false;ensureStyle();humanizeLabels();
