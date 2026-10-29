@@ -45,7 +45,7 @@ try{
  await wait(()=>p.evaluate(name=>B115.role==='simulated'&&B115.remoteName===name&&!!gGameEngine.simulatedOpponent,target.name),'challenge match did not start',10000);
  await sleep(700);
  const match=await p.evaluate(()=>({name:B115.remoteName,rating:gGameEngine.simulatedOpponent.rating,skill:gGameEngine.simulatedOpponent.humanSkill,appearance:gGameEngine.simulatedAppearance,status:B115.els?.matchStatus?.textContent||''}));
- assert.equal(match.name,target.name);assert.equal(match.rating,target.score);assert.ok(Math.abs(match.skill-target.skill)<1e-9);assert.deepEqual(match.appearance,target.appearance);assert.ok(!/^SIMULATED\s*•/i.test(match.status),match.status);
+ assert.equal(match.name,target.name);assert.equal(match.rating,target.score);assert.ok(Math.abs(match.skill-target.skill)<1e-9);assert.deepEqual(match.appearance,target.appearance);assert.ok(!/simulat/i.test(match.status),match.status);
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V136_CHALLENGE_SMOKE PASS',JSON.stringify({board,distribution,pass,target,match}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
