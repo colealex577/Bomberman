@@ -232,6 +232,7 @@ GameEngine = Class.extend({
     },
 
     update: function() {
+        if (window.BomberMultiplayer && BomberMultiplayer.frame()) return;
         if (gGameEngine.lobbyOpen) {
             gGameEngine.menu.update();
             gGameEngine.stage.update();
@@ -260,6 +261,8 @@ GameEngine = Class.extend({
             var bomb = gGameEngine.bombs[i];
             bomb.update();
         }
+
+        if (window.BomberMultiplayer) BomberMultiplayer.afterFrame();
 
         // Menu
         gGameEngine.menu.update();

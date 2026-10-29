@@ -5,7 +5,7 @@ if(!S||!Q)return;
 
 var SCORE_KEY='BombermanRatingV1',WINS_KEY='BombermanPlayerWinsV1',LOSSES_KEY='BombermanPlayerLossesV1';
 var POPULATION_SIZE=599,POSITIVE_COUNT=520,LIVE_BUCKET_MS=300000,DAY_MS=86400000,CAREER_EPOCH=Date.UTC(2026,0,1);
-var installed=false,seedRoster=[],roster=[],top50=[],byName={},lastBucket=-1,matchedProfile=null;
+var lastPlayerScore=-1,installed=false,seedRoster=[],roster=[],top50=[],byName={},lastBucket=-1,matchedProfile=null;
 
 var GAMER_PREFIX=['Neon','Pixel','Turbo','Ghost','Nova','Night','Vapor','Cyber','Echo','Astro','Crimson','Volt','Hyper','Rapid','Bomb','Arcade','Grid','Retro','Fuse','Shadow'];
 var GAMER_SUFFIX=['Fox','Pilot','Rider','Wolf','Ace','Viper','Byte','Rush','Runner','Knight','Hawk','Bolt','Rex','Drift','Blaze','Storm','Ninja','Phantom','Rocket','Zero'];
@@ -69,7 +69,7 @@ function profileAt(seed,now){
   var live=(hash('BM128|live|'+seed.name+'|'+b)%7)-3;
   var daily=(hash('BM128|day|'+seed.name+'|'+day)%9)-4;
   var volatility=base>=800?0.55:(base>=300?1:1.25);
-  sc=clamp(base+Math.round((live+daily)*volatility));
+  sc=Math.min(999,clamp(base+Math.round((live+daily)*volatility)));
   if(seed.baseRank<=POSITIVE_COUNT&&sc===0)sc=1
  }
  var baseGames=80+(h%721);
@@ -78,7 +78,7 @@ function profileAt(seed,now){
  var games=baseGames+added,wins=Math.max(1,Math.min(games-1,Math.round(games*baseRate))),losses=Math.max(1,games-wins);
  return{name:seed.name,category:seed.category,score:sc,wins:wins,losses:losses,rate:wins/(wins+losses),baseRank:seed.baseRank,baseScore:seed.baseScore}
 }
-function sortProfiles(a,b){return b.score-a.score||b.rate-a.rate||tieKey(a.name)-tieKey(b.name)||a.name.localeCompare(b.name)}
+function sortProfiles(a,b){return b.score-a.score||tieKey(a.name)-tieKey(b.name)||a.name.localeCompare(b.name)}
 function refreshRoster(now,force){
  buildSeedRoster();var b=bucketFor(now);if(!force&&roster.length&&b===lastBucket)return false;lastBucket=b;
  roster=seedRoster.map(function(seed){return profileAt(seed,now)});roster.sort(sortProfiles);byName={};
@@ -107,8 +107,7 @@ function fakeDisplayRank(name){
 function profile(name){refreshRoster();var p=byName[name];if(!p)return null;var c=clone(p);c.displayRank=fakeDisplayRank(name);return c}
 
 function currentFake(){
- if(matchedProfile&&matchedProfile.name===S.remoteName)return matchedProfile;
- var p=profile(S.remoteName);if(p){matchedProfile=p;matchedProfile.matchRank=p.displayRank}return matchedProfile
+ var p=profile(S.remoteName);if(p){matchedProfile=p;matchedProfile.matchRank=p.displayRank}return p
 }
 function localRank(){return playerRankAt(score(),savedName())}
 
@@ -122,7 +121,7 @@ function matchmakingPool(){
 function enforceFakeProfile(){
  if(S.role!=='simulated'){matchedProfile=null;return}
  var p=currentFake(),g=G();if(!p||!g)return;
- g.simulatedRating=p.score;S.simulatedRating=p.score;
+ g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=p.score||Number.MIN_VALUE;
  var sim=g.simulatedOpponent;if(sim){
   sim.rating=p.score;sim.humanRating=p.score;sim.leaderboardRank=p.matchRank||p.displayRank||p.rank;
   if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.score)
@@ -161,7 +160,7 @@ function style(){
  if($('v127-leaderboard-style'))return;var st=document.createElement('style');st.id='v127-leaderboard-style';st.textContent=`
 #mainLeaderboardTile{position:fixed;z-index:6500;display:none;box-sizing:border-box;border:0;background:rgba(0,0,0,.5);color:#fff;font-family:Helvetica,Arial,sans-serif;text-align:center;cursor:pointer;padding:7px 4px 5px;align-items:center;justify-content:flex-start;flex-direction:column;gap:2px}#mainLeaderboardTile:hover{background:rgba(0,0,0,.68)}#mainLeaderboardTile svg{width:42px;height:42px;display:block;fill:#ffd166;margin:1px auto 3px}#mainLeaderboardTile strong{font-size:14px;line-height:1.1;color:#ffd166;font-weight:600}#mainLeaderboardTile small{font-size:8px;color:#fff;font-weight:700}
 #v127LeaderboardPanel{position:fixed;inset:0;z-index:8500;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(10,6,9,.78);backdrop-filter:blur(4px)}#v127LeaderboardPanel[hidden]{display:none!important}.v127_lb_card{width:min(650px,96vw);max-height:94vh;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;padding:16px;border:1px solid rgba(255,255,255,.17);border-radius:14px;background:#21111a;color:#fff;font-family:Helvetica,Arial,sans-serif;box-shadow:0 22px 70px rgba(0,0,0,.55)}.v127_lb_head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.v127_lb_head h2{margin:0;font-size:22px}.v127_lb_head p{margin:4px 0 0;color:#aaa;font-size:10px}.v127_lb_close{border:0;background:transparent;color:#fff;font-size:27px}.v127_lb_you{display:grid;grid-template-columns:58px minmax(100px,1fr) 75px 82px 95px;gap:6px;align-items:center;margin:12px 0 8px;padding:9px;border:1px solid rgba(185,239,140,.35);border-radius:8px;background:rgba(86,123,37,.16);font-size:11px}.v127_lb_you strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v127_lb_you .score{color:#b9ef8c;font-weight:900}.v127_lb_columns,.v127_lb_row{display:grid;grid-template-columns:40px minmax(100px,1fr) 68px 76px 88px;gap:6px;align-items:center}.v127_lb_columns{padding:5px 7px;color:#888;font-size:9px;text-transform:uppercase}.v127_lb_list{overflow:auto;display:grid;gap:3px;padding-right:2px}.v127_lb_row{padding:6px 7px;border-radius:6px;background:rgba(255,255,255,.04);font-size:10px}.v127_lb_row.top3{background:rgba(255,209,102,.09)}.v127_lb_row.you{background:rgba(86,123,37,.26);border:1px solid rgba(185,239,140,.25)}.v127_lb_row .rank{color:#aaa}.v127_lb_row .name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v127_lb_row .score{color:#b9ef8c;font-weight:900}.v127_lb_note{margin-top:8px;color:#777;font-size:9px;text-align:center}
-#qolStatHud .qol_stat_box[data-rank]:not([data-rank=""]) .qol_stat_name::after{content:" · " attr(data-rating) " · #" attr(data-rank)!important;color:#b9ef8c!important;font-weight:800!important}
+#qolStatHud .qol_stat_box[data-rank]:not([data-rank=""]) .qol_stat_name::after{content:none!important;color:#b9ef8c!important;font-weight:800!important}
 @media(max-width:560px){.v127_lb_you{grid-template-columns:48px minmax(80px,1fr) 58px 68px 75px;font-size:9px}.v127_lb_columns,.v127_lb_row{grid-template-columns:30px minmax(80px,1fr) 52px 60px 70px;font-size:8px}}
 `;document.head.appendChild(st)
 }
@@ -192,10 +191,6 @@ function decorateHudRanks(){
  for(var i=0;i<4;i++){
   var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box)continue;var rank='';
   if(e&&e===g.simulatedOpponent&&S.role==='simulated'){var p=currentFake();rank=p?(p.matchRank||p.displayRank||p.rank):''}
-  else if(e&&g.players&&g.players.indexOf(e)>=0&&isFinite(Number(e.rating))){
-   var idx=g.players.indexOf(e),name=e.displayName||((S.role==='guest'?(idx===1?S.localName:S.remoteName):(idx===0?S.localName:S.remoteName))||('Player '+(idx+1)));
-   rank=playerRankAt(e.rating,name)
-  }
   box.setAttribute('data-rank',rank?String(rank):'')
  }
 }
@@ -223,7 +218,8 @@ buildSeedRoster();refreshRoster(Date.now(),true);
 var tries=0,t=setInterval(function(){if(install()||++tries>600)clearInterval(t)},40);
 setInterval(function(){
  if(!installed)return;var changed=refreshRoster();hideMatchLog();fixCustomizeName();countPlayerResult();enforceFakeProfile();decorateHudRanks();syncTiles();
- if(changed&&$('v127LeaderboardPanel')&&!$('v127LeaderboardPanel').hidden)renderLeaderboard()
+ if((changed||score()!==lastPlayerScore)&&$('v127LeaderboardPanel')&&!$('v127LeaderboardPanel').hidden)renderLeaderboard();lastPlayerScore=score()
 },120);
 window.addEventListener('resize',syncTiles,{passive:true});window.addEventListener('orientationchange',function(){setTimeout(syncTiles,80)},{passive:true});
 })();
+

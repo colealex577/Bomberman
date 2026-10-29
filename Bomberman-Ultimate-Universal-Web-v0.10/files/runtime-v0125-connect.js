@@ -12,6 +12,7 @@ function symmetric(id,generation,done){
  function fail(){if(finished)return;finished=true;if(timer)clearTimeout(timer);try{p&&p.destroy()}catch(e){}if(S.peer===p)S.peer=null;done(false)}
  try{p=new Peer(reverse,S.ICE)}catch(e){if(baseConnect)return baseConnect.call(S,id,generation,done);return done(false)}S.peer=p;S.recover(p);p.on('connection',function(c){guestCandidate(c,complete)});p.on('open',function(){opened=true;if(V.forceReverseForTest)return;try{guestCandidate(p.connect(id,{serialization:'json',reliable:true,metadata:{kind:S.kind,code:S.code,name:S.localName,reverseListener:reverse}}),complete)}catch(e){}});p.on('error',function(e){var t=e&&e.type;if(!opened&&t==='unavailable-id'){try{p.destroy()}catch(x){}if(S.peer===p)S.peer=null;if(baseConnect)return baseConnect.call(S,id,generation,done);return}if(t==='unavailable-id')fail()});timer=setTimeout(fail,S.kind==='private'?7000:3200)
 }
-function install(){if(installed)return true;if(!V.netInstalled||!S.connectFresh||!S.destroyNetwork)return false;installed=true;baseConnect=S.connectFresh;S.connectFresh=symmetric;var od=S.destroyNetwork;S.destroyNetwork=function(){clear();V.connectionPath='';return od.apply(S,arguments)};V.reverseId=rid;V.connectInstalled=true;return true}
+function install(){if(installed)return true;if(!V.coreInstalled||!S.connectFresh||!S.destroyNetwork)return false;installed=true;baseConnect=S.connectFresh;S.connectFresh=symmetric;var od=S.destroyNetwork;S.destroyNetwork=function(){clear();V.connectionPath='';return od.apply(S,arguments)};V.reverseId=rid;V.connectInstalled=true;return true}
 var n=0,t=setInterval(function(){if(install()||++n>700)clearInterval(t)},40);setInterval(function(){if(installed)probe()},100);
 })();
+

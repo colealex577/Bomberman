@@ -11,7 +11,7 @@ function loadCompatibility(){
  loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',function(){
   loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',function(){
    if(dataDiagnosticsDisabled())return;
-   loadScript('net-v0120-data-loader','./files/net-v0120-data.js?v=0120',function(){
+   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=0129',function(){
     loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
      loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120c',function(){
       loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
@@ -20,21 +20,21 @@ function loadCompatibility(){
          loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d',function(){
           loadScript('runtime-v0124-loader','./files/runtime-v0124.js?v=0124',function(){
            loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=0125',function(){
-            loadScript('runtime-v0125-net-loader','./files/runtime-v0125-net.js?v=0125',function(){
+            (function(){
              loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=0125',function(){
               loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=0126',function(){
                loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
                  loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=0128',function(){
-                  loadScript('runtime-v0128-rank-zero-loader','./files/runtime-v0128-rank-zero.js?v=0128',function(){
+                  (function(){
                    loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d');
-                  });
+                  })();
                  });
                 });
                });
               });
              });
-            });
+            })();
            });
           });
          });
@@ -49,3 +49,4 @@ function loadCompatibility(){
 }
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0128').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
+

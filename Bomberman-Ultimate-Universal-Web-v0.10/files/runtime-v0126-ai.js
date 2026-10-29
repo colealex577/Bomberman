@@ -44,7 +44,7 @@ function attackThreshold(bot){
  var d=window.BomberV125&&BomberV125.getDifficulty?BomberV125.getDifficulty():'normal';return{easy:5,normal:10,hard:21,expert:36}[d]||10
 }
 function remainingWood(){var g=G(),n=0;if(!g)return 999;for(var i=0;i<g.tiles.length;i++)if(g.tiles[i]&&g.tiles[i].material==='wood')n++;return n}
-function attackActive(bot){if(!bot||bot.alive===false)return false;if(bot.hyperAggressive)return true;return dataGuest()&&remainingWood()<=attackThreshold(bot)}
+function attackActive(bot){if(!bot||bot.alive===false)return false;if(dataGuest())return !!bot.hyperAggressive;if(bot.hyperAggressive)return true;return false}
 function setMarker(bot,on){var g=G(),m=ensureMarker(bot);if(!m||!g)return;bot.attackMode=!!on;m.visible=!!on;if(!on)return;m.x=bot.bmp.x+14;m.y=bot.bmp.y-(bot.nameLabel?27:19)+Math.sin(Date.now()/120)*1.5;m.alpha=.82+Math.sin(Date.now()/95)*.16;try{g.moveToFront(m)}catch(e){try{g.stage.setChildIndex(m,g.stage.numChildren-1)}catch(x){}}}
 function patchAttackMode(){
  if(!window.Bot||Bot.prototype.__v126AttackMarkerPatched)return;Bot.prototype.__v126AttackMarkerPatched=true;
@@ -60,3 +60,4 @@ function expose(){window.BomberAI126={version:VERSION,bombPlan:bombPlan,usefulBo
 function install(){if(installed)return true;if(!window.Bot||!window.createjs||!window.Utils||!G())return false;patchBombLogic();patchAttackMode();expose();installed=true;showVersion();syncMarkers();return true}
 showVersion();var tries=0,t=setInterval(function(){showVersion();if(install()||++tries>700)clearInterval(t)},40);setInterval(function(){showVersion();if(installed)syncMarkers()},80);
 })();
+

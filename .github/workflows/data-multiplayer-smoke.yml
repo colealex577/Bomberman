@@ -2,7 +2,7 @@ name: Data multiplayer branch smoke
 
 on:
   push:
-    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128]
+    branches: [authoritative-multiplayer-v0129,multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128]
   workflow_dispatch:
 
 permissions:
@@ -135,3 +135,11 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 120s node .github/scripts/v128-leaderboard-smoke.mjs
+
+      - name: Authoritative two-browser world consistency
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?netdebug=1
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/multiplayer-v0129.js
+          timeout 180s node .github/scripts/authoritative-network-test.mjs
