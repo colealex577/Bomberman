@@ -14,27 +14,21 @@ function patchSimulatedProfile(){
  if(!S||S.__v127SimProfileSeed||!window.BomberCharacter||!S.startSimulated)return;S.__v127SimProfileSeed=true;var old=S.startSimulated;
  S.startSimulated=function(){var g=G(),a=BomberCharacter.random(),rating=BomberCharacter.randomSimRating();S.simulatedRating=rating;if(g){g.simulatedAppearance=JSON.parse(JSON.stringify(a));g.simulatedRating=rating}var r=old.apply(S,arguments);setTimeout(function(){var gg=G(),sim=gg&&gg.simulatedOpponent;if(!sim)return;if(!sim.characterAppearance&&gg.simulatedAppearance){try{var sheet=BomberCharacter.makeSheet(gg.simulatedAppearance);if(sheet&&sim.bmp){sim.bmp.spriteSheet=new createjs.SpriteSheet({images:[sheet],frames:{width:48,height:48,regX:10,regY:12},animations:{idle:[0,0,'idle'],down:[0,3,'down',.1],left:[4,7,'left',.1],up:[8,11,'up',.1],right:[12,15,'right',.1],dead:[16,16,'dead',.1]}});sim.characterAppearance=JSON.parse(JSON.stringify(gg.simulatedAppearance));try{sim.bmp.gotoAndPlay('idle')}catch(e){}}}catch(e){}}},80);return r}
 }
-function renderLogDisplay(){
- var root=$('v127LogListDisplay');if(!root||!V)return;var a=(V.getLog?V.getLog():[]).slice().reverse().slice(0,40);root.textContent='';
- if(!a.length){var empty=document.createElement('div');empty.className='v127_empty';empty.textContent='No public matchmaking activity recorded on this device yet.';root.appendChild(empty);return}
- for(var i=0;i<a.length;i++){var x=a[i],row=document.createElement('div');row.className='v127_log_row';var time=document.createElement('time'),user=document.createElement('strong'),result=document.createElement('span'),t=new Date(x.ts);time.textContent=t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});user.textContent=x.username||'Player';result.textContent=x.result||x.event||'';row.appendChild(time);row.appendChild(user);row.appendChild(result);root.appendChild(row)}
-}
-function stabilizeExistingLog(){var live=$('v127LogList');if(live)live.id='v127LogListDisplay';var root=$('v127LogListDisplay');if(!root)return false;var section=root.closest('.v127_section'),h=section&&section.querySelector('h3'),p=section&&section.querySelector('p');if(section)section.id='v127SearchActivitySection';if(h)h.textContent='Public search activity';if(p)p.textContent='This device only. Records public matchmaking searches and results this browser can observe; this static peer-to-peer build has no central server that can see every search worldwide.';return true}
-function ensureLogSection(){
- var panel=$('v127SettingsPanel'),card=panel&&panel.querySelector('.v127_card');if(!card)return null;if(stabilizeExistingLog()){renderLogDisplay();return $('v127SearchActivitySection')}
- var old=$('v127SearchActivitySection');if(old)return old;var sec=document.createElement('section');sec.id='v127SearchActivitySection';sec.className='v127_section';sec.innerHTML='<h3>Public search activity</h3><p>This device only. Records public matchmaking searches and results this browser can observe; this static peer-to-peer build has no central server that can see every search worldwide.</p><div class="v127_log_tools"><button id="v127ClearLogDisplay" class="v127_clear" type="button">Clear log</button></div><div id="v127LogListDisplay" class="v127_log"></div>';card.appendChild(sec);$('v127ClearLogDisplay').onclick=function(){if(V&&V.clearLog)V.clearLog();renderLogDisplay()};renderLogDisplay();return sec
+function removeMatchmakingLog(){
+ var panel=$('v127SettingsPanel');if(!panel)return;
+ ['v127SearchActivitySection'].forEach(function(id){var e=$(id);if(e)e.remove()});
+ var sections=panel.querySelectorAll('.v127_section');for(var i=sections.length-1;i>=0;i--){var h=sections[i].querySelector('h3'),txt=h&&String(h.textContent||'');if(/matchmaking log|search activity/i.test(txt))sections[i].remove()}
 }
 function ensureCompatStyle(){if($('v127-fix-style'))return;var s=document.createElement('style');s.id='v127-fix-style';s.textContent='#qolElimRematchNow{display:none!important}#v127RematchNow:not([hidden]){display:inline-block!important;visibility:visible!important;opacity:1!important}';document.head.appendChild(s)}
 function fixRematchButton(){var old=$('qolElimRematchNow'),current=$('v127RematchNow');if(old)old.style.setProperty('display','none','important');if(current)current.onclick=function(){if(V&&V.requestRematch)V.requestRematch()}}
 function fixSettingsHandlers(){
- if(!V)return;ensureLogSection();ensureCompatStyle();fixRematchButton();var tile=$('mainSettingsTile'),panel=$('v127SettingsPanel'),clear=$('v127ClearLogDisplay')||$('v127ClearLog');
- if(tile&&!tile.__v127StableLog){tile.__v127StableLog=true;tile.onclick=function(){if(panel)panel.hidden=false;ensureLogSection();renderLogDisplay()}}
- if(clear&&!clear.__v127StableLog){clear.__v127StableLog=true;clear.onclick=function(){if(V.clearLog)V.clearLog();renderLogDisplay()}}
- if(V.openSettings&&!V.__stableOpenSettings){V.__stableOpenSettings=true;V.openSettings=function(){if(panel)panel.hidden=false;ensureLogSection();renderLogDisplay()}}
+ if(!V)return;removeMatchmakingLog();ensureCompatStyle();fixRematchButton();var tile=$('mainSettingsTile'),panel=$('v127SettingsPanel');
+ if(tile&&!tile.__v127CleanSettings){tile.__v127CleanSettings=true;tile.onclick=function(){if(panel)panel.hidden=false;removeMatchmakingLog()}}
+ if(V.openSettings&&!V.__cleanOpenSettings){V.__cleanOpenSettings=true;V.openSettings=function(){if(panel)panel.hidden=false;removeMatchmakingLog()}}
 }
 function install(){
  if(installed)return true;S=window.B115;V=window.BomberV127;if(!S||!V||!window.GameEngine||!V.round||!window.BomberCharacter)return false;
- patchElimination();patchSimulatedProfile();fixSettingsHandlers();V.renderLocalLog=renderLogDisplay;V.ensureSearchActivity=ensureLogSection;V.fixLayerReady=true;installed=true;return true
+ patchElimination();patchSimulatedProfile();fixSettingsHandlers();V.fixLayerReady=true;installed=true;return true
 }
 var tries=0,t=setInterval(function(){if(install()){clearInterval(t);fixSettingsHandlers();setInterval(fixSettingsHandlers,300)}else if(++tries>700)clearInterval(t)},40);
 })();
