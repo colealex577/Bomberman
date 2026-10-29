@@ -17,7 +17,7 @@ async function inspect(label,url,expectData){
   const context=await browser.createBrowserContext();
   const page=await context.newPage();
   const errors=[];
-  page.on('pageerror',e=>errors.push(String(e&&e.message||e)));
+  page.on('pageerror',e=>errors.push(String(e&&e.stack||e&&e.message||e)));
   page.on('console',msg=>{
     if(msg.type()!=='error')return;
     const text=msg.text();
