@@ -74,13 +74,14 @@ try{
  assert.ok(await g.evaluate(()=>{const dead=BomberMultiplayer.inspect().world.actors.filter(a=>!a.alive);return dead.length===1&&gGameEngine.bots[0].bmp.alpha<=0}),'guest must fade the dead AI');
  assert.ok(await g.evaluate(()=>gGameEngine.bots[1].alive),'surviving AI identity must remain intact');
  console.log('HOST_ONLY_AI_ATTACK_MIRROR PASS');
- // Simulated opponent identity, visual randomization and two-second rematch.
+ // Public fallback opponent identity, visual randomization and two-second rematch.
  await g.evaluate(()=>{B115.destroyNetwork();B115.started=false;B115.kind='public';B115.setRole('host');B115.startSimulated()});await sleep(700);
  const sim=await g.evaluate(()=>{const p=BomberLeaderboard127.profile(B115.remoteName),b=gGameEngine.simulatedOpponent;return {p,score:b.rating,rank:b.leaderboardRank,appearance:b.characterAppearance}});
  assert.equal(sim.score,sim.p.score);assert.equal(sim.rank,sim.p.displayRank);assert.ok(sim.appearance);
  await g.evaluate(()=>{window.oldSim=gGameEngine.simulatedOpponent;BomberV127.requestRematch()});await sleep(1100);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),true);await sleep(1200);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),false);
- await g.evaluate(()=>{localStorage.setItem('BombermanRatingV1','995');B115.kind='public';B115.setRole('host');const random=Math.random;try{Math.random=()=>0;B115.startSimulated()}finally{Math.random=random}});await sleep(250);
- assert.ok(await g.evaluate(()=>gGameEngine.simulatedOpponent.leaderboardRank<=50),'top 50 cannot be matched');
+ // Full-range matchmaking must still allow leaderboard leaders to appear in real public matches.
+ await g.evaluate(()=>{localStorage.setItem('BombermanRatingV1','995');B115.kind='public';B115.setRole('host');BomberPolish131.debug.forceTarget(1000);B115.startSimulated()});await sleep(600);
+ assert.ok(await g.evaluate(()=>gGameEngine.simulatedOpponent.leaderboardRank<=50),'top 50 opponent was not eligible for full-range matchmaking');
  const rankedBefore=await g.evaluate(()=>BomberLeaderboard127.profile(B115.remoteName));
  await g.evaluate(()=>gGameEngine.simulatedOpponent.die());await sleep(350);
  const rankedAfter=await g.evaluate(()=>({p:BomberLeaderboard127.profile(B115.remoteName),score:gGameEngine.simulatedOpponent.rating}));
