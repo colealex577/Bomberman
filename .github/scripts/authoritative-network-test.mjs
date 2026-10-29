@@ -78,5 +78,9 @@ try{
  await g.evaluate(()=>{window.oldSim=gGameEngine.simulatedOpponent;BomberV127.requestRematch()});await sleep(1100);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),true);await sleep(1200);assert.equal(await g.evaluate(()=>oldSim===gGameEngine.simulatedOpponent),false);
  await g.evaluate(()=>{localStorage.setItem('BombermanRatingV1','995');B115.kind='public';B115.setRole('host');const random=Math.random;try{Math.random=()=>0;B115.startSimulated()}finally{Math.random=random}});await sleep(250);
  assert.ok(await g.evaluate(()=>gGameEngine.simulatedOpponent.leaderboardRank<=50),'top 50 cannot be matched');
+ const rankedBefore=await g.evaluate(()=>BomberLeaderboard127.profile(B115.remoteName));
+ await g.evaluate(()=>gGameEngine.simulatedOpponent.die());await sleep(350);
+ const rankedAfter=await g.evaluate(()=>({p:BomberLeaderboard127.profile(B115.remoteName),score:gGameEngine.simulatedOpponent.rating}));
+ assert.equal(rankedAfter.p.score,Math.max(0,rankedBefore.score-10));assert.equal(rankedAfter.score,rankedAfter.p.score);assert.equal(rankedAfter.p.losses,rankedBefore.losses+1);
  assert.deepEqual(errors,[]);console.log('AUTHORITATIVE_NETWORK_TEST PASS');
 }finally{await Promise.all(clients.map(c=>c.close()));await browser.close()}

@@ -41,7 +41,7 @@ function world(){
  finished:!!g.matchFinished,spectatorFinished:!!g.spectatorFinished,
  };
 }
-function checksum(w){let h=2166136261;const s=JSON.stringify(w);for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return (h>>>0).toString(16)}
+function checksum(w){let h=2166136261;const s=N.worldRevision+'|'+JSON.stringify(w);for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return (h>>>0).toString(16)}
 function actorPacket(){return {q:++N.actorSequence,ack:N.lastProcessedInput,at:Date.now(),actors:actors().map(e=>({x:e.bmp.x,y:e.bmp.y,an:e.bmp.currentAnimation||'idle',attack:!!e.hyperAggressive,alive:e.alive!==false}))}}
 function diff(a,b){
  const ops=[];

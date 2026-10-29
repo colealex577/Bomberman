@@ -62,6 +62,15 @@ function buildSeedRoster(){
  seedRoster=out.slice(0,POPULATION_SIZE)
 }
 
+// Persist only encounters played on this device; the shared seeded careers remain stable.
+var encounterRecords=(function(){try{return JSON.parse(localStorage.getItem('BombermanSimEncountersV129')||'{}')||{}}catch(e){return {}}})();
+function recordResult(name,delta){
+ if([10,-10,5].indexOf(delta)<0||!profile(name))return null;
+ var r=encounterRecords[name]||{points:0,wins:0,losses:0};
+ r.points+=delta;if(delta===10)r.wins++;if(delta===-10)r.losses++;encounterRecords[name]=r;
+ try{localStorage.setItem('BombermanSimEncountersV129',JSON.stringify(encounterRecords))}catch(e){}
+ refreshRoster(Date.now(),true);renderLeaderboard();enforceFakeProfile();return profile(name)
+}
 function profileAt(seed,now){
  var base=seed.baseScore,h=hash('BM128|profile|'+seed.name),sc=base;
  if(base>0){
@@ -76,6 +85,7 @@ function profileAt(seed,now){
  var baseRate=Math.max(.35,Math.min(.93,.405+(base/1000)*.47+(((h>>>12)%101)-50)/1000));
  var days=dayFor(now),activity=1+((h>>>21)%4),added=days*activity;
  var games=baseGames+added,wins=Math.max(1,Math.min(games-1,Math.round(games*baseRate))),losses=Math.max(1,games-wins);
+ var played=encounterRecords[seed.name];if(played){sc=clamp(sc+(Number(played.points)||0));wins+=Number(played.wins)||0;losses+=Number(played.losses)||0}
  return{name:seed.name,category:seed.category,score:sc,wins:wins,losses:losses,rate:wins/(wins+losses),baseRank:seed.baseRank,baseScore:seed.baseScore}
 }
 function sortProfiles(a,b){return b.score-a.score||tieKey(a.name)-tieKey(b.name)||a.name.localeCompare(b.name)}
@@ -206,6 +216,7 @@ function install(){
  window.BomberLeaderboard127={
   top50:function(){refreshRoster();return top50.map(function(x){var c=clone(x);c.displayRank=fakeDisplayRank(x.name);return c})},
   profile:function(name){return profile(name)},
+  recordResult:recordResult,
   population:function(){refreshRoster();return roster.map(clone)},
   rank:function(sc,name){return playerRankAt(sc,name||savedName())},
   rankForPlayer:function(){return localRank()},

@@ -8,7 +8,7 @@ function auxReady(cb){if(aux&&aux.open)return cb(aux);if(aux&&!aux.destroyed){va
 // directions commit only that channel, avoiding crossed direct/reverse winners.
 function hostCandidate(c,reverse){
  if(!c)return;trace('host candidate',reverse===false?'direct':'reverse');attempts.push(c);
- c.on('data',function(d){trace('host received',d&&d.type);
+ c.on('data',function(d){if(d&&d.type!=='auth129')trace('host received',d.type);
   if(d&&d.type==='guestReady'&&!S.started){trace('host selected',reverse===false?'direct':'reverse');
    if(S.conn&&S.conn!==c)close(S.conn);S.conn=c;
    V.connectionPath=reverse===false?'direct-host':'reverse-host';
