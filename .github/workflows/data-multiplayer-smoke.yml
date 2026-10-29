@@ -2,7 +2,7 @@ name: Data multiplayer branch smoke
 
 on:
   push:
-    branches: [multiplayer-data-v0120, qol-v0120]
+    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow]
   workflow_dispatch:
 
 permissions:
@@ -11,18 +11,20 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check data sync and QoL
         run: |
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0120-data.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol-fix.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
           node --check .github/scripts/qol-smoke.mjs
           node --check .github/scripts/qol-rematch-test.mjs
+          node --check .github/scripts/hud-flow-smoke.mjs
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -48,6 +50,12 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 90s node .github/scripts/qol-smoke.mjs
+      - name: HUD graphics and spectate flow smoke
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 90s node .github/scripts/hud-flow-smoke.mjs
       - name: Two-client data match integration
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
