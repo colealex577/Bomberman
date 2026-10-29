@@ -140,7 +140,7 @@ function receiveActors(d){
   const a=d.actors[i];if(!a)return;e.hyperAggressive=!!a.attack;e.attackMode=!!a.attack;
   if(i===1){
    pending=pending.filter(c=>c.seq>d.ack);
-   const visible={x:e.bmp.x,y:e.bmp.y};e.bmp.x=a.x;e.bmp.y=a.y;e.updatePosition();
+   const visible={x:e.bmp.x,y:e.bmp.y};e.bmp.x=a.x;e.bmp.y=a.y;e.updatePosition();e.escapeBomb=G().bombs.find(b=>!b.exploded&&Utils.comparePositions(b.position,e.position))||null;
    for(const c of pending)if(!c.bomb)move(e,c.dir,c.dt);
    const error=Math.hypot(e.bmp.x-visible.x,e.bmp.y-visible.y);
    if(error<1.5){e.bmp.x=visible.x;e.bmp.y=visible.y;e.updatePosition()}else N.metrics.corrections++;
@@ -171,7 +171,7 @@ function begin(d){
  try{if(d.startType==='start')g.menu.setMode('multi');else oldGuest.call(S,{type:'v127RematchStart'})}finally{building=null}
  renderWorld();receiveActors(d.actors);
  if(d.startType==='start')oldGuest.call(S,{type:'start',names:d.names,ultimate:d.ultimate,dropRate:d.dropRate});
- S.ensureMusic();S.chatVisibility();
+ S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.ensureMusic();S.chatVisibility();
 }
 function receive(d,isHost){
  if(!d||d.type!=='auth129')return false;
@@ -196,7 +196,7 @@ function receive(d,isHost){
   if(d.worldRevision<N.worldRevision)return true;
   if(N.debug&&d.worldRevision===N.worldRevision&&checksum(world())!==d.checksum)console.warn('[net129] mirror mismatch',{roundId:N.roundId,revision:N.worldRevision,expected:d.world,actual:world()});
   N.mirror=copy(d.world);N.worldRevision=d.worldRevision;renderWorld();
- }else if(d.kind==='control'&&d.q>lastControl){lastControl=d.q;applying=true;try{oldGuest.call(S,d.packet)}finally{applying=false}}
+ }else if(d.kind==='control'&&d.q>lastControl){lastControl=d.q;if(d.packet.type==='spectate'){G().spectatorMode=true;const banner=document.getElementById('spectatorBanner');if(banner)banner.hidden=false}applying=true;try{oldGuest.call(S,d.packet)}finally{applying=false}}
  return true;
 }
 function install(){

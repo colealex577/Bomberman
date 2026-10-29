@@ -9,7 +9,7 @@ async function client(name){
   const context=await browser.createBrowserContext();const page=await context.newPage();const errors=[];
   page.on('pageerror',e=>errors.push(String(e&&e.message||e)));page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
   await page.evaluateOnNewDocument(n=>{try{localStorage.setItem('BombermanPlayerName',n)}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}},name);
-  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});
+  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});
   await page.waitForFunction(()=>window.BomberQOL&&BomberQOL.installed&&window.BomberDataSync&&B115.__dataSyncInstalled&&gGameEngine&&gGameEngine.menu,{timeout:15000});
   return{context,page,errors};
 }
@@ -42,3 +42,4 @@ try{
 }finally{
   await A?.context.close().catch(()=>{});await B?.context.close().catch(()=>{});await browser.close().catch(()=>{});
 }
+

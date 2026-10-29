@@ -14,7 +14,7 @@ async function makeClient(label,aiPref=true){
  page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));
  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
  await page.evaluateOnNewDocument(pref=>{try{localStorage.setItem('BombermanMultiplayerAIEnabled',pref?'1':'0')}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}},aiPref);
- await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});
+ await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});
  await page.waitForFunction(()=>window.B115&&window.BomberV124&&BomberV124.version==='v0.12.4'&&window.BomberDataSync&&B115.__dataSyncInstalled&&document.getElementById('v124AiToggle')&&gGameEngine?.menu,{timeout:18000});
  console.log(label,'ready');
  return{context,page,errors,label};
@@ -69,3 +69,4 @@ try{
  if([...C.errors,...D.errors].length)throw new Error('browser errors: '+[...C.errors,...D.errors].join(' | '));
  console.log('V124_MULTIPLAYER_SMOKE PASS');
 }finally{await closeClient(A);await closeClient(B);await closeClient(C);await closeClient(D);await browser.close().catch(()=>{})}
+

@@ -1,145 +1,33 @@
 name: Data multiplayer branch smoke
-
 on:
   push:
-    branches: [authoritative-multiplayer-v0129,multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128]
+    branches: [authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  smoke:
+  regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        test: [data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test]
     steps:
       - uses: actions/checkout@v4
-      - name: Syntax check data sync and QoL
-        run: |
-          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0120-data.js
-          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol.js
-          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol-fix.js
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-final.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0124.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0124.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-core.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-core.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-net.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-net.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-connect.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-connect.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0126-ai.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0126-ai.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-fix.js; fi
-          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-leaderboard.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-leaderboard.js; fi
-          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
-          node --check .github/scripts/data-smoke.mjs
-          node --check .github/scripts/data-match-test.mjs
-          node --check .github/scripts/qol-smoke.mjs
-          node --check .github/scripts/qol-rematch-test.mjs
-          node --check .github/scripts/hud-flow-smoke.mjs
-          if [ -f .github/scripts/character-rating-smoke.mjs ]; then node --check .github/scripts/character-rating-smoke.mjs; fi
-          if [ -f .github/scripts/profile-sync-smoke.mjs ]; then node --check .github/scripts/profile-sync-smoke.mjs; fi
-          if [ -f .github/scripts/v124-multiplayer-smoke.mjs ]; then node --check .github/scripts/v124-multiplayer-smoke.mjs; fi
-          if [ -f .github/scripts/v125-netcode-smoke.mjs ]; then node --check .github/scripts/v125-netcode-smoke.mjs; fi
-          if [ -f .github/scripts/v126-ai-smoke.mjs ]; then node --check .github/scripts/v126-ai-smoke.mjs; fi
-          if [ -f .github/scripts/v127-rematch-settings-smoke.mjs ]; then node --check .github/scripts/v127-rematch-settings-smoke.mjs; fi
-          if [ -f .github/scripts/v128-leaderboard-smoke.mjs ]; then node --check .github/scripts/v128-leaderboard-smoke.mjs; fi
+      - name: Syntax check
+        run: find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts -name '*.js' -o -name '*.mjs' | xargs -n 1 node --check
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
-      - name: Start local server
-        run: |
-          python3 -m http.server 8080 --bind 127.0.0.1 >/tmp/bm-http.log 2>&1 &
-          echo $! > /tmp/bm-http.pid
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html >/dev/null; then exit 0; fi
-            sleep 1
-          done
-          cat /tmp/bm-http.log
-          exit 1
-      - name: Chrome boot A/B smoke
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          "$CHROME_PATH" --version
-          node .github/scripts/data-smoke.mjs
-      - name: QoL UI smoke
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 90s node .github/scripts/qol-smoke.mjs
-      - name: HUD graphics and spectate flow smoke
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 90s node .github/scripts/hud-flow-smoke.mjs
-      - name: Character customization and rating smoke
-        if: ${{ hashFiles('.github/scripts/character-rating-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 90s node .github/scripts/character-rating-smoke.mjs
-      - name: Two-client profile sync smoke
-        if: ${{ hashFiles('.github/scripts/profile-sync-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/profile-sync-smoke.mjs || (echo 'PeerJS profile attempt 1 missed; retrying once' && timeout 120s node .github/scripts/profile-sync-smoke.mjs)
-      - name: Two-client data match integration
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/data-match-test.mjs
-      - name: Two-client rematch integration
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/qol-rematch-test.mjs
-      - name: v0.12.4 multiplayer regression
-        if: ${{ hashFiles('.github/scripts/v124-multiplayer-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 180s node .github/scripts/v124-multiplayer-smoke.mjs
-      - name: v0.12.5 netcode regression
-        if: ${{ hashFiles('.github/scripts/v125-netcode-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 180s node .github/scripts/v125-netcode-smoke.mjs
-      - name: v0.12.6 AI bomb and attack-mode regression
-        if: ${{ hashFiles('.github/scripts/v126-ai-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/v126-ai-smoke.mjs
-      - name: v0.12.7 rematch scoring and settings regression
-        if: ${{ hashFiles('.github/scripts/v127-rematch-settings-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 180s node .github/scripts/v127-rematch-settings-smoke.mjs
-      - name: v0.12.8 dynamic leaderboard regression
-        if: ${{ hashFiles('.github/scripts/v128-leaderboard-smoke.mjs') != '' }}
-        env:
-          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
-        run: |
-          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/v128-leaderboard-smoke.mjs
-
-      - name: Authoritative two-browser world consistency
+      - name: Run browser regression
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?netdebug=1
         run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 >/tmp/bm-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS "$TEST_URL" >/dev/null; then break; fi
+            sleep 1
+          done
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/multiplayer-v0129.js
-          timeout 180s node .github/scripts/authoritative-network-test.mjs
+          timeout 210s node .github/scripts/${{ matrix.test }}.mjs

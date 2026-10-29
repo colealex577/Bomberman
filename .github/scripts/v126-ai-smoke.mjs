@@ -51,3 +51,4 @@ try{
  if(errors.length)throw new Error('browser errors: '+errors.join(' | '));
  console.log('V126_AI_SMOKE PASS');
 }finally{await context.close().catch(()=>{});await browser.close().catch(()=>{})}
+

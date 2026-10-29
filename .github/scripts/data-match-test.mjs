@@ -21,7 +21,7 @@ async function makeClient(label){
   await page.evaluateOnNewDocument(()=>{
     try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}
   });
-  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});
+  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});
   await page.waitForFunction(()=>window.B115&&window.BomberOnline&&window.BomberDataSync&&B115.__dataSyncInstalled&&gGameEngine&&gGameEngine.menu,{timeout:15000});
   console.log(label,'ready');
   return{context,page,errors};
@@ -135,3 +135,4 @@ try{
   await B?.context.close().catch(()=>{});
   await browser.close().catch(()=>{});
 }
+

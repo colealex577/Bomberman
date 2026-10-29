@@ -7,7 +7,7 @@ page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));
 page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
 try{
  await page.evaluateOnNewDocument(()=>{try{localStorage.setItem('BombermanPlayerName','ColeRank');localStorage.setItem('BombermanRatingV1','0');localStorage.setItem('BombermanScoreV1Initialized','1')}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}});
- await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});
+ await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});
  await page.waitForFunction(()=>window.BomberLeaderboard127&&BomberLeaderboard127.population&&BomberLeaderboard127.rank&&window.BomberV127&&gGameEngine?.menu,{timeout:20000});
  const audit=await page.evaluate(()=>{
   const pop=BomberLeaderboard127.population(),top=BomberLeaderboard127.top50(),r0=BomberLeaderboard127.rank(0,'ColeRank'),r50=BomberLeaderboard127.rank(top[49].score,'ThresholdUser');
@@ -40,3 +40,4 @@ try{
  if(errors.length)throw new Error('browser errors: '+errors.join(' | '));
  console.log('V128_LEADERBOARD_SMOKE PASS');
 }finally{await context.close().catch(()=>{});await browser.close().catch(()=>{})}
+

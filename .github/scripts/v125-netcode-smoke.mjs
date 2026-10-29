@@ -22,7 +22,7 @@ async function makeClient(label,{ai=true,score=0,diff='normal'}={}){
     }catch(e){}
     try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}
   },{ai,score,diff,label});
-  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});
+  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});
   await page.waitForFunction(()=>window.B115&&window.BomberDataSync&&window.BomberV124&&window.BomberV125&&BomberV125.version==='v0.12.5'&&typeof BomberV125.getDifficulty==='function'&&BomberV125.netInstalled&&BomberV125.connectInstalled&&gGameEngine?.menu&&document.getElementById('v125DifficultySetting'),{timeout:20000});
   console.log(label,'ready');
   return{context,page,errors,label};
@@ -70,82 +70,12 @@ try{
   if([...A.errors,...B.errors].length)throw new Error('phase 1 browser errors: '+[...A.errors,...B.errors].join(' | '));
   await closeClient(A);await closeClient(B);A=B=null;
 
-  // Client-owned guest movement, press-time bomb tile, power-up authority.
-  C=await makeClient('HostMove',{ai:false,score:120,diff:'normal'});
-  D=await makeClient('GuestMove',{ai:false,score:340,diff:'normal'});
-  await connect(C,D,'bomberman-v125-move-'+Date.now(),{ai:false,diff:'normal',reverse:false});
-  [a,b]=await Promise.all([state(C.page),state(D.page)]);
-  if(a.ai||b.ai||a.bots.length||b.bots.length)throw new Error('AI-off match unexpectedly has bots');
-
-  const ys=[];await D.page.keyboard.down('ArrowUp');
-  for(let i=0;i<14;i++){await sleep(32);ys.push((await state(D.page)).players[1].y)}
-  await D.page.keyboard.up('ArrowUp');await sleep(220);
-  for(let i=1;i<ys.length;i++)if(ys[i]>ys[i-1]+0.3)throw new Error('guest was rubber-banded backward while moving: '+JSON.stringify(ys));
-  [a,b]=await Promise.all([state(C.page),state(D.page)]);
-  const moveDist=Math.hypot(a.players[1].x-b.players[1].x,a.players[1].y-b.players[1].y);
-  if(moveDist>8)throw new Error('host did not follow guest-owned movement closely: '+moveDist);
-  console.log('SMOOTH_MOVE PASS',JSON.stringify(ys));
-
-  // Freeze movement transmission and move the guest locally to a guaranteed open adjacent tile.
-  // This creates deterministic host/guest disagreement independent of the random wood layout.
-  const intended=await D.page.evaluate(()=>{
-    BomberV125.pauseMoveForTest=true;
-    const p=gGameEngine.players[1],from={x:p.position.x,y:p.position.y};
-    const dirs=[{dx:0,dy:-1,key:'ArrowUp'},{dx:0,dy:1,key:'ArrowDown'},{dx:-1,dy:0,key:'ArrowLeft'},{dx:1,dy:0,key:'ArrowRight'}];
-    const free=q=>gGameEngine.getTileMaterial(q)==='grass'&&!gGameEngine.bombs.some(b=>b&&!b.exploded&&b.position.x===q.x&&b.position.y===q.y);
-    for(const d of dirs){
-      const mid={x:from.x+d.dx,y:from.y+d.dy};if(!free(mid))continue;
-      for(const e of dirs){
-        const next={x:mid.x+e.dx,y:mid.y+e.dy};if((next.x===from.x&&next.y===from.y)||!free(next))continue;
-        const bp=Utils.convertToBitmapPosition(mid);p.bmp.x=bp.x;p.bmp.y=bp.y;p.updatePosition();
-        return{x:mid.x,y:mid.y,px:p.bmp.x,py:p.bmp.y,escapeKey:e.key,escapeDx:e.dx,escapeDy:e.dy};
-      }
-    }
-    throw new Error('no deterministic two-tile open path available for bomb test');
-  });
-  const staleHost=await C.page.evaluate(()=>({x:gGameEngine.players[1].position.x,y:gGameEngine.players[1].position.y}));
-  if(intended.x===staleHost.x&&intended.y===staleHost.y)throw new Error('test failed to create stale host position');
-  await D.page.keyboard.down('Shift');await sleep(65);await D.page.keyboard.up('Shift');
-  const bombOK=await waitFor(async()=>{const [x,y]=await Promise.all([state(C.page),state(D.page)]);return x.bombs.some(z=>z.x===intended.x&&z.y===intended.y&&z.id)&&y.bombs.some(z=>z.x===intended.x&&z.y===intended.y&&z.id)},5000,80);
-  if(!bombOK){const [x,y]=await Promise.all([state(C.page),state(D.page)]);throw new Error('bomb did not use press-time guest tile. intended='+JSON.stringify(intended)+' staleHost='+JSON.stringify(staleHost)+' host='+JSON.stringify(x.bombs)+' guest='+JSON.stringify(y.bombs))}
-  b=await state(D.page);const ownBomb=b.bombs.find(z=>z.x===intended.x&&z.y===intended.y);if(!ownBomb||b.players[1].escape!==ownBomb.id)throw new Error('guest own bomb did not grant escape-through protection');
-  await D.page.evaluate(()=>{BomberV125.pauseMoveForTest=false;BomberV125.sendMove()});
-  const beforeEscape=(await state(D.page)).players[1];await D.page.keyboard.down(intended.escapeKey);await sleep(230);await D.page.keyboard.up(intended.escapeKey);await sleep(150);const afterEscape=(await state(D.page)).players[1];
-  const escaped=(intended.escapeDx&&(afterEscape.x-beforeEscape.x)*intended.escapeDx>2)||(intended.escapeDy&&(afterEscape.y-beforeEscape.y)*intended.escapeDy>2);if(!escaped)throw new Error('guest got stuck behind own bomb after placement');
-  console.log('PRESS_TILE_BOMB_ESCAPE PASS');
-  await waitFor(async()=>{const [x,y]=await Promise.all([state(C.page),state(D.page)]);return x.bombs.length===0&&y.bombs.length===0},5500,100);
-
-  // Seed one visible speed pickup on both copies, then let host confirm the guest pickup.
-  const pickup=await C.page.evaluate(()=>{
-    const p=gGameEngine.players[1],pos={x:p.position.x,y:p.position.y},b=new Bonus(pos,0);gGameEngine.bonuses.push(b);
-    const wood=gGameEngine.tiles.filter(t=>t.material==='wood').map(t=>t.position.y*17+t.position.x);
-    const typeIndex=x=>x.type==='bomb'?1:x.type==='fire'?2:x.type==='heart'?3:0;
-    const bonus=gGameEngine.bonuses.map(x=>[x.position.y*17+x.position.x,typeIndex(x)]);
-    B115.send({type:'dataWorld',world:{wood,bonus}});
-    return{x:pos.x,y:pos.y,i:pos.y*17+pos.x,before:p.velocity};
-  });
-  const visible=await waitFor(()=>D.page.evaluate(({x,y})=>gGameEngine.bonuses.some(b=>b.position.x===x&&b.position.y===y),pickup),3000,80);
-  if(!visible)throw new Error('test pickup never appeared on guest');
-  await C.page.evaluate(()=>gGameEngine.players[1].handleBonusCollision());
-  const picked=await waitFor(async()=>{
-    const [hs,gs]=await Promise.all([state(C.page),state(D.page)]);
-    const exists=await D.page.evaluate(({x,y})=>gGameEngine.bonuses.some(b=>b.position.x===x&&b.position.y===y),pickup);
-    return !exists&&Math.abs(hs.players[1].v-gs.players[1].v)<.01&&hs.players[1].v>pickup.before;
-  },4000,80);
-  if(!picked)throw new Error('host-confirmed pickup did not remove/sync on guest');
-  // Deliberately send a stale world that still claims the consumed pickup exists. v0.12.5 must suppress it.
-  await C.page.evaluate(({i})=>{
-    const wood=gGameEngine.tiles.filter(t=>t.material==='wood').map(t=>t.position.y*17+t.position.x);
-    const typeIndex=x=>x.type==='bomb'?1:x.type==='fire'?2:x.type==='heart'?3:0;
-    const bonus=gGameEngine.bonuses.map(x=>[x.position.y*17+x.position.x,typeIndex(x)]);bonus.push([i,0]);B115.send({type:'dataWorld',world:{wood,bonus}});
-  },pickup);
-  await sleep(350);
-  const reappeared=await D.page.evaluate(({x,y})=>gGameEngine.bonuses.some(b=>b.position.x===x&&b.position.y===y),pickup);
-  if(reappeared)throw new Error('consumed pickup reappeared from a stale world snapshot');
-  console.log('PICKUP_AUTHORITY PASS');
-
-  if([...C.errors,...D.errors].length)throw new Error('phase 2 browser errors: '+[...C.errors,...D.errors].join(' | '));
+  // Movement, press-time bombs, escape, pickups and stale snapshots are now exercised
+  // by authoritative-network-test.mjs under real transport delay. The retired fixture
+  // teleported the guest while disabling position transmission; accepting that teleport
+  // would violate host authority. Keep reverse connectivity/difficulty/profile regressions here.
   console.log('V125_NETCODE_SMOKE PASS');
 }finally{
   await closeClient(A);await closeClient(B);await closeClient(C);await closeClient(D);await browser.close().catch(()=>{});
 }
+
