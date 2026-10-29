@@ -1,4 +1,4 @@
-const CACHE='bomberman-ultimate-v0120-qol-4';
+const CACHE='bomberman-ultimate-v0120-qol-5';
 const CORE=[
  './','./index.html','./manifest.webmanifest',
  './files/css/style.css?v=0119','./files/css/bootstrap.css',
@@ -13,7 +13,7 @@ self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
  const req=event.request,url=new URL(req.url);if(req.method!=='GET'||url.origin!==location.origin||url.pathname.includes('__bomberman_'))return;
- const hot=url.pathname.endsWith('/')||url.pathname.endsWith('/index.html')||/\/(online|mobile|app|hotfix-0117|runtime-v0116|runtime-v0116-fix|runtime-v0119|net-v0120-data|runtime-v0120-qol|runtime-v0120-qol-fix|GameEngine|Bot|Menu)\.js$/.test(url.pathname)||url.pathname.endsWith('/files/css/style.css');
+ const hot=url.pathname.endsWith('/')||url.pathname.endsWith('/index.html')||/\/(online|mobile|app|hotfix-0117|net-v0115-ui|runtime-v0116|runtime-v0116-fix|runtime-v0119|net-v0120-data|runtime-v0120-qol|runtime-v0120-qol-fix|GameEngine|Bot|Menu)\.js$/.test(url.pathname)||url.pathname.endsWith('/files/css/style.css');
  if(hot){const fresh=new Request(req,{cache:'no-store'});event.respondWith(fetch(fresh).then(res=>{if(res&&res.ok)caches.open(CACHE).then(cache=>cache.put(req,res.clone()));return res}).catch(()=>caches.match(req)));return}
  event.respondWith(caches.match(req).then(cached=>cached||fetch(req).then(res=>{if(res&&res.ok)caches.open(CACHE).then(cache=>cache.put(req,res.clone()));return res})));
 });
