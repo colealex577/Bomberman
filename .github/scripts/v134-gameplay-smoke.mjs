@@ -9,7 +9,7 @@ await p.evaluateOnNewDocument(()=>{localStorage.removeItem('BombermanSingleMapV1
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
  await p.waitForFunction(()=>window.BomberGameplay134?.version==='v0.13.4'&&window.BomberMaps133&&window.BomberWhole132&&window.gGameEngine?.menu,{timeout:30000});
- await sleep(300);
+ await p.waitForFunction(()=>document.getElementById('buildVersion134')?.textContent==='v0.13.4',{timeout:5000});
  const startup=await p.evaluate(()=>({single:BomberMaps133.getSelection('single'),multi:BomberMaps133.getSelection('multi'),active:BomberMaps133.active(),badge:(document.getElementById('buildVersion134')||{}).textContent,tiers:[BomberGameplay134.tierFor(50),BomberGameplay134.tierFor(150),BomberGameplay134.tierFor(300)],eligible:[BomberGameplay134.baitEligible(299),BomberGameplay134.baitEligible(300)]}));
  assert.deepEqual(startup,{single:'classic',multi:'classic',active:'classic',badge:'v0.13.4',tiers:['low','middle','advanced'],eligible:[false,true]});
  await p.evaluate(()=>{B115.setRole('simulated');BomberGameplay134.forceDesktopChat()});await sleep(80);
