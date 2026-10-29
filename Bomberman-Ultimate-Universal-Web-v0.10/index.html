@@ -157,15 +157,15 @@
             </div>
 
             <div id="lobbyChoice" class="lobby_choice">
-                <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for your friend to join • simulated opponent after a short wait</small></button>
-                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Find the waiting host automatically • simulated opponent if none is available</small></button>
+                <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for another player to join</small></button>
+                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Find an available match automatically</small></button>
                 <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
             </div>
 
             <div id="onlineHostControls" class="lobby_section" hidden>
                 <div class="lobby_state_icon">⌁</div>
                 <h3>Hosting game</h3>
-                <p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. If nobody connects, a simulated player will join automatically.</p>
+                <p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. The match will start when an opponent is ready.</p>
 
                 <div class="host_customization" id="hostCustomization">
                     <div class="host_customization_header">
@@ -187,7 +187,7 @@
             <div id="onlineJoinControls" class="lobby_section" hidden>
                 <div class="lobby_state_icon">⌁</div>
                 <h3>Finding host…</h3>
-                <p>Searching for a waiting Bomberman host. If none is available, a simulated opponent will be created automatically.</p>
+                <p>Searching for an available Bomberman opponent.</p>
                 <div id="joinStatus" class="online_status working">Searching…</div>
                 <button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
             </div>

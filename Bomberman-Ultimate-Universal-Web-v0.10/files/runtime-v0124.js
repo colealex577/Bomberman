@@ -29,7 +29,7 @@ function ensureAISetting(){
  var choice=(S.els&&S.els.panel_choice)||$('lobbyChoice');if(!choice)return null;var box=$('v124AiSetting');if(!box){box=document.createElement('div');box.id='v124AiSetting';box.className='host_customization compact_drop_settings';box.innerHTML='<div class="host_customization_header"><div><strong>AI opponents</strong><small>Standard AI players in multiplayer rounds</small></div><button id="v124AiToggle" class="v124_ai_toggle" type="button" aria-pressed="true">ON</button></div><div id="v124AiNote" class="v124_ai_note"></div>';var drop=choice.querySelector('.compact_drop_settings');if(drop&&drop.nextSibling)choice.insertBefore(box,drop.nextSibling);else choice.insertBefore(box,choice.firstChild);var b=$('v124AiToggle');if(b)b.onclick=function(){if(this.disabled)return;setMatchAI(!localAI,false);if(S.host&&S.host()&&S.conn&&S.conn.open&&!S.started)S.send({type:'v124Settings',aiEnabled:matchAI})}}
  renderAI();return box
 }
-function renderAI(){var b=$('v124AiToggle'),n=$('v124AiNote');if(b){b.textContent=matchAI?'ON · 2 AI':'OFF · HUMANS ONLY';b.classList.toggle('on',matchAI);b.setAttribute('aria-pressed',matchAI?'true':'false');b.disabled=!!(S.guest&&S.guest()&&S.started)}if(n)n.textContent=matchAI?'Two standard AI opponents join multiplayer rounds.':'No standard AI opponents. Human/simulated-human matchmaking still works.'}
+function renderAI(){var b=$('v124AiToggle'),n=$('v124AiNote');if(b){b.textContent=matchAI?'ON · 2 AI':'OFF · PLAYERS ONLY';b.classList.toggle('on',matchAI);b.setAttribute('aria-pressed',matchAI?'true':'false');b.disabled=!!(S.guest&&S.guest()&&S.started)}if(n)n.textContent=matchAI?'Two standard AI opponents join multiplayer rounds.':'No standard AI opponents. Player matchmaking still works.'}
 
 function patchSpawning(){
  if(!window.GameEngine||GameEngine.prototype.__v124AISpawn)return;GameEngine.prototype.__v124AISpawn=true;var old=GameEngine.prototype.spawnBots;GameEngine.prototype.spawnBots=function(){var saved=this.botsCount,multi=this.playersCount===2||this.simulatedOpponentMode;this.multiplayerAIEnabled=matchAI;if(multi&&!matchAI)this.botsCount=0;try{return old.apply(this,arguments)}finally{this.botsCount=saved}}
@@ -75,3 +75,4 @@ function install(){
 }
 addStyle();showVersion();var tries=0,t=setInterval(function(){showVersion();ensureAISetting();ensureImmediateRematch();if(install()||++tries>600)clearInterval(t)},40);setInterval(function(){showVersion();ensureAISetting();renderAI();syncImmediateRematch()},120);['pageshow','focus','resize','orientationchange'].forEach(function(ev){window.addEventListener(ev,function(){showVersion();ensureAISetting();syncImmediateRematch()},{passive:true})});
 })();
+

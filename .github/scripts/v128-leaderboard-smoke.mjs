@@ -24,9 +24,10 @@ try{
  if(audit.r50<35||audit.r50>70)throw new Error('rank does not approach top 50 near 50th-place score: '+JSON.stringify(audit));
  if(audit.changed<5)throw new Error('leaderboard does not change dynamically between live buckets');
  await page.evaluate(()=>{localStorage.setItem('BombermanRatingV1','990');BomberLeaderboard127.open()});await sleep(100);
- const climb=await page.evaluate(()=>({rank:BomberLeaderboard127.rankForPlayer(),inTop:!!document.querySelector('#v127LbList .v127_lb_row.you'),youText:document.getElementById('v127LbYou')?.textContent||''}));
+ const climb=await page.evaluate(()=>({rank:BomberLeaderboard127.rankForPlayer(),inTop:!!document.querySelector('#v127LbList .v127_lb_row.you'),youText:document.getElementById('v127LbYou')?.textContent||'',copy:document.getElementById('v127LeaderboardPanel')?.innerText||''}));
  console.log('PLAYER_CLIMB',JSON.stringify(climb));
  if(climb.rank>10||!climb.inTop)throw new Error('high-score player did not enter visible top 50');
+ if(/simulat|fake[ -]?human/i.test(climb.copy))throw new Error('leaderboard reveals opponent implementation: '+climb.copy);
  await page.click('#v127LeaderboardPanel .v127_lb_close');await page.evaluate(()=>{localStorage.setItem('BombermanRatingV1','0');B115.kind='public';B115.setRole('host');B115.startSimulated()});await sleep(850);
  const live=await page.evaluate(()=>{
   const p=BomberLeaderboard127.profile(B115.remoteName),sim=gGameEngine.simulatedOpponent,box=sim&&document.querySelector('.qol_stat_box[data-slot="'+sim.statSlot+'"]');
@@ -37,6 +38,8 @@ try{
  if(live.simScore!==live.profile.score)throw new Error('matched opponent score differs from leaderboard score');
  if(Number(live.simRank)!==Number(live.profile.displayRank))throw new Error('matched opponent rank differs from leaderboard position');
  if(live.hudRank!==String(live.profile.displayRank)||!live.status.includes('(#'+live.profile.displayRank+')'))throw new Error('in-game HUD/status does not show opponent leaderboard rank');
+ const publicCopy=await page.evaluate(()=>document.body.innerText);
+ if(/simulat|fake[ -]?human/i.test(publicCopy))throw new Error('player-facing UI reveals opponent implementation: '+publicCopy);
  if(errors.length)throw new Error('browser errors: '+errors.join(' | '));
  console.log('V128_LEADERBOARD_SMOKE PASS');
 }finally{await context.close().catch(()=>{});await browser.close().catch(()=>{})}

@@ -85,7 +85,7 @@ function setButtonsWaiting(waiting){['qolReplayBtn','qolElimRematchNow','v127Rem
 function requestRematch(){
  if(rematch.outgoing)return;
  if(simulated()){
-   rematch.outgoing=true;Q.rematchWaiting=true;setButtonsWaiting(true);statusText('Rematch requested… simulated opponent is deciding.');
+   rematch.outgoing=true;Q.rematchWaiting=true;setButtonsWaiting(true);statusText('Rematch requested… opponent is deciding.');
    rematch.simTimer=setTimeout(function(){if(!rematch.outgoing||S.role!=='simulated')return;rematch.outgoing=false;Q.rematchWaiting=false;setButtonsWaiting(false);startSimRematch()},2000);return
  }
  if(!online()||!S.conn||!S.conn.open){statusText('Opponent is no longer connected.');return}
@@ -137,7 +137,7 @@ function patchMatchLog(){
  var host=S.startPublicHost;S.startPublicHost=function(){networkGuard=true;var r=host.apply(S,arguments);networkGuard=false;publicStart('host');return r};
  var start=S.startHostMatch;S.startHostMatch=function(id,name){var r=start.apply(S,arguments);if(S.kind==='public')publicMatched(S.remoteName||name);return r};
  var guest=S.guestData;S.guestData=function(d){var r=guest.apply(S,arguments);if(d&&d.type==='start'&&S.kind==='public')publicMatched(S.remoteName);return r};
- var sim=S.startSimulated;S.startSimulated=function(){var id=activeLogId;networkGuard=true;var r=sim.apply(S,arguments);networkGuard=false;if(id){updateLog(id,'Simulated fallback: '+S.remoteName);if(activeLogId===id)activeLogId=null}return r};
+ var sim=S.startSimulated;S.startSimulated=function(){var id=activeLogId;networkGuard=true;var r=sim.apply(S,arguments);networkGuard=false;if(id){updateLog(id,'Opponent joined: '+S.remoteName);if(activeLogId===id)activeLogId=null}return r};
  var destroy=S.destroyNetwork;S.destroyNetwork=function(){if(!networkGuard&&activeLogId){updateLog(activeLogId,'Cancelled / disconnected');activeLogId=null}return destroy.apply(S,arguments)}
 }
 function renderLog(){var root=$('v127LogList');if(!root)return;var a=loadLog().slice().reverse().slice(0,40);root.textContent='';if(!a.length){var e=document.createElement('div');e.className='v127_empty';e.textContent='No public matchmaking activity recorded on this device yet.';root.appendChild(e);return}for(var i=0;i<a.length;i++){var x=a[i],row=document.createElement('div');row.className='v127_log_row';var t=new Date(x.ts);row.innerHTML='<time></time><strong></strong><span></span>';row.querySelector('time').textContent=t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});row.querySelector('strong').textContent=x.username;row.querySelector('span').textContent=x.result||x.event;root.appendChild(row)}}

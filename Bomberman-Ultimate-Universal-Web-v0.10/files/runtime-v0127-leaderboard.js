@@ -138,7 +138,7 @@ function enforceFakeProfile(){
  }
  var lr=localRank(),rr=p.matchRank||p.displayRank||p.rank;
  if(S.els&&S.els.matchStatus&&S.els.matchBar&&!S.els.matchBar.hidden){
-  S.els.matchStatus.textContent='SIMULATED • '+savedName()+' '+score()+' (#'+lr+') vs '+p.name+' '+p.score+' (#'+rr+')'
+  S.els.matchStatus.textContent='ONLINE • '+savedName()+' '+score()+' (#'+lr+') vs '+p.name+' '+p.score+' (#'+rr+')'
  }
 }
 function patchSimulatedRoster(){
@@ -177,11 +177,11 @@ function style(){
 function ensureLeaderboard(){
  style();var p=$('v127LeaderboardPanel');if(!p){
   p=document.createElement('div');p.id='v127LeaderboardPanel';p.hidden=true;
-  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Simulated Leaderboard</h2><p>Top 50 of a roughly 600-player simulated population. Names, scores and records are deterministic across devices at the same time; standings move gradually as simulated players gain and lose points.</p></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div><div class="v127_lb_note">The population mixes gamer tags, ordinary male first names, and name-number handles. Your row uses your actual competitive human/fake-human record on this device.</div></div>';
+  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Online Leaderboard</h2><p>Top 50 of roughly 600 active players. Scores and records stay consistent while standings move gradually as players gain and lose points.</p></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div><div class="v127_lb_note">Your row uses your competitive record on this device.</div></div>';
   document.body.appendChild(p);p.querySelector('.v127_lb_close').onclick=function(){p.hidden=true;syncTiles()}
  }
  var tile=$('mainLeaderboardTile');if(!tile){
-  tile=document.createElement('button');tile.type='button';tile.id='mainLeaderboardTile';tile.setAttribute('aria-label','Simulated leaderboard');
+  tile=document.createElement('button');tile.type='button';tile.id='mainLeaderboardTile';tile.setAttribute('aria-label','Online leaderboard');
   tile.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v2h3v4c0 2.8-2 5-4.7 5.6A5.1 5.1 0 0 1 13 17.8V20h4v2H7v-2h4v-2.2a5.1 5.1 0 0 1-2.3-3.2C6 14 4 11.8 4 9V5h3V3Zm0 4H6v2c0 1.5.9 2.8 2.2 3.4A9.8 9.8 0 0 1 7 7Zm10 0a9.8 9.8 0 0 1-1.2 5.4A3.7 3.7 0 0 0 18 9V7h-1Z"/></svg><strong>Leaderboard</strong><small>Top 50</small>';
   tile.onclick=function(){ensureLeaderboard();renderLeaderboard();p.hidden=false;syncTiles()};document.body.appendChild(tile)
  }return tile
