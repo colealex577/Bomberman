@@ -68,7 +68,7 @@ function profileAt(seed,now){
   var b=bucketFor(now),day=dayFor(now);
   var live=(hash('BM128|live|'+seed.name+'|'+b)%7)-3;
   var daily=(hash('BM128|day|'+seed.name+'|'+day)%9)-4;
-  var volatility=base>=800?.55:(base>=300?1:1.25);
+  var volatility=base>=800?0.55:(base>=300?1:1.25);
   sc=clamp(base+Math.round((live+daily)*volatility));
   if(seed.baseRank<=POSITIVE_COUNT&&sc===0)sc=1
  }
