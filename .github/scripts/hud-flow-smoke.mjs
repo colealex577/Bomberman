@@ -14,7 +14,7 @@ await page.evaluateOnNewDocument(()=>{try{if(navigator.serviceWorker)navigator.s
 
 try{
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
-  await page.waitForFunction(()=>window.BomberQOL&&BomberQOL.hudGraphicsFixed&&BomberQOL.bottomRightOpponent&&BomberQOL.stagedElimination&&gGameEngine&&gGameEngine.menu,{timeout:15000});
+  await page.waitForFunction(()=>window.BomberQOL&&BomberQOL.installed&&BomberQOL.hudGraphicsFixed&&BomberQOL.bottomRightOpponent&&BomberQOL.stagedElimination&&window.BomberDataSync&&B115.__dataSyncInstalled&&gGameEngine&&gGameEngine.menu&&gGameEngine.bonusesImg,{timeout:15000});
   await page.evaluate(()=>{if(B115.els?.lobby)B115.els.lobby.hidden=true;gGameEngine.lobbyOpen=false;gGameEngine.menu.setMode('multi')});
   await sleep(650);
   const layout=await page.evaluate(()=>{
@@ -23,7 +23,7 @@ try{
     const boxes=[...document.querySelectorAll('.qol_stat_box:not([hidden])')].map(box=>({
       slot:box.dataset.slot,
       items:[...box.querySelectorAll('.qol_stat_item')].map(item=>{
-        const c=item.querySelector('canvas'),ctx=c?.getContext('2d'),d=ctx?.getImageData(0,0,c.width,c.height).data||[];let alpha=0;for(let i=3;i<d.length;i+=4)alpha+=d[i];
+        const c=item.querySelector('canvas');const ctx=c&&c.getContext?c.getContext('2d'):null;const d=ctx?ctx.getImageData(0,0,c.width,c.height).data:[];let alpha=0;for(let i=3;i<d.length;i+=4)alpha+=d[i];
         return{type:item.getAttribute('data-qol-stat'),count:item.querySelector('.qol_stat_count')?.textContent||'',alpha};
       })
     }));
