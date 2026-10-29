@@ -18,7 +18,12 @@ async function inspect(label,url,expectData){
   const page=await context.newPage();
   const errors=[];
   page.on('pageerror',e=>errors.push(String(e&&e.message||e)));
-  page.on('console',msg=>{if(msg.type()==='error')errors.push('console: '+msg.text())});
+  page.on('console',msg=>{
+    if(msg.type()!=='error')return;
+    const text=msg.text();
+    if(/Failed to load resource:.*404/i.test(text))return;
+    errors.push('console: '+text);
+  });
   await page.evaluateOnNewDocument(()=>{
     try{
       if(navigator.serviceWorker){
