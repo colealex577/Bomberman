@@ -1,89 +1,40 @@
 (function(){
 'use strict';
-var VERSION='v0.13.1',S=window.B115,KEY='BombermanRatingV1';
+var VERSION='v0.13.1',S=window.B115;
 if(!S)return;
 var installed=false,forcedTarget=null,lastTarget=null;
-var START=[
- 'hey','yo','gl','good luck','glhf','sup','heyy','hi','yo good luck','ok im ready','k ready','lets go','lets run it','im rusty lol','havent played in a min','hey man','oh hey','good lu','lets g','sry if i lag','ok go','hiii','yo wait nvm','ready?','alr lets do it','lol hey','wassup','go easy lol','im ready i think','wait ok go','yo','hey hey','gl bro','first game today lol','ok im here','lets do ths','good luckkk','hi lol','ready when u are','aight go','k go'
-];
-var DEATH=[
- 'gg','ggs','nice','lol gg','you got me','damn','nice bomb','nicee','bruh','welp','nooo','rip me','that got me','gg man','nice one','ugh','broo','dang','i walked into that lol','i trapped myself','lol my bad','wait what','wait wha','i thought i was out','i wasnt ready lol','welp gg','how did i...','ok that was good','that was clean','srry im bad lol','i thot i had that','bro i-','nahhh','oof gg','my fault lol','i ran right into it','that corner got me','lol wow','gg wp','ok rematch','closee','i panicked lol','rip','g','gg lol','whaat','nice shot','i sold','that was dumb lol','welp thats on me'
-];
-var KILL=[
- 'gg','got u','gotcha','nice try','lol','sry','srry','oof','gg man','ggs','close one','caught you','my bad lol','boom','rip','sorryyy','lets go','that was close','thought you had that','i almost missed that','no way lol','wait that worked','kinda lucky','my bad','damn close','that lane lol','got em','nicee','bro i thought u got out','lol sorry','gg wp','whew','barely','that was luck lol','oops','i saw that lane','closeee','rip lol','wait i got you?','no way','g','sryy','that actually worked','lol got u','my fault','gg tho','you almost had me','that was so close','welp','boom lol'
-];
+var START=['hey','yo','gl','good luck','glhf','sup','heyy','hi','yo good luck','ok im ready','k ready','lets go','lets run it','im rusty lol','havent played in a min','hey man','oh hey','good lu','lets g','sry if i lag','ok go','hiii','yo wait nvm','ready?','alr lets do it','lol hey','wassup','go easy lol','im ready i think','wait ok go','yo','hey hey','gl bro','first game today lol','ok im here','lets do ths','good luckkk','hi lol','ready when u are','aight go','k go'];
+var DEATH=['gg','ggs','nice','lol gg','you got me','damn','nice bomb','nicee','bruh','welp','nooo','rip me','that got me','gg man','nice one','ugh','broo','dang','i walked into that lol','i trapped myself','lol my bad','wait what','wait wha','i thought i was out','i wasnt ready lol','welp gg','how did i...','ok that was good','that was clean','srry im bad lol','i thot i had that','bro i-','nahhh','oof gg','my fault lol','i ran right into it','that corner got me','lol wow','gg wp','ok rematch','closee','i panicked lol','rip','g','gg lol','whaat','nice shot','i sold','that was dumb lol','welp thats on me'];
+var KILL=['gg','got u','gotcha','nice try','lol','sry','srry','oof','gg man','ggs','close one','caught you','my bad lol','boom','rip','sorryyy','lets go','that was close','thought you had that','i almost missed that','no way lol','wait that worked','kinda lucky','my bad','damn close','that lane lol','got em','nicee','bro i thought u got out','lol sorry','gg wp','whew','barely','that was luck lol','oops','i saw that lane','closeee','rip lol','wait i got you?','no way','g','sryy','that actually worked','lol got u','my fault','gg tho','you almost had me','that was so close','welp','boom lol'];
 function $(id){return document.getElementById(id)}
 function clamp(v){v=Math.round(Number(v)||0);return Math.max(0,Math.min(1000,v))}
-function actualScore(){try{return clamp(localStorage.getItem(KEY))}catch(e){return 0}}
-function isDesktop(){
- try{
-  if(document.body&&document.body.classList.contains('desktop-ui'))return true;
-  if(window.matchMedia&&matchMedia('(pointer: fine)').matches&&matchMedia('(hover: hover)').matches)return true;
-  return !(navigator.maxTouchPoints>0||(window.matchMedia&&matchMedia('(pointer: coarse)').matches));
- }catch(e){return true}
-}
+function isDesktop(){try{if(document.body&&document.body.classList.contains('desktop-ui'))return true;if(window.matchMedia&&matchMedia('(pointer: fine)').matches&&matchMedia('(hover: hover)').matches)return true;return !(navigator.maxTouchPoints>0||(window.matchMedia&&matchMedia('(pointer: coarse)').matches))}catch(e){return true}}
 function nextTarget(){var v=forcedTarget==null?Math.floor(Math.random()*1001):clamp(forcedTarget);forcedTarget=null;lastTarget=v;return v}
-function restoreLocalRating(v){
- var g=window.gGameEngine,p=g&&g.players&&g.players[0];if(p)p.rating=v;
- try{if(g&&g.updateStatHud)g.updateStatHud()}catch(e){}
+function chooseProfile(target){
+ var pop=window.BomberLeaderboard127&&BomberLeaderboard127.population?BomberLeaderboard127.population():[];if(!pop.length)return null;var best=[],dist=Infinity;
+ for(var i=0;i<pop.length;i++){var d=Math.abs((Number(pop[i].score)||0)-target);if(d<dist){dist=d;best=[pop[i]]}else if(d===dist)best.push(pop[i])}
+ return best[Math.floor(Math.random()*best.length)]||null
+}
+function applyChosenProfile(p){
+ if(!p||S.role!=='simulated')return;S.remoteName=p.name;var g=window.gGameEngine;if(!g)return;g.playerNames=g.playerNames||[];g.playerNames[1]=p.name;g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating;
+ var sim=g.simulatedOpponent;if(sim){var live=BomberLeaderboard127.profile(p.name)||p;sim.displayName=p.name;sim.rating=p.score;sim.humanRating=p.score;sim.leaderboardRank=live.displayRank||live.rank;if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.score);try{if(sim.updateNameLabel)sim.updateNameLabel()}catch(e){}}
+ try{if(g.updateStatHud)g.updateStatHud()}catch(e){}
 }
 function patchWideMatchmaking(){
- if(S.__v131WideMatchmaking||!S.startSimulated)return;S.__v131WideMatchmaking=true;
- var old=S.startSimulated;
- S.startSimulated=function(){
-  var raw=null,had=false,score=actualScore(),target=nextTarget(),out;
-  try{raw=localStorage.getItem(KEY);had=raw!==null;localStorage.setItem(KEY,String(target))}catch(e){}
-  try{out=old.apply(S,arguments)}finally{
-   try{if(had)localStorage.setItem(KEY,raw);else localStorage.removeItem(KEY)}catch(e){}
-   restoreLocalRating(score);setTimeout(function(){restoreLocalRating(score)},0);setTimeout(function(){restoreLocalRating(score)},100)
-  }
-  return out
- }
+ if(S.__v131WideMatchmaking||!S.startSimulated)return;S.__v131WideMatchmaking=true;var old=S.startSimulated;
+ S.startSimulated=function(){var target=nextTarget(),chosen=chooseProfile(target),out=old.apply(S,arguments);applyChosenProfile(chosen);[0,40,150,500].forEach(function(ms){setTimeout(function(){applyChosenProfile(chosen)},ms)});return out}
 }
 function installMessages(){S.SIM_START=START.slice();S.SIM_DEATH=DEATH.slice();S.SIM_KILL=KILL.slice()}
-function hideOldRoundSettings(){
- var old=document.querySelector('#v127SettingsPanel .v130_set_section');if(old)old.style.setProperty('display','none','important')
-}
+function hideOldRoundSettings(){var old=document.querySelector('#v127SettingsPanel .v130_set_section');if(old)old.style.setProperty('display','none','important')}
 function ensureRoundLobby(){
- var lobby=$('multiplayerLobby'),card=lobby&&lobby.querySelector('.lobby_card');if(!card||!window.BomberSocial130)return;
- hideOldRoundSettings();var sec=$('v131RoundSets');
- if(!sec){
-  sec=document.createElement('div');sec.id='v131RoundSets';sec.className='v131_round_sets';
-  sec.innerHTML='<div class="v131_round_head"><strong>Rounds</strong><small>host choice controls online sets</small></div><div class="v131_round_buttons"><button type="button" data-v131-best="1">1 round</button><button type="button" data-v131-best="3">best of 3</button><button type="button" data-v131-best="5">best of 5</button></div>';
-  var mode=card.querySelector('.lobby_mode_row'),name=card.querySelector('.lobby_name_row');if(mode&&mode.nextSibling)card.insertBefore(sec,mode.nextSibling);else if(name&&name.nextSibling)card.insertBefore(sec,name.nextSibling);else card.insertBefore(sec,card.firstChild);
-  sec.querySelectorAll('[data-v131-best]').forEach(function(b){b.onclick=function(){BomberSocial130.setBestOf(Number(this.getAttribute('data-v131-best')));syncRounds()}})
- }
- syncRounds()
+ var lobby=$('multiplayerLobby'),card=lobby&&lobby.querySelector('.lobby_card');if(!card||!window.BomberSocial130)return;hideOldRoundSettings();var sec=$('v131RoundSets');
+ if(!sec){sec=document.createElement('div');sec.id='v131RoundSets';sec.className='v131_round_sets';sec.innerHTML='<div class="v131_round_head"><strong>Rounds</strong><small>host choice controls online sets</small></div><div class="v131_round_buttons"><button type="button" data-v131-best="1">1 round</button><button type="button" data-v131-best="3">best of 3</button><button type="button" data-v131-best="5">best of 5</button></div>';var mode=card.querySelector('.lobby_mode_row'),name=card.querySelector('.lobby_name_row');if(mode&&mode.nextSibling)card.insertBefore(sec,mode.nextSibling);else if(name&&name.nextSibling)card.insertBefore(sec,name.nextSibling);else card.insertBefore(sec,card.firstChild);sec.querySelectorAll('[data-v131-best]').forEach(function(b){b.onclick=function(){BomberSocial130.setBestOf(Number(this.getAttribute('data-v131-best')));syncRounds()}})}syncRounds()
 }
-function syncRounds(){
- if(!window.BomberSocial130)return;var cur=BomberSocial130.getBestOf();document.querySelectorAll('[data-v131-best]').forEach(function(b){b.classList.toggle('active',Number(b.getAttribute('data-v131-best'))===cur)})
-}
-function syncTouchChoice(){
- var box=$('qolTouchSettings');if(!box)return;box.style.setProperty('display',isDesktop()?'none':'','important')
-}
-function cleanLobbyWording(){
- var root=$('multiplayerLobby');if(!root)return;
- var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;
- while((n=walker.nextNode())){
-  var t=n.nodeValue||'',x=t.replace(/simulated fallback/ig,'matchmaking fallback').replace(/simulated opponent/ig,'public opponent').replace(/simulated player/ig,'player').replace(/simulated/ig,'public');if(x!==t)n.nodeValue=x
- }
-}
-function style(){
- if($('v131-style'))return;var s=document.createElement('style');s.id='v131-style';s.textContent=`
-#buildVersion131{position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.94);font:700 9px/1.25 Arial,sans-serif;pointer-events:none}
-#buildVersion130{display:none!important}
-#v127SettingsPanel .v130_set_section{display:none!important}
-.v131_round_sets{margin:10px 0;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.035);color:#fff;font-family:Helvetica,Arial,sans-serif}.v131_round_head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}.v131_round_head strong{font-size:13px}.v131_round_head small{font-size:9px;color:rgba(255,255,255,.58)}.v131_round_buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.v131_round_buttons button{min-height:34px;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:800}.v131_round_buttons button.active{background:#567b25;border-color:#8fbd4a}
-body.desktop-ui #qolTouchSettings{display:none!important}
-`;document.head.appendChild(s)
-}
+function syncRounds(){if(!window.BomberSocial130)return;var cur=BomberSocial130.getBestOf();document.querySelectorAll('[data-v131-best]').forEach(function(b){b.classList.toggle('active',Number(b.getAttribute('data-v131-best'))===cur)})}
+function syncTouchChoice(){var box=$('qolTouchSettings');if(box)box.style.setProperty('display',isDesktop()?'none':'','important')}
+function cleanLobbyWording(){var root=$('multiplayerLobby');if(!root)return;var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),n;while((n=walker.nextNode())){var t=n.nodeValue||'',x=t.replace(/simulated fallback/ig,'matchmaking fallback').replace(/simulated opponent/ig,'public opponent').replace(/simulated player/ig,'player').replace(/simulated/ig,'public');if(x!==t)n.nodeValue=x}}
+function style(){if($('v131-style'))return;var s=document.createElement('style');s.id='v131-style';s.textContent=`#buildVersion131{position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.94);font:700 9px/1.25 Arial,sans-serif;pointer-events:none}#buildVersion130{display:none!important}#v127SettingsPanel .v130_set_section{display:none!important}.v131_round_sets{margin:10px 0;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.035);color:#fff;font-family:Helvetica,Arial,sans-serif}.v131_round_head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}.v131_round_head strong{font-size:13px}.v131_round_head small{font-size:9px;color:rgba(255,255,255,.58)}.v131_round_buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.v131_round_buttons button{min-height:34px;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:800}.v131_round_buttons button.active{background:#567b25;border-color:#8fbd4a}body.desktop-ui #qolTouchSettings{display:none!important}`;document.head.appendChild(s)}
 function version(){var v=$('buildVersion131');if(!v){v=document.createElement('div');v.id='buildVersion131';document.body.appendChild(v)}v.textContent=VERSION}
-function install(){
- if(installed)return true;if(!window.BomberLeaderboard127||!window.BomberSocial130||!window.BomberV127||!S.startSimulated)return false;
- installed=true;style();version();installMessages();patchWideMatchmaking();ensureRoundLobby();hideOldRoundSettings();syncTouchChoice();cleanLobbyWording();
- window.BomberPolish131={version:VERSION,lastTarget:function(){return lastTarget},isDesktop:isDesktop,sampleTargets:function(n){var out=[];n=Math.max(1,Math.min(10000,Number(n)||1));for(var i=0;i<n;i++)out.push(Math.floor(Math.random()*1001));return out}};
- if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberPolish131.debug={forceTarget:function(v){forcedTarget=clamp(v)}};
- return true
-}
-style();var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(installed){version();installMessages();ensureRoundLobby();hideOldRoundSettings();syncRounds();syncTouchChoice();cleanLobbyWording()}},180);window.addEventListener('resize',function(){syncTouchChoice()},{passive:true});
+function install(){if(installed)return true;if(!window.BomberLeaderboard127||!window.BomberSocial130||!window.BomberV127||!S.startSimulated)return false;installed=true;style();version();installMessages();patchWideMatchmaking();ensureRoundLobby();hideOldRoundSettings();syncTouchChoice();cleanLobbyWording();window.BomberPolish131={version:VERSION,lastTarget:function(){return lastTarget},isDesktop:isDesktop,sampleTargets:function(n){var out=[];n=Math.max(1,Math.min(10000,Number(n)||1));for(var i=0;i<n;i++)out.push(Math.floor(Math.random()*1001));return out}};if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberPolish131.debug={forceTarget:function(v){forcedTarget=clamp(v)}};return true}
+style();var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(installed){version();installMessages();ensureRoundLobby();hideOldRoundSettings();syncRounds();syncTouchChoice();cleanLobbyWording()}},180);window.addEventListener('resize',syncTouchChoice,{passive:true});
 })();
