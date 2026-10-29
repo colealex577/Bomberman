@@ -8,4 +8,5 @@ class StorageError extends Error{constructor(msg){super();this.name='StorageErro
 function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
 function dataDiagnosticsDisabled(){try{return new URLSearchParams(location.search).get('nodata')==='1'}catch(e){return false}}
 function loadCompatibility(){loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',()=>loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',()=>{if(!dataDiagnosticsDisabled())loadScript('net-v0120-data-loader','./files/net-v0120-data.js?v=0120',()=>loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120'))}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0120-qol').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
