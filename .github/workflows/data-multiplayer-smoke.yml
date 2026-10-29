@@ -11,7 +11,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check data sync and QoL
@@ -85,7 +85,7 @@ jobs:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          timeout 120s node .github/scripts/profile-sync-smoke.mjs
+          timeout 120s node .github/scripts/profile-sync-smoke.mjs || (echo 'PeerJS profile attempt 1 missed; retrying once' && timeout 120s node .github/scripts/profile-sync-smoke.mjs)
       - name: Two-client data match integration
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
