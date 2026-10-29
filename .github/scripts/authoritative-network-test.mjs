@@ -70,6 +70,9 @@ try{
  await g.evaluate(()=>{window.botCalls=0;for(const b of gGameEngine.bots)b.update=()=>{window.botCalls++}});
  await h.evaluate(()=>{for(const b of gGameEngine.bots){b.hyperAggressive=true;b.started=true}});await sleep(500);
  assert.equal(await g.evaluate(()=>window.botCalls),0);assert.ok(await g.evaluate(()=>gGameEngine.bots.every(b=>b.hyperAggressive&&b.__v126Marker?.visible)));
+ await h.evaluate(()=>gGameEngine.bots[0].die());await sleep(1900);
+ assert.ok(await g.evaluate(()=>{const dead=BomberMultiplayer.inspect().world.actors.filter(a=>!a.alive);return dead.length===1&&gGameEngine.bots[0].bmp.alpha<=0}),'guest must fade the dead AI');
+ assert.ok(await g.evaluate(()=>gGameEngine.bots[1].alive),'surviving AI identity must remain intact');
  console.log('HOST_ONLY_AI_ATTACK_MIRROR PASS');
  // Simulated opponent identity, visual randomization and two-second rematch.
  await g.evaluate(()=>{B115.destroyNetwork();B115.started=false;B115.kind='public';B115.setRole('host');B115.startSimulated()});await sleep(700);

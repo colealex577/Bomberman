@@ -29,7 +29,8 @@ function raw(d){if(S.conn&&S.conn.open)oldSend.call(S,d)}
 function send(kind,data){raw(Object.assign({type:'auth129',kind,roundId:N.roundId,roundNumber:N.roundNumber,session},data))}
 function stats(e){return {v:e.velocity,bm:e.bombsMax,bs:e.bombStrength,h:e.hearts||0,c:copy(e.bonusCounts||{})}}
 function putStats(e,s){e.velocity=s.v;e.bombsMax=s.bm;e.bombStrength=s.bs;e.hearts=s.h;e.bonusCounts=copy(s.c)}
-function actors(){return G().players.concat(G().bots)}
+let roundBots=[];
+function actors(){for(const b of G().bots)if(!roundBots.includes(b))roundBots.push(b);return G().players.concat(roundBots)}
 function ensureBomb(b){if(!b.__dataNetId)b.__dataNetId=N.roundId+':b'+(++serial);if(!b.endTime)b.endTime=Date.now()+b.timerMax*1000;return b}
 function world(){
  const g=G();
@@ -155,6 +156,7 @@ N.frame=function(){
 };
 N.afterFrame=publish;
 function newRound(){
+ roundBots=[];
  N.roundNumber++;N.roundId=session+':'+N.roundNumber;N.worldRevision=0;N.actorSequence=0;N.lastActorSequence=0;N.lastProcessedInput=0;N.inputSequence=0;lastQueued=0;serial=0;commands=[];pending=[];lastWorld=null;budget=200;budgetTime=performance.now();
 }
 function initPacket(type){announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,profile:{type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()},names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
@@ -167,7 +169,7 @@ function begin(d){
  S.remoteName=S.cleanName(d.names[0]);S.localName=S.cleanName(d.names[1]);S.applyMode(d.ultimate,true);S.applyDrop(d.dropRate,true);
  const g=G();g.onlineDataMode=true;g.networkRole='guest';g.playerNames=d.names;g.simulatedOpponentMode=false;g.lobbyOpen=false;
  S.els.lobby.hidden=true;S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.els.matchBar.hidden=false;
- building=d;N.mirror=copy(d.world);
+ roundBots=[];building=d;N.mirror=copy(d.world);
  try{if(d.startType==='start')g.menu.setMode('multi');else oldGuest.call(S,{type:'v127RematchStart'})}finally{building=null}
  renderWorld();receiveActors(d.actors);
  if(d.profile)oldGuest.call(S,d.profile);
