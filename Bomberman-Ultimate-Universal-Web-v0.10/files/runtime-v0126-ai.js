@@ -38,7 +38,7 @@ function markerShape(){
  s.graphics.setStrokeStyle(1).beginStroke('#5b4100').beginFill('#ffe45c').moveTo(6,0).lineTo(1,9).lineTo(5,9).lineTo(2,17).lineTo(13,6).lineTo(8,6).lineTo(11,0).closePath();
  c.addChild(s);c.regX=6;c.regY=8;c.visible=false;c.mouseEnabled=false;return c
 }
-function ensureMarker(bot){var g=G();if(!g||!g.stage||!bot)return null;if(bot.__v126AttackMarker)return bot.__v126AttackMarker;var m=markerShape();m.__owner=bot;bot.__v126AttackMarker=m;g.stage.addChild(m);markers.push(m);return m}
+function ensureMarker(bot){var g=G();if(!g||!g.stage||!bot)return null;if(bot.__v126Marker)return bot.__v126Marker;var m=markerShape();m.__owner=bot;bot.__v126Marker=m;g.stage.addChild(m);markers.push(m);return m}
 function attackThreshold(bot){
  if(bot&&bot.simulatedHuman){var sk=Math.max(.08,Math.min(1,Number(bot.humanSkill)||0));return 10+Math.round(sk*34)}
  var d=window.BomberV125&&BomberV125.getDifficulty?BomberV125.getDifficulty():'normal';return{easy:5,normal:10,hard:21,expert:36}[d]||10
@@ -47,14 +47,14 @@ function remainingWood(){var g=G(),n=0;if(!g)return 999;for(var i=0;i<g.tiles.le
 function attackActive(bot){if(!bot||bot.alive===false)return false;if(bot.hyperAggressive)return true;return dataGuest()&&remainingWood()<=attackThreshold(bot)}
 function setMarker(bot,on){var g=G(),m=ensureMarker(bot);if(!m||!g)return;bot.attackMode=!!on;m.visible=!!on;if(!on)return;m.x=bot.bmp.x+14;m.y=bot.bmp.y-(bot.nameLabel?27:19)+Math.sin(Date.now()/120)*1.5;m.alpha=.82+Math.sin(Date.now()/95)*.16;try{g.moveToFront(m)}catch(e){try{g.stage.setChildIndex(m,g.stage.numChildren-1)}catch(x){}}}
 function patchAttackMode(){
- if(!window.Bot||Bot.prototype.__v126AttackMarker)return;Bot.prototype.__v126AttackMarker=true;
+ if(!window.Bot||Bot.prototype.__v126AttackMarkerPatched)return;Bot.prototype.__v126AttackMarkerPatched=true;
  Bot.prototype.setAttackMarkerVisible=function(v){setMarker(this,!!v)};
  var old=Bot.prototype.updateEndgameAggression;Bot.prototype.updateEndgameAggression=function(){var r=old.apply(this,arguments);setMarker(this,attackActive(this));return r};
  var die=Bot.prototype.die;Bot.prototype.die=function(){setMarker(this,false);return die.apply(this,arguments)}
 }
 function syncMarkers(){
  var g=G();if(!g||!g.bots)return;for(var i=0;i<g.bots.length;i++){var b=g.bots[i];if(b)setMarker(b,attackActive(b))}
- for(var j=markers.length-1;j>=0;j--){var m=markers[j],o=m&&m.__owner;if(!m||!o||g.bots.indexOf(o)<0){try{g.stage.removeChild(m)}catch(e){}if(o)o.__v126AttackMarker=null;markers.splice(j,1)}}
+ for(var j=markers.length-1;j>=0;j--){var m=markers[j],o=m&&m.__owner;if(!m||!o||g.bots.indexOf(o)<0){try{g.stage.removeChild(m)}catch(e){}if(o)o.__v126Marker=null;markers.splice(j,1)}}
 }
 function expose(){window.BomberAI126={version:VERSION,bombPlan:bombPlan,usefulBomb:useful,attackActive:attackActive,syncMarkers:syncMarkers}}
 function install(){if(installed)return true;if(!window.Bot||!window.createjs||!window.Utils||!G())return false;patchBombLogic();patchAttackMode();expose();installed=true;showVersion();syncMarkers();return true}
