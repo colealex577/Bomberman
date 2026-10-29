@@ -5,12 +5,12 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
 const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];await p.setViewport({width:1280,height:800});
 p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text()))errors.push(m.text())});
-await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanSingleMapV133','fortress');localStorage.setItem('BombermanMultiMapV133','zigzag');localStorage.setItem('BombermanPlayerName','GameplayTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
+await p.evaluateOnNewDocument(()=>{localStorage.removeItem('BombermanSingleMapV133');localStorage.removeItem('BombermanMultiMapV133');localStorage.setItem('BombermanPlayerName','GameplayTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
  await p.waitForFunction(()=>window.BomberGameplay134?.version==='v0.13.4'&&window.BomberMaps133&&window.BomberWhole132&&window.gGameEngine?.menu,{timeout:30000});
  await sleep(300);
- const startup=await p.evaluate(()=>({single:BomberMaps133.getSelection('single'),multi:BomberMaps133.getSelection('multi'),active:BomberMaps133.active(),badge:(document.getElementById('buildVersion133')||{}).textContent,tiers:[BomberGameplay134.tierFor(50),BomberGameplay134.tierFor(150),BomberGameplay134.tierFor(300)],eligible:[BomberGameplay134.baitEligible(299),BomberGameplay134.baitEligible(300)]}));
+ const startup=await p.evaluate(()=>({single:BomberMaps133.getSelection('single'),multi:BomberMaps133.getSelection('multi'),active:BomberMaps133.active(),badge:(document.getElementById('buildVersion134')||{}).textContent,tiers:[BomberGameplay134.tierFor(50),BomberGameplay134.tierFor(150),BomberGameplay134.tierFor(300)],eligible:[BomberGameplay134.baitEligible(299),BomberGameplay134.baitEligible(300)]}));
  assert.deepEqual(startup,{single:'classic',multi:'classic',active:'classic',badge:'v0.13.4',tiers:['low','middle','advanced'],eligible:[false,true]});
  await p.evaluate(()=>{B115.setRole('simulated');BomberGameplay134.forceDesktopChat()});await sleep(80);
  const chat=await p.evaluate(()=>({panel:document.getElementById('chatPanel').hidden,toggle:document.getElementById('chatToggleBtn').hidden,close:getComputedStyle(document.getElementById('chatCloseBtn')).display,desktop:BomberGameplay134.isDesktop()}));
