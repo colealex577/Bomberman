@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-function ensureStyle(){if(document.getElementById('v128-rank-style'))return;var s=document.createElement('style');s.id='v128-rank-style';s.textContent='#qolStatHud .qol_stat_name::after{content:none!important}';document.head.appendChild(s)}
+function ensureStyle(){if(document.getElementById('v128-rank-style'))return;var s=document.createElement('style');s.id='v128-rank-style';s.textContent='body #qolStatHud .qol_stat_box[data-rank]:not([data-rank="__never__"]) .qol_stat_name::after{content:none!important}';document.head.appendChild(s)}
 function playerName(){var S=window.B115;try{return String((S&&S.localName)||localStorage.getItem('BombermanPlayerName')||'Player').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,14)||'Player'}catch(e){return(S&&S.localName)||'Player'}}
 function playerScore(){if(window.BomberV127&&BomberV127.getScore)return BomberV127.getScore();if(window.BomberCharacter&&BomberCharacter.getRating)return BomberCharacter.getRating();return 0}
 function syncRankedSim(){
