@@ -6,5 +6,6 @@ function GUILocalization(){
 let Storage={setValue:(key,value)=>{localStorage[key]=JSON.stringify(value)},getValue:(key)=>{let result;try{if(localStorage[key])result=JSON.parse(localStorage[key])}catch(e){throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`)}return result}};
 class StorageError extends Error{constructor(msg){super();this.name='StorageError';this.message=msg||'Storage Error';this.stack=(new Error()).stack}}
 function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
-function loadCompatibility(){loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',()=>loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',()=>loadScript('net-v0120-data-loader','./files/net-v0120-data.js?v=0120')))}
+function dataDiagnosticsDisabled(){try{return new URLSearchParams(location.search).get('nodata')==='1'}catch(e){return false}}
+function loadCompatibility(){loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',()=>loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',()=>{if(!dataDiagnosticsDisabled())loadScript('net-v0120-data-loader','./files/net-v0120-data.js?v=0120')}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
