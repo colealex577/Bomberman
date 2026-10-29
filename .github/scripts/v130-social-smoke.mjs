@@ -29,6 +29,7 @@ try{
  await A.p.evaluate(()=>gGameEngine.players[1].die());
  await wait(async()=>{const [a,b]=await Promise.all([A.p.evaluate(()=>BomberSocial130.set()),B.p.evaluate(()=>BomberSocial130.set())]);return a?.localWins===1&&a?.opponentWins===0&&b?.localWins===0&&b?.opponentWins===1},'set perspective did not sync correctly');
  await wait(()=>B.p.evaluate(()=>BomberSocial130.stats().p1.deaths>=1),'guest did not receive authoritative round stats');
+ await wait(async()=>{const [a,b]=await Promise.all([A.p.evaluate(()=>BomberSocial130.rivalry()),B.p.evaluate(()=>BomberSocial130.rivalry())]);return a?.wins===1&&b?.losses===1},'rivalry perspective did not persist on both clients');
  const real=await Promise.all([A.p,B.p].map(x=>x.evaluate(()=>({set:BomberSocial130.set(),rival:BomberSocial130.rivalry(),stats:BomberSocial130.stats(),status:B115.els.matchStatus.textContent,version:BomberMultiplayer.version}))));assert.equal(real[0].rival.wins,1);assert.equal(real[1].rival.losses,1);assert.ok(real.every(x=>x.version==='v0.12.9'));assert.ok(real.every(x=>noSyntheticWords(x.status)));assert.ok(real[0].set.opponent==='GuestSocial'&&real[1].set.opponent==='HostSocial');console.log('REAL_RIVAL_SET_SYNC PASS',JSON.stringify(real.map(x=>x.set)));
  const allErrors=[...solo.errors,...A.errors,...B.errors];if(allErrors.length)throw Error('browser errors: '+allErrors.join(' | '));console.log('V130_SOCIAL_SMOKE PASS');
 }finally{for(const c of contexts)await c.close().catch(()=>{});await browser.close().catch(()=>{})}
