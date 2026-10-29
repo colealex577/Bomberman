@@ -2,7 +2,7 @@ name: Data multiplayer branch smoke
 
 on:
   push:
-    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126]
+    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check data sync and QoL
@@ -27,6 +27,8 @@ jobs:
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-net.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-net.js; fi
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-connect.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-connect.js; fi
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0126-ai.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0126-ai.js; fi
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127.js; fi
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0127-fix.js; fi
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
@@ -38,6 +40,7 @@ jobs:
           if [ -f .github/scripts/v124-multiplayer-smoke.mjs ]; then node --check .github/scripts/v124-multiplayer-smoke.mjs; fi
           if [ -f .github/scripts/v125-netcode-smoke.mjs ]; then node --check .github/scripts/v125-netcode-smoke.mjs; fi
           if [ -f .github/scripts/v126-ai-smoke.mjs ]; then node --check .github/scripts/v126-ai-smoke.mjs; fi
+          if [ -f .github/scripts/v127-rematch-settings-smoke.mjs ]; then node --check .github/scripts/v127-rematch-settings-smoke.mjs; fi
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -116,3 +119,10 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 120s node .github/scripts/v126-ai-smoke.mjs
+      - name: v0.12.7 rematch scoring and settings regression
+        if: ${{ hashFiles('.github/scripts/v127-rematch-settings-smoke.mjs') != '' }}
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 180s node .github/scripts/v127-rematch-settings-smoke.mjs
