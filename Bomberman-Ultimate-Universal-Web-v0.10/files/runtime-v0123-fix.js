@@ -2,7 +2,10 @@
 'use strict';
 var tries=0;
 function install(){
-  if(!window.GameEngine||!window.Utils||!window.BomberQOL||!BomberQOL.bottomRightOpponent)return false;
+  if(!window.GameEngine||!window.Utils||!window.BomberQOL||!BomberQOL.bottomRightOpponent||!window.Bot)return false;
+  /* Older simulated-opening code calls this unconditionally, while the current
+     Bot class no longer renders attack markers. Keep the legacy hook harmless. */
+  if(typeof Bot.prototype.setAttackMarkerVisible!=='function')Bot.prototype.setAttackMarkerVisible=function(){};
   if(GameEngine.prototype.__v123FinalSimCorner)return true;
   GameEngine.prototype.__v123FinalSimCorner=true;
   var old=GameEngine.prototype.spawnBots;
