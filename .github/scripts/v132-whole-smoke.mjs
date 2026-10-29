@@ -20,7 +20,7 @@ try{
  const phases=await p.evaluate(()=>({mp:BomberWhole132.phaseFor({bestOf:5,localWins:2,opponentWins:1,complete:false}),final:BomberWhole132.phaseFor({bestOf:5,localWins:2,opponentWins:2,complete:false}),opp:BomberWhole132.phaseFor({bestOf:3,localWins:0,opponentWins:1,complete:false}),won:BomberWhole132.phaseFor({bestOf:3,localWins:2,opponentWins:1,complete:true})}));
  assert.deepEqual(phases,{mp:'match point',final:'final round',opp:'opponent match point',won:'set won'});
  await p.evaluate(()=>{BomberPolish131.debug.forceTarget(900);B115.kind='public';B115.setRole('host');B115.startSimulated()});
- await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent&&gGameEngine.simulatedOpponent.__v132Personality,{timeout:10000});await sleep(400);
+ await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent&&gGameEngine.simulatedOpponent.__v132Personality,{timeout:10000});await sleep(750);
  const live1=await p.evaluate(()=>{const b=gGameEngine.simulatedOpponent,p=BomberLeaderboard127.profile(B115.remoteName);BomberWhole132.applyPersonality(b);b.updateEndgameAggression();return{name:B115.remoteName,score:b.rating,rank:b.leaderboardRank,style:b.__v132Personality.style,pred:b.__v132Personality.prediction,mistake:b.__v132Personality.mistake,weight:b.attackWeight,threshold:b.__v132AggroThreshold,profileScore:p&&p.score}});
  assert.equal(live1.score,live1.profileScore);assert.ok(live1.rank>0);assert.ok(live1.threshold>=5&&live1.threshold<=52);assert.ok(live1.pred>.55);
  await sleep(650);const live2=await p.evaluate(()=>{const b=gGameEngine.simulatedOpponent;return{weight:b.attackWeight,style:b.__v132Personality&&b.__v132Personality.style}});
