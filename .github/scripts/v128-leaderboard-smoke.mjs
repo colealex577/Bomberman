@@ -4,7 +4,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check'],timeout:30000});
 const context=await browser.createBrowserContext(),page=await context.newPage(),errors=[];
 page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));
-page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
+page.on('console',m=>{if(m.text().startsWith('[connect]'))console.log(m.text());if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
 try{
  await page.evaluateOnNewDocument(()=>{try{localStorage.setItem('BombermanPlayerName','ColeRank');localStorage.setItem('BombermanRatingV1','0');localStorage.setItem('BombermanScoreV1Initialized','1')}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}});
  await page.goto(baseUrl,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMultiplayer?.ready,{timeout:30000});

@@ -17,7 +17,7 @@ async function makeClient(label){
   const page=await context.newPage();
   const errors=[];
   page.on('pageerror',e=>errors.push(String(e&&e.message||e)));
-  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
+  page.on('console',m=>{if(m.text().startsWith('[connect]'))console.log(m.text());if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
   await page.evaluateOnNewDocument(()=>{
     try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}
   });

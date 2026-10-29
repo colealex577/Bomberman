@@ -5,6 +5,7 @@ const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH,hea
 const clients=[],errors=[];
 async function client(name){
  const ctx=await browser.createBrowserContext(),p=await ctx.newPage();clients.push(ctx);
+ p.on('console',m=>{if(m.text().startsWith('[connect]'))console.log(m.text())});
  p.on('pageerror',e=>errors.push(name+': '+e.stack));
  await p.evaluateOnNewDocument(name=>{localStorage.setItem('BombermanPlayerName',name);localStorage.setItem('BombermanRatingV1','100');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);
  await p.goto(process.env.TEST_URL);await p.waitForFunction(()=>window.BomberMultiplayer?.ready);return p;

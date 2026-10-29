@@ -3,7 +3,7 @@ const url=process.env.TEST_URL,executablePath=process.env.CHROME_PATH;if(!url||!
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check'],timeout:30000});
 const context=await browser.createBrowserContext();const page=await context.newPage();const errors=[];
-page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
+page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));page.on('console',m=>{if(m.text().startsWith('[connect]'))console.log(m.text());if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
 await page.evaluateOnNewDocument(()=>{try{localStorage.setItem('BombermanMultiplayerAIEnabled','1');localStorage.setItem('BombermanAIDifficultyV1','normal')}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}});
 function assert(c,m){if(!c)throw new Error(m)}
 try{

@@ -11,7 +11,7 @@ async function makeClient(label,{ai=true,score=0,diff='normal'}={}){
   const page=await context.newPage();
   const errors=[];
   page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));
-  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
+  page.on('console',m=>{if(m.text().startsWith('[connect]'))console.log(m.text());if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
   await page.evaluateOnNewDocument(({ai,score,diff,label})=>{
     try{
       localStorage.setItem('BombermanMultiplayerAIEnabled',ai?'1':'0');

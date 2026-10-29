@@ -76,7 +76,7 @@ function remotePlayer(){var g=window.gGameEngine;if(!g||!g.players||g.players.le
 function applyProfilesToEntities(){
   var g=window.gGameEngine;if(!g)return;var lp=localPlayer();if(lp){lp.rating=loadRating();applyAppearanceToEntity(lp,loadAppearance());if(!g.onlineNetworkMode&&g.players[0]===lp){lp.displayName=savedName();if(lp.nameLabel)lp.nameLabel.text=lp.displayName}}
   var rp=remotePlayer();if(rp&&remoteProfile){rp.rating=remoteProfile.rating;applyAppearanceToEntity(rp,remoteProfile.appearance)}
-  var sim=g.simulatedOpponent;if(sim){sim.rating=clampRating(g.simulatedRating||S.simulatedRating||650);if(g.simulatedAppearance)applyAppearanceToEntity(sim,g.simulatedAppearance);applySimSkill(sim,sim.rating)}
+  var sim=g.simulatedOpponent;if(sim){var ranked=window.BomberLeaderboard127&&BomberLeaderboard127.profile(S.remoteName);sim.rating=ranked?ranked.score:clampRating(g.simulatedRating||S.simulatedRating||650);if(ranked)sim.leaderboardRank=ranked.displayRank;if(g.simulatedAppearance)applyAppearanceToEntity(sim,g.simulatedAppearance);applySimSkill(sim,sim.rating)}
 }
 
 function ensureStyle(){
@@ -151,7 +151,7 @@ function updateRatingHud(){
   var g=window.gGameEngine,hud=$('qolStatHud');if(!g||!hud)return;var slots=g.getContestantsByStatSlot?g.getContestantsByStatSlot():[];for(var i=0;i<4;i++){var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box)continue;if(e&&isFinite(Number(e.rating)))box.setAttribute('data-rating',formatRating(e.rating));else box.setAttribute('data-rating','')}
 }
 function updateMatchStatus(){
-  if(!S.els||!S.els.matchStatus||!S.els.matchBar||S.els.matchBar.hidden)return;var local=S.localName||savedName(),lr=formatRating(loadRating());if(S.role==='simulated'&&remoteProfile){S.els.matchStatus.textContent='SIMULATED • '+local+' '+lr+' vs '+S.remoteName+' '+formatRating(remoteProfile.rating)}else if(S.online()){var rr=remoteProfile?formatRating(remoteProfile.rating):'—';S.els.matchStatus.textContent='ONLINE • '+local+' '+lr+' vs '+S.remoteName+' '+rr}
+  if(!S.els||!S.els.matchStatus||!S.els.matchBar||S.els.matchBar.hidden)return;var local=S.localName||savedName(),lr=formatRating(loadRating());if(S.role==='simulated'&&window.BomberLeaderboard127){var rp=BomberLeaderboard127.profile(S.remoteName);if(rp){S.els.matchStatus.textContent='SIMULATED • '+local+' '+lr+' (#'+BomberLeaderboard127.rank(loadRating(),local)+') vs '+rp.name+' '+rp.score+' (#'+rp.displayRank+')';return}}if(S.role==='simulated'&&remoteProfile){S.els.matchStatus.textContent='SIMULATED • '+local+' '+lr+' vs '+S.remoteName+' '+formatRating(remoteProfile.rating)}else if(S.online()){var rr=remoteProfile?formatRating(remoteProfile.rating):'—';S.els.matchStatus.textContent='ONLINE • '+local+' '+lr+' vs '+S.remoteName+' '+rr}
 }
 function periodic(){setVersion();applyProfilesToEntities();updateRatingHud();updatePostRating();updateMatchStatus();if(S.online())sendProfile(false)}
 
@@ -161,3 +161,4 @@ function install(){
 }
 setVersion();var tries=0,t=setInterval(function(){setVersion();if(install()||++tries>600)clearInterval(t)},40);setInterval(periodic,140);
 })();
+

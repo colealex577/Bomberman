@@ -19,11 +19,11 @@ const copy=x=>JSON.parse(JSON.stringify(x));
 const cell=p=>p.y*G().tilesX+p.x;
 const pos=n=>({x:n%G().tilesX,y:Math.floor(n/G().tilesX)});
 let session='',lastWorld=null,pending=[],commands=[],serial=0,controlSeq=0,lastControl=0;
-let building=null,starting=false,lastFrame=0,lastRecovery=0,lastInput=0,lastQueued=0;
+let building=null,starting=false,lastFrame=0,lastRecovery=0,lastQueued=0;
 let oldHost,oldGuest,oldSend,baseMove,previousSession='',lastSeenRound=0;
-let budget=200,budgetTime=0, applying=false;
+let budget=200,budgetTime=0, applying=false,announcedRound=null;
 const retiredSessions=new Set();
-const legacyWire=/^(dataState|dataWorld|dataBombSpawn|dataBombExplode|v125Move|v125BombRequest|v125BombAck|v125Pickup|key|bomb|streamRetry|streamAck)$/;
+const legacyWire=/^(dataState|dataWorld|dataBombSpawn|dataBombExplode|v125Move|v125BombRequest|v125BombAck|v125Pickup|key|bomb|streamRetry|streamAck|qolRematchRequest|qolRematchResponse|qolRematchStart)$/;
 const controls=/^(v127DuelResolved|v127AIBonus|v127RematchRequest|v127RematchResponse|v123Profile|spectate|matchEnd|qolOpponentLeft)$/;
 function raw(d){if(S.conn&&S.conn.open)oldSend.call(S,d)}
 function send(kind,data){raw(Object.assign({type:'auth129',kind,roundId:N.roundId,roundNumber:N.roundNumber,session},data))}
@@ -157,7 +157,7 @@ N.afterFrame=publish;
 function newRound(){
  N.roundNumber++;N.roundId=session+':'+N.roundNumber;N.worldRevision=0;N.actorSequence=0;N.lastActorSequence=0;N.lastProcessedInput=0;N.inputSequence=0;lastQueued=0;serial=0;commands=[];pending=[];lastWorld=null;budget=200;budgetTime=performance.now();
 }
-function initPacket(type){publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
+function initPacket(type){announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
 function begin(d){
  if(retiredSessions.has(d.session))return;
  if(d.session===previousSession&&d.roundNumber<=lastSeenRound)return;
@@ -214,7 +214,7 @@ function install(){
  const start=S.startHostMatch;S.startHostMatch=function(){if(S.started)return;session=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);N.roundNumber=0;DS.active=true;DS.role='host';G().onlineDataMode=true;G().networkRole='host';return start.apply(S,arguments)};
  const destroy=S.destroyNetwork;S.destroyNetwork=function(){DS.active=false;DS.role='offline';N.roundId=null;N.mirror=null;pending=[];commands=[];return destroy.apply(S,arguments)};
  S.streamTo=function(){};S.incomingCall=c=>c.close();
- const restart=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){if(guest()&&!building)return;if(host()){newRound();starting=true}try{return restart.apply(this,arguments)}finally{starting=false}};
+ const restart=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){if(guest()&&!building)return;if(host()){newRound();starting=true}try{return restart.apply(this,arguments)}finally{starting=false;if(host()){const id=N.roundId;setTimeout(()=>{if(host()&&N.roundId===id&&announcedRound!==id)initPacket('v127RematchStart')},0)}}};
  const tiles=GameEngine.prototype.drawTiles,bonuses=GameEngine.prototype.drawBonuses,bots=GameEngine.prototype.spawnBots;
  GameEngine.prototype.drawTiles=function(){if(!building)return tiles.apply(this,arguments);for(let y=0;y<this.tilesY;y++)for(let x=0;x<this.tilesX;x++){const t=new Tile('grass',{x,y});this.stage.addChild(t.bmp)}for(const [k,m] of building.world.tiles){const t=new Tile(m,pos(k));this.stage.addChild(t.bmp);this.tiles.push(t)}};
  GameEngine.prototype.drawBonuses=function(){if(!building)return bonuses.apply(this,arguments)};
@@ -229,6 +229,7 @@ function install(){
  Bomb.prototype.update=function(){if(guest())return;if(host()){if(!this.exploded&&Date.now()>=ensureBomb(this).endTime)this.explode();return}return bombUpdate.apply(this,arguments)};
  Bomb.prototype.explode=function(){if(guest()||this.exploded)return;return bombExplode.apply(this,arguments)};
  const action=S.remoteAction;S.remoteAction=function(a,down){if(!guest())return action.apply(S,arguments);const was=!!gInputEngine.actions[a];gInputEngine.actions[a]=!!down;if(a==='bomb2'&&down&&!was)input(0,true)};
+ window.addEventListener('keyup',e=>{if(DS.active&&e.code==='Enter'&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();e.stopImmediatePropagation();BomberV127.requestRematch()}},true);
  const keys={ArrowUp:'up2',KeyW:'up2',ArrowDown:'down2',KeyS:'down2',ArrowLeft:'left2',KeyA:'left2',ArrowRight:'right2',KeyD:'right2',Space:'bomb2',ShiftLeft:'bomb2',ShiftRight:'bomb2'};
  for(const type of ['keydown','keyup'])window.addEventListener(type,e=>{if(!guest()||!keys[e.code]||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.target.isContentEditable)return;S.remoteAction(keys[e.code],type==='keydown');e.preventDefault();e.stopPropagation()},true);
  BomberOnline.sendTouchAction=function(a,down){if(guest())S.remoteAction({up:'up2',down:'down2',left:'left2',right:'right2',bomb:'bomb2'}[a]||a,down)};

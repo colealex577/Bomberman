@@ -202,7 +202,7 @@ function syncTiles(){
 }
 function install(){
  if(installed)return true;if(!window.BomberV127||!window.BomberCharacter||!window.GameEngine||!G()||!G().menu)return false;installed=true;
- refreshRoster(Date.now(),true);patchSimulatedRoster();hideMatchLog();ensureLeaderboard();fixCustomizeName();renderLeaderboard();syncTiles();
+ refreshRoster(Date.now(),true);patchSimulatedRoster();hideMatchLog();ensureLeaderboard();fixCustomizeName();renderLeaderboard();syncTiles();['v127SettingsPanel','v127LeaderboardPanel','characterPanel'].forEach(function(id){var el=$(id);if(el)new MutationObserver(syncTiles).observe(el,{attributes:true,attributeFilter:['hidden']})});
  window.BomberLeaderboard127={
   top50:function(){refreshRoster();return top50.map(function(x){var c=clone(x);c.displayRank=fakeDisplayRank(x.name);return c})},
   profile:function(name){return profile(name)},
