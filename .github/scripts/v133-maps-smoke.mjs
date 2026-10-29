@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 const base=process.env.TEST_URL,exe=process.env.CHROME_PATH;if(!base||!exe)throw Error('TEST_URL/CHROME_PATH missing');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
-const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];
+const contexts=[];const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];contexts.push(ctx);
 p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text()))errors.push(m.text())});
+async function wait(fn,msg,ms=12000){const end=Date.now()+ms;while(Date.now()<end){try{if(await fn())return}catch{}await sleep(70)}throw Error(msg)}
+async function client(name,pref){const c=await browser.createBrowserContext(),page=await c.newPage();contexts.push(c);const es=[];page.on('pageerror',e=>es.push(String(e.stack||e)));page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text()))es.push(m.text())});await page.evaluateOnNewDocument(({name,pref})=>{localStorage.setItem('BombermanPlayerName',name);localStorage.setItem('BombermanMultiMapV133',pref);if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})},{name,pref});await page.goto(base,{waitUntil:'domcontentloaded',timeout:20000});await page.waitForFunction(()=>window.BomberMaps133?.version==='v0.13.3'&&window.BomberMultiplayer?.ready&&window.gGameEngine?.menu,{timeout:30000});return{page,errors:es}}
 await p.evaluateOnNewDocument(()=>{localStorage.removeItem('BombermanSingleMapV133');localStorage.removeItem('BombermanMultiMapV133');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
@@ -27,6 +29,13 @@ try{
  await p.evaluate(()=>{B115.setRole('guest');BomberMaps133.debug.setRemote('shuffle','fortress')});await sleep(220);const guestChoice=await p.evaluate(()=>({disabled:document.getElementById('v133MultiSelect').disabled,shown:document.getElementById('v133MultiSelect').value,saved:BomberMaps133.getSelection('multi')}));assert.deepEqual(guestChoice,{disabled:true,shown:'shuffle',saved:'longlanes'},'guest host-map state leaked into saved preference');
  await p.evaluate(()=>{B115.setRole('offline');BomberMaps133.setSelection('single','shuffle');gGameEngine.lobbyOpen=false;document.getElementById('multiplayerLobby').hidden=true;gGameEngine.playersCount=1;gGameEngine.menu.hide();gGameEngine.restart()});await sleep(120);const shuffleA=await p.evaluate(()=>BomberMaps133.active());await p.evaluate(()=>gGameEngine.restart());await sleep(120);const shuffleB=await p.evaluate(()=>BomberMaps133.active());assert.notEqual(shuffleA,shuffleB,'shuffle repeated the previous map');
  await p.evaluate(()=>{B115.setRole('guest');gGameEngine.playersCount=2;BomberMaps133.debug.setRemote('shuffle','fortress');gGameEngine.restart()});await sleep(120);assert.equal(await p.evaluate(()=>BomberMaps133.active()),'fortress','guest did not use host active map');
- if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V133_MAPS_SMOKE PASS',JSON.stringify({maps:layouts.map(x=>({id:x.id,wall:x.wall,wood:x.wood,grass:x.grass})),shuffle:[shuffleA,shuffleB],guestChoice}));
-}finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
+ const A=await client('MapHost','fortress'),B=await client('MapGuest','longlanes'),id='bomberman-v133-'+Date.now();
+ await A.page.evaluate(id=>{BomberV124.setAIEnabled(false);BomberMaps133.setSelection('multi','fortress');B115.privateId=()=>id;B115.els.privateCode.value='7';B115.els.name.value='MapHost';B115.startPrivateHost()},id);await sleep(700);
+ await B.page.evaluate(id=>{B115.privateId=()=>id;B115.els.privateCode.value='7';B115.els.name.value='MapGuest';B115.startPrivateJoin()},id);
+ await wait(()=>B.page.evaluate(()=>window.BomberDataSync?.role==='guest'&&!!BomberMultiplayer.roundId),'private map pair did not connect',30000);
+ await wait(async()=>{const [a,b]=await Promise.all([A.page.evaluate(()=>BomberMaps133.active()),B.page.evaluate(()=>BomberMaps133.active())]);return a==='fortress'&&b==='fortress'},'host map did not synchronize to guest',12000);
+ const pair=await Promise.all([A.page,B.page].map(page=>page.evaluate(()=>({map:BomberMaps133.active(),version:BomberMultiplayer.version,walls:(gGameEngine.tiles||[]).filter(t=>t&&t.material==='wall').map(t=>t.position.x+','+t.position.y).sort().join('|'),saved:BomberMaps133.getSelection('multi')}))));
+ assert.equal(pair[0].map,'fortress');assert.equal(pair[1].map,'fortress');assert.equal(pair[0].version,'v0.12.9');assert.equal(pair[1].version,'v0.12.9');assert.equal(pair[0].walls,pair[1].walls,'host and guest hard-wall layouts differ');assert.equal(pair[0].saved,'fortress');assert.equal(pair[1].saved,'longlanes','guest preference was overwritten by host map');
+ const allErrors=[...errors,...A.errors,...B.errors];if(allErrors.length)throw Error('browser errors: '+allErrors.join(' | '));
+ console.log('V133_MAPS_SMOKE PASS',JSON.stringify({maps:layouts.map(x=>({id:x.id,wall:x.wall,wood:x.wood,grass:x.grass})),shuffle:[shuffleA,shuffleB],guestChoice,pair:pair.map(x=>({map:x.map,version:x.version,saved:x.saved}))}));
+}finally{for(const c of contexts)await c.close().catch(()=>{});await browser.close().catch(()=>{})}
