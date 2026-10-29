@@ -53,12 +53,13 @@ function patchSimulated(){
 function availability(name,now){var bucket=Math.floor(Number(now||Date.now())/300000);return(hash('v136|online|'+clean(name)+'|'+bucket)%100)<30}
 function ensureToast(){var t=document.getElementById('v136ChallengeToast');if(t)return t;t=document.createElement('div');t.id='v136ChallengeToast';t.hidden=true;t.style.cssText='position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:12000;padding:10px 14px;border-radius:10px;background:rgba(18,14,18,.94);border:1px solid rgba(255,255,255,.2);color:#fff;font:700 12px/1.3 Arial,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.45);pointer-events:none';document.body.appendChild(t);return t}
 var toastTimer=null;function toast(msg){var t=ensureToast();t.textContent=msg;t.hidden=false;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
+function launchChallenge(){if(!pendingChallenge||typeof S.startSimulated!=='function')return false;if(S.role!=='host'&&S.role!=='guest'&&typeof S.setRole==='function')S.setRole('host');S.startSimulated();return S.role==='simulated'}
 function startChallenge(name,force){
  name=clean(name);var p=profile(name);if(!p)return false;
  if(!force&&!availability(name)){toast(name+' is offline or declined the challenge.');return false}
  pendingChallenge={name:name,profile:p,appearance:appearanceFor(name),acceptedAt:Date.now()};
  var panel=document.getElementById('v127LeaderboardPanel');if(panel)panel.hidden=true;toast(name+' accepted • '+p.score+' rating');
- setTimeout(function(){if(pendingChallenge&&typeof S.startSimulated==='function')S.startSimulated()},140);return true
+ setTimeout(launchChallenge,140);return true
 }
 function ensureStyle(){
  if(document.getElementById('v136-style'))return;var st=document.createElement('style');st.id='v136-style';st.textContent='\
@@ -88,7 +89,7 @@ function install(){
  if(installed)return true;if(!window.Bot||!window.BomberPolish135||!window.BomberLeaderboard127||!window.BomberCharacter||!G()||!S.startSimulated)return false;
  patchAI();patchSimulated();ensureStyle();decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();installed=true;
  window.BomberChallenge136={version:VERSION,availability:availability,appearanceFor:appearanceFor,challenge:startChallenge,active:function(){return activeChallenge},applyOpponent:applyOpponent};
- if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberChallenge136.debug={occupant:occupant,safeGrass:safeGrass,recentLoop:recentLoop,loopPassThrough:loopPassThrough,forceChallenge:function(name){return startChallenge(name,true)},setPending:function(name){var p=profile(name);pendingChallenge=p?{name:name,profile:p,appearance:appearanceFor(name)}:null;return pendingChallenge},femaleRate:function(names){var f=0;for(var i=0;i<names.length;i++)if(appearanceFor(names[i]).gender==='female')f++;return names.length?f/names.length:0}};
+ if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberChallenge136.debug={occupant:occupant,safeGrass:safeGrass,recentLoop:recentLoop,loopPassThrough:loopPassThrough,forceChallenge:function(name){return startChallenge(name,true)},launchChallenge:launchChallenge,setPending:function(name){var p=profile(name);pendingChallenge=p?{name:name,profile:p,appearance:appearanceFor(name)}:null;return pendingChallenge},femaleRate:function(names){var f=0;for(var i=0;i<names.length;i++)if(appearanceFor(names[i]).gender==='female')f++;return names.length?f/names.length:0}};
  return true
 }
 var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(!installed)return;decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();if(S.role==='simulated'&&S.remoteName)applyOpponent(S.remoteName,profile(S.remoteName))},180);window.addEventListener('resize',decorateLeaderboard,{passive:true});
