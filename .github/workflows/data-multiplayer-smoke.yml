@@ -2,7 +2,7 @@ name: Data multiplayer branch smoke
 
 on:
   push:
-    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow]
+    branches: [multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123]
   workflow_dispatch:
 
 permissions:
@@ -19,12 +19,14 @@ jobs:
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0120-data.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol-fix.js
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js; fi
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
           node --check .github/scripts/qol-smoke.mjs
           node --check .github/scripts/qol-rematch-test.mjs
           node --check .github/scripts/hud-flow-smoke.mjs
+          if [ -f .github/scripts/character-rating-smoke.mjs ]; then node --check .github/scripts/character-rating-smoke.mjs; fi
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -56,6 +58,13 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 90s node .github/scripts/hud-flow-smoke.mjs
+      - name: Character customization and rating smoke
+        if: ${{ hashFiles('.github/scripts/character-rating-smoke.mjs') != '' }}
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 90s node .github/scripts/character-rating-smoke.mjs
       - name: Two-client data match integration
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
