@@ -12,6 +12,14 @@ function syncRankedSim(){
  var hud=document.getElementById('qolStatHud'),box=sim&&hud&&hud.querySelector('.qol_stat_box[data-slot="'+sim.statSlot+'"]');if(box){box.setAttribute('data-rating',String(p.score));box.setAttribute('data-rank',String(p.displayRank));var pts=box.querySelector('.v125_points');if(pts)pts.textContent=String(p.score)+' · #'+String(p.displayRank)}
  if(S.els&&S.els.matchStatus&&S.els.matchBar&&!S.els.matchBar.hidden){var ps=playerScore(),pr=L.rank(ps,playerName()),desired='SIMULATED • '+playerName()+' '+ps+' (#'+pr+') vs '+p.name+' '+p.score+' (#'+p.displayRank+')';if(S.els.matchStatus.textContent!==desired)S.els.matchStatus.textContent=desired}
 }
-function watchStatus(){var S=window.B115,el=S&&S.els&&S.els.matchStatus;if(!el||el.__v128RankWatch)return;el.__v128RankWatch=true;new MutationObserver(function(){syncRankedSim()}).observe(el,{childList:true,characterData:true,subtree:true})}
-ensureStyle();setInterval(function(){watchStatus();syncRankedSim()},55);setTimeout(function(){watchStatus();syncRankedSim()},0);
+function syncOnlineStatus(){
+ var S=window.B115,g=window.gGameEngine,L=window.BomberLeaderboard127;if(!S||!g||!L||S.role==='simulated'||!(S.online&&S.online())||!S.started||!S.els||!S.els.matchStatus||!S.els.matchBar||S.els.matchBar.hidden||!g.players||g.players.length<2)return;
+ var li=S.role==='guest'?1:0,ri=li===0?1:0,lp=g.players[li],rp=g.players[ri];if(!lp||!rp)return;
+ var ls=Math.round(Number(lp.rating)),rs=Math.round(Number(rp.rating));if(!isFinite(ls)||!isFinite(rs))return;
+ var ln=String(lp.displayName||S.localName||'Player').slice(0,14),rn=String(rp.displayName||S.remoteName||'Opponent').slice(0,14),lr=L.rank(ls,ln),rr=L.rank(rs,rn),prefix=S.kind==='private'?'PRIVATE • DATA':'ONLINE';
+ var desired=prefix+' • '+ln+' '+ls+' (#'+lr+') vs '+rn+' '+rs+' (#'+rr+')';if(S.els.matchStatus.textContent!==desired)S.els.matchStatus.textContent=desired
+}
+function syncAll(){syncRankedSim();syncOnlineStatus()}
+function watchStatus(){var S=window.B115,el=S&&S.els&&S.els.matchStatus;if(!el||el.__v128RankWatch)return;el.__v128RankWatch=true;new MutationObserver(function(){syncAll()}).observe(el,{childList:true,characterData:true,subtree:true})}
+ensureStyle();setInterval(function(){watchStatus();syncAll()},55);setTimeout(function(){watchStatus();syncAll()},0);
 })();
