@@ -42,9 +42,9 @@ function skillFor(score){try{return window.BomberCharacter&&BomberCharacter.skil
 function applyOpponent(name,p){
  var g=G();name=clean(name);p=p||profile(name);if(!g||!name)return false;
  var rating=p?Number(p.score)||0:Number(g.simulatedRating||S.simulatedRating||500),a=appearanceFor(name),token=name+'|'+rating+'|'+a.gender+'|'+a.skin+'|'+(a.glasses?1:0)+'|'+a.hat+'|'+a.shoes;
- S.remoteName=name;S.simulatedRating=rating;g.simulatedRating=rating;g.simulatedAppearance=a;
- function sync(){var gg=G(),sim=gg&&gg.simulatedOpponent;if(!sim)return;sim.displayName=name;if(sim.nameLabel)sim.nameLabel.text=name;sim.rating=rating;sim.humanRating=rating;sim.humanSkill=skillFor(rating);if(p)sim.leaderboardRank=p.displayRank||p.rank}
- if(g.__v136OpponentToken!==token){g.__v136OpponentToken=token;[0,40,140,420,900].forEach(function(ms){setTimeout(sync,ms)})}else sync();return true
+ S.remoteName=name;S.simulatedRating=rating;g.simulatedRating=rating;g.simulatedAppearance=a;g.playerNames=g.playerNames||[];g.playerNames[1]=name;
+ function sync(){var gg=G(),sim=gg&&gg.simulatedOpponent;if(!sim)return;S.remoteName=name;gg.playerNames=gg.playerNames||[];gg.playerNames[1]=name;sim.displayName=name;if(sim.nameLabel)sim.nameLabel.text=name;sim.rating=rating;sim.humanRating=rating;sim.humanSkill=skillFor(rating);if(p)sim.leaderboardRank=p.displayRank||p.rank;if(sim.updateNameLabel)try{sim.updateNameLabel()}catch(e){}}
+ if(g.__v136OpponentToken!==token){g.__v136OpponentToken=token;[0,40,140,420,520,620,900].forEach(function(ms){setTimeout(sync,ms)})}else sync();return true
 }
 function patchSimulated(){
  if(S.__v136Simulated)return false;S.__v136Simulated=true;var old=S.startSimulated;
@@ -92,5 +92,5 @@ function install(){
  if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberChallenge136.debug={occupant:occupant,safeGrass:safeGrass,recentLoop:recentLoop,loopPassThrough:loopPassThrough,forceChallenge:function(name){return startChallenge(name,true)},launchChallenge:launchChallenge,setPending:function(name){var p=profile(name);pendingChallenge=p?{name:name,profile:p,appearance:appearanceFor(name)}:null;return pendingChallenge},femaleRate:function(names){var f=0;for(var i=0;i<names.length;i++)if(appearanceFor(names[i]).gender==='female')f++;return names.length?f/names.length:0}};
  return true
 }
-var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(!installed)return;decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();if(S.role==='simulated'&&S.remoteName)applyOpponent(S.remoteName,profile(S.remoteName))},180);window.addEventListener('resize',decorateLeaderboard,{passive:true});
+var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);setInterval(function(){if(!installed)return;decorateLeaderboard();watchMatchStatus();humanizeLabels();badge();if(S.role==='simulated'){if(activeChallenge)applyOpponent(activeChallenge.name,activeChallenge.profile);else if(S.remoteName)applyOpponent(S.remoteName,profile(S.remoteName))}},180);window.addEventListener('resize',decorateLeaderboard,{passive:true});
 })();
