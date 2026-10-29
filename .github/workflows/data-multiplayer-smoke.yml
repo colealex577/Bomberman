@@ -20,6 +20,7 @@ jobs:
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0120-qol-fix.js
           if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123.js; fi
+          if [ -f Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js ]; then node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0123-fix.js; fi
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check .github/scripts/data-smoke.mjs
           node --check .github/scripts/data-match-test.mjs
@@ -27,6 +28,7 @@ jobs:
           node --check .github/scripts/qol-rematch-test.mjs
           node --check .github/scripts/hud-flow-smoke.mjs
           if [ -f .github/scripts/character-rating-smoke.mjs ]; then node --check .github/scripts/character-rating-smoke.mjs; fi
+          if [ -f .github/scripts/profile-sync-smoke.mjs ]; then node --check .github/scripts/profile-sync-smoke.mjs; fi
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Start local server
@@ -65,6 +67,13 @@ jobs:
         run: |
           export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           timeout 90s node .github/scripts/character-rating-smoke.mjs
+      - name: Two-client profile sync smoke
+        if: ${{ hashFiles('.github/scripts/profile-sync-smoke.mjs') != '' }}
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 120s node .github/scripts/profile-sync-smoke.mjs
       - name: Two-client data match integration
         env:
           TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?ci=${{ github.sha }}
