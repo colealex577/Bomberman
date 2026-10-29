@@ -1,13 +1,15 @@
 import puppeteer from 'puppeteer-core';
 const url=process.env.TEST_URL,executablePath=process.env.CHROME_PATH;if(!url||!executablePath)throw new Error('TEST_URL/CHROME_PATH missing');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function waitFor(fn,timeout=30000,step=200){const end=Date.now()+timeout;while(Date.now()<end){try{if(await fn())return true}catch(e){}await sleep(step)}return false}
 const browser=await puppeteer.launch({executablePath,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check'],timeout:30000});
 const context=await browser.createBrowserContext();const page=await context.newPage();const errors=[];
 page.on('pageerror',e=>errors.push(String(e?.stack||e?.message||e)));page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource:.*404/i.test(m.text()))errors.push('console: '+m.text())});
 await page.evaluateOnNewDocument(()=>{try{localStorage.setItem('BombermanPlayerName','ScoreCI');localStorage.setItem('BombermanRatingV1','500');localStorage.removeItem('BombermanScoreV1Initialized');localStorage.removeItem('BombermanCharacterV1')}catch(e){}try{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({scope:location.href})}catch(e){}});
 try{
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:20000});
- await page.waitForFunction(()=>window.BomberCharacter&&document.getElementById('buildVersion123')?.textContent==='v0.12.3'&&window.BomberQOL?.bottomRightOpponent&&document.getElementById('mainCustomizeTile')&&gGameEngine?.menu,{timeout:18000});
+ const ready=await waitFor(()=>page.evaluate(()=>!!(window.BomberCharacter&&document.getElementById('buildVersion123')?.textContent==='v0.12.3'&&window.BomberQOL?.bottomRightOpponent&&document.getElementById('mainCustomizeTile')&&window.gGameEngine?.menu)),30000,200);
+ if(!ready)throw new Error('character/customize runtime did not finish startup');
  await page.evaluate(()=>{if(!gGameEngine.menu.views.length)gGameEngine.menu.show()});await sleep(300);
  const menu=await page.evaluate(()=>({version:document.getElementById('buildVersion123')?.textContent,panel:!!document.getElementById('characterPanel'),score:BomberCharacter.getRating(),tileDisplay:getComputedStyle(document.getElementById('mainCustomizeTile')).display,tileText:document.getElementById('mainCustomizeTile').innerText,canvasCards:gGameEngine.menu.views.filter(v=>v instanceof createjs.Container&&v.children?.some(c=>String(c.text||'').toLowerCase()==='character')).length,shapeX:gGameEngine.menu.views.filter(v=>v instanceof createjs.Shape&&v._listeners?.click?.length).map(v=>v.x)}));
  console.log('CHAR_BOOT',JSON.stringify(menu));if(menu.version!=='v0.12.3'||!menu.panel||menu.score!==0||menu.tileDisplay==='none'||!menu.tileText.includes('Customize')||!menu.tileText.includes('Score 0')||menu.canvasCards!==0)throw new Error('customize menu / zero score did not initialize');
