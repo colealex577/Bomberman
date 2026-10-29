@@ -17,7 +17,9 @@ function loadCompatibility(){
       loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
        loadScript('runtime-v0123-fix-loader','./files/runtime-v0123-fix.js?v=0123b',function(){
         loadScript('runtime-v0123-final-loader','./files/runtime-v0123-final.js?v=0123c',function(){
-         loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d');
+         loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d',function(){
+          loadScript('runtime-v0124-loader','./files/runtime-v0124.js?v=0124');
+         });
         });
        });
       });
@@ -27,5 +29,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0123d').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0124').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
