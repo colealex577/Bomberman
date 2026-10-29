@@ -3,6 +3,9 @@ on:
   push:
     branches: [authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133]
   workflow_dispatch:
+concurrency:
+  group: data-multiplayer-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
