@@ -20,12 +20,12 @@ async function makeClient(label,aiPref=true){
 }
 async function waitFor(fn,timeout=20000,step=100){const end=Date.now()+timeout;while(Date.now()<end){if(await fn())return true;await sleep(step)}return false}
 async function snapshot(page){return page.evaluate(()=>({
- role:B115.role,started:B115.started,ai:BomberV124.getAIEnabled(),players:gGameEngine.players.map(p=>({alive:p.alive,x:p.bmp.x,y:p.bmp.y})),bots:gGameEngine.bots.map(b=>({alive:b.alive,sim:!!b.simulatedHuman,x:b.bmp.x,y:b.bmp.y})),bombs:gGameEngine.bombs.filter(b=>b&&!b.exploded).map(b=>({id:b.__dataNetId||'',x:b.position.x,y:b.position.y,t:b.timer})),actions:{up2:!!gInputEngine.actions.up2,down2:!!gInputEngine.actions.down2,left2:!!gInputEngine.actions.left2,right2:!!gInputEngine.actions.right2,bomb2:!!gInputEngine.actions.bomb2},elim:document.getElementById('qolEliminated')&&!document.getElementById('qolEliminated').hidden,earlyBtn:document.getElementById('qolElimRematchNow')&&!document.getElementById('qolElimRematchNow').hidden,prompt:document.getElementById('qolRematchPrompt')&&!document.getElementById('qolRematchPrompt').hidden,version:document.getElementById('buildVersion124')?.textContent}))}
+ role:B115.role,started:B115.started,dataActive:!!BomberDataSync.active,dataRole:BomberDataSync.role,ai:BomberV124.getAIEnabled(),players:gGameEngine.players.map(p=>({alive:p.alive,x:p.bmp.x,y:p.bmp.y})),bots:gGameEngine.bots.map(b=>({alive:b.alive,sim:!!b.simulatedHuman,x:b.bmp.x,y:b.bmp.y})),bombs:gGameEngine.bombs.filter(b=>b&&!b.exploded).map(b=>({id:b.__dataNetId||'',x:b.position.x,y:b.position.y,t:b.timer})),actions:{up2:!!gInputEngine.actions.up2,down2:!!gInputEngine.actions.down2,left2:!!gInputEngine.actions.left2,right2:!!gInputEngine.actions.right2,bomb2:!!gInputEngine.actions.bomb2},elim:document.getElementById('qolEliminated')&&!document.getElementById('qolEliminated').hidden,earlyBtn:document.getElementById('qolElimRematchNow')&&!document.getElementById('qolElimRematchNow').hidden,prompt:document.getElementById('qolRematchPrompt')&&!document.getElementById('qolRematchPrompt').hidden,version:document.getElementById('buildVersion124')?.textContent}))}
 async function connectPair(A,B,peerId,hostAI){
  await A.page.evaluate(({id,hostAI})=>{BomberV124.setAIEnabled(hostAI);B115.privateId=()=>id;B115.els.privateCode.value='9';B115.els.name.value='Host124';B115.startPrivateHost()},{id:peerId,hostAI});
  await sleep(850);
  await B.page.evaluate(id=>{B115.privateId=()=>id;B115.els.privateCode.value='9';B115.els.name.value='Guest124';B115.startPrivateJoin()},peerId);
- const ok=await waitFor(async()=>{const [a,b]=await Promise.all([snapshot(A.page),snapshot(B.page)]);return a.started&&b.started&&a.role==='host'&&b.role==='guest'&&BomberDataSync!==undefined},25000,200).catch(()=>false);
+ const ok=await waitFor(async()=>{const [a,b]=await Promise.all([snapshot(A.page),snapshot(B.page)]);return a.started&&b.started&&a.role==='host'&&b.role==='guest'&&a.dataActive&&b.dataActive&&a.dataRole==='host'&&b.dataRole==='guest'},25000,200);
  if(!ok)throw new Error('pair did not connect');
  await sleep(900);
 }
@@ -68,7 +68,9 @@ try{
  await D.page.evaluate(()=>window.dispatchEvent(new Event('blur')));await sleep(350);
  [a,b]=await Promise.all([snapshot(C.page),snapshot(D.page)]);
  if(a.actions.up2||b.actions.up2)throw new Error('guest movement stayed stuck after blur');
- const hostBefore=a.players[1].y;
+ // Reset Puppeteer's own held-key bookkeeping after the synthetic browser blur.
+ await D.page.keyboard.up('ArrowUp');await sleep(120);
+ const hostBefore=(await snapshot(C.page)).players[1].y;
  await D.page.keyboard.down('ArrowUp');await sleep(260);await D.page.keyboard.up('ArrowUp');await sleep(650);
  [a,b]=await Promise.all([snapshot(C.page),snapshot(D.page)]);
  if(!(a.players[1].y<hostBefore-2))throw new Error('guest controls did not recover after blur/re-press');
