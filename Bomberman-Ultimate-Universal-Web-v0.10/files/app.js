@@ -26,7 +26,9 @@ function loadCompatibility(){
                loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
                  loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=0128',function(){
-                  loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d');
+                  loadScript('runtime-v0128-rank-zero-loader','./files/runtime-v0128-rank-zero.js?v=0128',function(){
+                   loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d');
+                  });
                  });
                 });
                });
