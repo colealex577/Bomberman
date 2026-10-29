@@ -10,6 +10,10 @@ function patchElimination(){
  if(!GameEngine.prototype.__v127LocalElimFix){GameEngine.prototype.__v127LocalElimFix=true;var oldHuman=GameEngine.prototype.handleHumanDeath;GameEngine.prototype.handleHumanDeath=function(player){if(isLocalHuman(player))markLocalEliminated();return oldHuman.apply(this,arguments)}}
  if(S&&!S.__v127GuestElimFix){S.__v127GuestElimFix=true;var oldGuest=S.guestData;S.guestData=function(d){var r=oldGuest.apply(S,arguments);if(d&&d.type==='spectate'&&S.role==='guest')markLocalEliminated();return r}}
 }
+function patchSimulatedProfile(){
+ if(!S||S.__v127SimProfileSeed||!window.BomberCharacter||!S.startSimulated)return;S.__v127SimProfileSeed=true;var old=S.startSimulated;
+ S.startSimulated=function(){var g=G(),a=BomberCharacter.random(),rating=BomberCharacter.randomSimRating();S.simulatedRating=rating;if(g){g.simulatedAppearance=JSON.parse(JSON.stringify(a));g.simulatedRating=rating}var r=old.apply(S,arguments);setTimeout(function(){var gg=G(),sim=gg&&gg.simulatedOpponent;if(!sim)return;if(!sim.characterAppearance&&gg.simulatedAppearance){try{var sheet=BomberCharacter.makeSheet(gg.simulatedAppearance);if(sheet&&sim.bmp){sim.bmp.spriteSheet=new createjs.SpriteSheet({images:[sheet],frames:{width:48,height:48,regX:10,regY:12},animations:{idle:[0,0,'idle'],down:[0,3,'down',.1],left:[4,7,'left',.1],up:[8,11,'up',.1],right:[12,15,'right',.1],dead:[16,16,'dead',.1]}});sim.characterAppearance=JSON.parse(JSON.stringify(gg.simulatedAppearance));try{sim.bmp.gotoAndPlay('idle')}catch(e){}}}catch(e){}}},80);return r}
+}
 function renderLogDisplay(){
  var root=$('v127LogListDisplay');if(!root||!V)return;var a=(V.getLog?V.getLog():[]).slice().reverse().slice(0,40);root.textContent='';
  if(!a.length){var empty=document.createElement('div');empty.className='v127_empty';empty.textContent='No public matchmaking activity recorded on this device yet.';root.appendChild(empty);return}
@@ -25,8 +29,8 @@ function fixSettingsHandlers(){
  if(V.openSettings&&!V.__stableOpenSettings){V.__stableOpenSettings=true;V.openSettings=function(){if(panel)panel.hidden=false;renderLogDisplay()}}
 }
 function install(){
- if(installed)return true;S=window.B115;V=window.BomberV127;if(!S||!V||!window.GameEngine||!V.round)return false;
- patchElimination();fixSettingsHandlers();V.renderLocalLog=renderLogDisplay;V.fixLayerReady=true;installed=true;return true
+ if(installed)return true;S=window.B115;V=window.BomberV127;if(!S||!V||!window.GameEngine||!V.round||!window.BomberCharacter)return false;
+ patchElimination();patchSimulatedProfile();fixSettingsHandlers();V.renderLocalLog=renderLogDisplay;V.fixLayerReady=true;installed=true;return true
 }
 var tries=0,t=setInterval(function(){if(install()){clearInterval(t);fixSettingsHandlers();setInterval(fixSettingsHandlers,300)}else if(++tries>700)clearInterval(t)},40);
 })();
