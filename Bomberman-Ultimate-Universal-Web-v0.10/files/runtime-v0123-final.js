@@ -20,11 +20,13 @@ function removeLegacyCanvasCharacterCard(){
     if(card)break;
   }
   if(!card)return;
-  // v0.12.3's recovered canvas menu patch nudged the original labels/icons outward.
-  // Restore them before replacing its center card with the HTML Customize tile below.
+  // Restore the original Single/Online visuals and clickable areas before
+  // replacing the recovered canvas character card with the HTML Customize tile.
   for(var k=0;k<m.views.length;k++){
-    var x=m.views[k];if(!x||x===card||typeof x.x!=='number'||typeof x.y!=='number')continue;
-    if(x.y<cy-10||x.y>cy+130)continue;
+    var x=m.views[k];if(!x||x===card)continue;
+    var clicks=x._listeners&&x._listeners.click;
+    if(window.createjs&&x instanceof createjs.Shape&&clicks&&clicks.length&&(x.x===-50||x.x===50))x.x=0;
+    if(typeof x.x!=='number'||typeof x.y!=='number'||x.y<cy-10||x.y>cy+130)continue;
     if(x.x>=45&&x.x<205)x.x+=50;
     else if(x.x>325&&x.x<505)x.x-=50;
   }
