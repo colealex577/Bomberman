@@ -19,13 +19,28 @@ try{
   const before=api.state(bot);api.setWait(bot,350,'smoke wait');const wait=api.state(bot);
   const target=api.chooseTarget(bot,true);
   const path=target?api.timedPath(bot,bot.position,target.position,true):null;
-  return{preload:BomberPreload150.nativeImages,waitMs:wait.waitUntil-Date.now(),target:!!target,pathLength:path&&path.length,opening:BomberOpening144.version,replans:before.replans||0};
+
+  // Regression for the v0.15 cover-commitment bug: after reaching cover the
+  // remaining route no longer intersects the bot's own blast, but that bomb is
+  // still dangerous until its fuse/fire clears. trackedBombStillDangerous()
+  // must therefore retain the original escapeThreatBomb independently of the
+  // dynamically refreshed route threat set.
+  const saved={escapeMode:bot.escapeMode,escapePath:bot.escapePath,escapePathIndex:bot.escapePathIndex,escapeThreatBomb:bot.escapeThreatBomb,escapeThreats:bot.escapeThreats,escapeDestination:bot.escapeDestination};
+  const own={exploded:false,fires:[],position:{x:-90,y:-90},getDangerPositions(){return[{x:-90,y:-90}]}};
+  gGameEngine.bombs.push(own);
+  bot.escapeMode=true;bot.escapePath=[{x:bot.position.x,y:bot.position.y}];bot.escapePathIndex=1;bot.escapeThreatBomb=own;bot.escapeThreats=[];bot.escapeDestination={x:bot.position.x,y:bot.position.y};
+  const holdsOwnBomb=bot.trackedBombStillDangerous();
+  Utils.removeFromArray(gGameEngine.bombs,own);
+  bot.escapeMode=saved.escapeMode;bot.escapePath=saved.escapePath;bot.escapePathIndex=saved.escapePathIndex;bot.escapeThreatBomb=saved.escapeThreatBomb;bot.escapeThreats=saved.escapeThreats;bot.escapeDestination=saved.escapeDestination;
+
+  return{preload:BomberPreload150.nativeImages,waitMs:wait.waitUntil-Date.now(),target:!!target,pathLength:path&&path.length,opening:BomberOpening144.version,replans:before.replans||0,holdsOwnBomb};
  });
  assert.equal(result.preload,true,'native image loader was not active');
  assert.ok(result.waitMs>0,'deliberate wait state was not recorded');
  assert.ok(result.target,'AI could not choose a living contestant');
  assert.ok(result.pathLength===null||result.pathLength>=1,'timed path returned an invalid route');
  assert.equal(result.opening,'v0.14.4','v0.14.4 opening fix was not preserved');
+ assert.equal(result.holdsOwnBomb,true,'bot forgot its own live bomb after reaching cover');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V150_AI_OVERHAUL_SMOKE PASS',JSON.stringify(result));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
