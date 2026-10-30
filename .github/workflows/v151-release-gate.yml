@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        test: [v133-maps-smoke, authoritative-network-test, v150-ai-overhaul-smoke, v151-matchmaking-ai-polish-smoke]
+        test: [v125-netcode-smoke, v126-ai-smoke, v133-maps-smoke, v137-stability-chat-smoke, authoritative-network-test, v150-ai-overhaul-smoke, v151-matchmaking-ai-polish-smoke]
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
