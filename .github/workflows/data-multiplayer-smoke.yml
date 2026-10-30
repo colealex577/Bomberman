@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
+        # v139-stability-social-smoke now carries the consolidated v0.14 movement/social/post-match regression.
         test: [data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke, v132-whole-smoke, v133-maps-smoke, v134-gameplay-smoke, v135-polish-smoke, v136-challenge-smoke, v137-stability-chat-smoke, v138-ai-social-smoke, v139-stability-social-smoke]
     steps:
       - uses: actions/checkout@v4
