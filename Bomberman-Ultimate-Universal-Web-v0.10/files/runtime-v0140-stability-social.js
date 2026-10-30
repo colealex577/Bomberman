@@ -105,7 +105,7 @@ function sample(bot){
  // Small jitter and changing intentions do not reset the spatial progress clock.
  if(Math.hypot(x-m.lastX,y-m.lastY)>=threshold){m.lastMovedAt=now;m.lastX=x;m.lastY=y}
  if(centered(bot)){var k=key(bot.position);if(k&&m.trail[m.trail.length-1]!==k){m.trail.push(k);m.samples.push({k:k,t:now});if(m.trail.length>160)m.trail.shift()}}
- m.samples=m.samples.filter(function(s){return now-s.t<16000}).slice(-160);
+ m.samples=m.samples.filter(function(s){return now-s.t<Math.max(16000,Math.max(G().tilesX,G().tilesY)*G().tileSize/Math.max(1,bot.velocity)*60)}).slice(-160);
  var tk=key(bot.targetPosition);if(tk!==m.targetKey){m.targetKey=tk;m.targetSince=now}
 }
 function corridorProblem(bot){
@@ -116,7 +116,7 @@ function corridorProblem(bot){
   var runs=[],sign=0,start=null,last=null,minLane=Infinity,maxLane=-Infinity;
   for(var i=0;i<h.length;i++){
    var p=point(h[i]),along=axis?p.y:p.x,lane=axis?p.x:p.y;
-   if(lane<minLane-2||lane>maxLane+2){runs=[];sign=0;start=null;last=null;minLane=lane;maxLane=lane}
+   if(minLane===Infinity||Math.max(maxLane,lane)-Math.min(minLane,lane)>2){runs=[];sign=0;start=null;last=null;minLane=lane;maxLane=lane}
    minLane=Math.min(minLane,lane);maxLane=Math.max(maxLane,lane);
    if(last!==null&&along!==last){var dir=along>last?1:-1;if(sign&&dir!==sign){if(Math.abs(last-start)>=3)runs.push({sign:sign,length:Math.abs(last-start)});start=last}if(start===null)start=last;sign=dir}
    last=along;
