@@ -13,13 +13,12 @@ jobs:
       - name: Apply and syntax-check patch
         run: |
           python3 .github/scripts/v141-apply.py
+          git checkout HEAD -- .github/workflows/data-multiplayer-smoke.yml
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0140-stability-social.js
           node --check .github/scripts/v141-ai-chat-smoke.mjs
       - name: Commit patched source
         run: |
           rm .github/scripts/v141-apply.py
-          rm .github/workflows/v141-apply.yml
-          rm .github/workflows/v141-apply2.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
