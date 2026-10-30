@@ -12,7 +12,6 @@ try{
  await p.waitForFunction(()=>window.BomberAI138?.version==='v0.13.8'&&window.BomberStability137&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
  assert.equal(await p.evaluate(()=>document.getElementById('buildVersion138')?.textContent),'v0.13.8');
 
- // Start a deterministic simulated match through the existing challenge path.
  const name=await p.evaluate(()=>BomberLeaderboard127.population().map(x=>x.name).find(n=>BomberChallenge136.availability(n))||BomberLeaderboard127.population()[0].name);
  await p.evaluate(name=>BomberStability137.debug.forceChallenge(name,'accept'),name);
  await wait(()=>p.evaluate(name=>B115.role==='simulated'&&B115.remoteName===name,name),'simulated match did not start',7000);
@@ -26,12 +25,26 @@ try{
   bot.velocity=.11;bot.updateEndgameAggression();const afterAggro=BomberAI138.ensureSpeed(bot);
   const vertical=['5,1','5,2','5,3','5,4','5,5','5,6','5,7','5,6','5,5','5,4','5,3','5,2','5,1','5,2','5,3','5,4','5,5','5,6','5,7','5,6','5,5','5,4'];
   BomberAI138.debug.setTrail(bot,vertical);const axis=BomberAI138.axisProblem(bot);
+
+  // Deliberate ambushes are allowed to hold briefly when the target is actually at/near the bait.
+  const human=gGameEngine.players[0],oldHuman={x:human.position.x,y:human.position.y};
+  human.position={x:bot.position.x,y:bot.position.y};
+  bot.__v134Bait={x:human.position.x,y:human.position.y,created:Date.now(),triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};
+  BomberAI138.debug.setTrail(bot,[]);BomberAI138.debug.setStuck(bot,2600);
+  const deliberate=BomberAI138.intentionalAmbush(bot),deliberateProblem=BomberAI138.problem(bot);
+  BomberAI138.debug.ageAmbush(bot,5200);const expiredProblem=BomberAI138.problem(bot),baitCleared=!bot.__v134Bait;
+  human.position=oldHuman;
+
   BomberAI138.debug.setTrail(bot,[]);BomberAI138.debug.setStuck(bot,2600);const stuckBefore=BomberAI138.problem(bot);BomberAI138.watchdog(bot);const st=BomberAI138.debug.state(bot);
-  return{base,shoe,expected,afterAggro,axis,stuckBefore,breaks:st.breaks,recovery:st.recovery.length,speed:st.speed,shoes:st.shoes};
+  return{base,shoe,expected,afterAggro,axis,deliberate,deliberateProblem,expiredProblem,baitCleared,stuckBefore,breaks:st.breaks,recovery:st.recovery.length,speed:st.speed,shoes:st.shoes};
  });
  assert.equal(movement.shoe,movement.expected,'shoe speed was not exact');
  assert.equal(movement.afterAggro,movement.expected,'endgame aggression changed exact shoe speed');
  assert.equal(movement.axis,'vertical','vertical shuttle was not detected');
+ assert.equal(movement.deliberate,true,'intentional ambush was not recognized');
+ assert.equal(movement.deliberateProblem,'','watchdog incorrectly broke a deliberate ambush');
+ assert.equal(movement.expiredProblem,'stuck','expired ambush was not released to the watchdog');
+ assert.equal(movement.baitCleared,true,'expired ambush remained pinned');
  assert.equal(movement.stuckBefore,'stuck','stationary watchdog did not detect a stuck bot');
  assert.ok(movement.breaks>=1,'watchdog did not force a movement break');
  assert.ok(movement.recovery>=1,'watchdog did not create a recovery route');
