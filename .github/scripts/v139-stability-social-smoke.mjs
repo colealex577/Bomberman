@@ -24,7 +24,7 @@ try{
  await wait(()=>p.evaluate(name=>B115.role==='simulated'&&B115.remoteName===name,name),'simulated match did not start',7000);
  await wait(()=>p.evaluate(()=>gGameEngine.bots&&gGameEngine.bots.some(b=>b&&b.alive!==false)),'no live bot',5000);
 
- const movement=await p.evaluate(()=>{
+ const movement=await p.evaluate(async()=>{
   const bot=gGameEngine.bots.find(b=>b&&b.simulatedHuman&&b.alive!==false)||gGameEngine.bots.find(b=>b&&b.alive!==false);if(!bot)throw Error('bot missing');
   bot.started=true;bot.escapeMode=false;gGameEngine.playing=true;gGameEngine.lobbyOpen=false;gGameEngine.menu.visible=false;
   const horizontal=['1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5','1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5'];
@@ -35,6 +35,7 @@ try{
   gGameEngine.bonuses=[];human.position={x:bot.position.x,y:bot.position.y};human.targetPosition={x:bot.position.x,y:bot.position.y};bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const invalid=BomberStability139.strictItemAmbush(bot),pruned=BomberStability139.debug.pruneAmbush(bot),cleared=!bot.__v134Bait;
   gGameEngine.bonuses=[{position:{x:bot.position.x,y:bot.position.y},type:'speed'}];bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const valid=BomberStability139.strictItemAmbush(bot);bot.__v134Bait=null;
   gGameEngine.bonuses=oldBonuses;human.position=oldHuman;if(oldTarget)human.targetPosition=oldTarget;
+  await new Promise(r=>setTimeout(r,1050));
   BomberStability139.debug.setTrail(bot,[]);BomberStability139.debug.setStuck(bot,2500);const before=BomberStability139.debug.state(bot).breaks,reason=BomberStability139.watchdog(bot),after=BomberStability139.debug.state(bot);
   return{corridor,forced,recovery:afterRoute.recovery.length,banAxis:afterRoute.banAxis,invalid,pruned,cleared,valid,reason,before,afterBreaks:after.breaks};
  });
