@@ -48,7 +48,7 @@ function motion(bot){if(!bot.__v138Motion){bot.__v138Motion={lastPxX:Number(bot.
 function speedStep(){var g=G();return g&&g.ultimateMode?4:.8}
 function baseSpeed(){var g=G();return g&&g.ultimateMode?4:2}
 function ensureSpeed(bot){
- if(!bot)return 0;if(bot.__v138BaseSpeed==null){bot.__v138BaseSpeed=baseSpeed();var step=speedStep(),raw=Number(bot.velocity)||bot.__v138BaseSpeed;var inferred=Math.max(0,Math.round((raw-bot.__v138BaseSpeed)/Math.max(.01,step)));bot.__v138Shoes=inferred}
+ if(!bot)return 0;if(bot.__v138BaseSpeed==null){var raw=Number(bot.velocity);bot.__v138BaseSpeed=isFinite(raw)&&raw>0?raw:baseSpeed();if(bot.__v138Shoes==null)bot.__v138Shoes=0}
  var exact=bot.__v138BaseSpeed+Math.max(0,Number(bot.__v138Shoes)||0)*speedStep();if(Math.abs((Number(bot.velocity)||0)-exact)>.001)bot.velocity=exact;return exact
 }
 function movementActive(bot){var g=G();return!!(bot&&bot.alive!==false&&bot.started&&g&&g.playing&&!g.lobbyOpen&&g.menu&&!g.menu.visible)}
