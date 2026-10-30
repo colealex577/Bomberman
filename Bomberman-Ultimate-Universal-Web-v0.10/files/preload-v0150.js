@@ -4,6 +4,7 @@ var VERSION='v0.15.1';
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=0151');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=0151');
+early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0151');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
