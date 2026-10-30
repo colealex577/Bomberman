@@ -5,15 +5,16 @@ function S(){return window.B115||null}
 function button(){return document.getElementById('publicMatchBtn')}
 function live(){var s=S();return!!(s&&(s.started||s.role==='simulated'||(s.kind==='public'&&(s.role==='host'||s.role==='guest'))))}
 function capture(){var b=button();if(!b)return false;
- // The lobby is rebuilt by later runtime layers. Capture the FIRST real onclick
- // installed on each new button node (runtime-v0119's startPublic owner), then
- // keep that owner even if later self-heal layers wrap the DOM handler.
- if(b!==capturedButton){capturedButton=b;capturedStart=null}
+ // Preserve the first genuine public-search owner across lobby DOM rebuilds.
+ // Later runtime layers may replace the button node or wrap its onclick; the
+ // original v0.11.9 startPublic closure remains the authoritative owner and is
+ // safe to call with any current Search Public button as `this`.
+ if(b!==capturedButton)capturedButton=b;
  if(!capturedStart&&typeof b.onclick==='function'&&b.onclick!==repairStart)capturedStart=b.onclick;
  if(!b.__v151PublicCapture){b.__v151PublicCapture=true;b.addEventListener('click',function(){capture();[0,70,220].forEach(function(ms){setTimeout(function(){ensureStarted(b)},ms)})},true)}return!!capturedStart}
 function repairStart(b){return ensureStarted(b||button())}
 function ensureStarted(b){var s=S();if(!s||live()||repairing)return true;b=b||button();if(!b)return false;capture();var fn=capturedStart;if(typeof fn!=='function')return false;var t=Date.now();if(t-lastRepair<55)return false;lastRepair=t;repairing=true;try{fn.call(b)}catch(e){try{if(window.console&&console.warn)console.warn('[v0.15.1] public matchmaking repair',e)}catch(x){}}finally{repairing=false}return live()}
-function install(){capture();window.BomberMatchmaking151={version:VERSION,ready:function(){return!!capturedStart},ensureStarted:ensureStarted,isLive:live};if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberMatchmaking151.debug={captured:function(){return!!capturedStart},dropHandler:function(){var b=button();if(b)b.onclick=null;return!!b},restoreHandler:function(){var b=button();if(b&&capturedStart)b.onclick=capturedStart;return!!(b&&b.onclick)},repair:function(){return ensureStarted(button())}};return true}
+function install(){capture();window.BomberMatchmaking151={version:VERSION,ready:function(){return!!capturedStart},ensureStarted:ensureStarted,isLive:live};if(/[?&]netdebug=1(?:&|$)/.test(location.search))BomberMatchmaking151.debug={captured:function(){return!!capturedStart},dropHandler:function(){var b=button();if(b)b.onclick=null;return!!b},restoreHandler:function(){var b=button();if(b&&capturedStart)b.onclick=capturedStart;return!!(b&&b.onclick)},repair:function(){return ensureStarted(button())},ownerSource:function(){try{return capturedStart?String(capturedStart):''}catch(e){return''}}};return true}
 document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#publicMatchBtn');if(!b)return;capture();setTimeout(function(){ensureStarted(b)},45)},true);
 var tries=0,t=setInterval(function(){capture();if(++tries>1200)clearInterval(t)},25);
 if(document.readyState!=='loading')install();else document.addEventListener('DOMContentLoaded',install,{once:true});
