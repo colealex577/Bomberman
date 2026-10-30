@@ -13,7 +13,11 @@ try{
   const out={};
   try{
    g.tiles=g.tiles.filter(t=>t.material==='wall');g.bombs=[];g.bonuses=[];g.matchFinished=false;g.playing=true;g.menu.visible=false;
-   function place(bot,x,y){bot.position={x,y};const px=Utils.convertToBitmapPosition(bot.position);bot.bmp.x=px.x;bot.bmp.y=px.y;bot.clearEscapePlan();bot.__v140Motion=null;bot.__v134Bait=null;bot.started=true;bot.alive=true;bot.bombs=[];bot.bombsMax=0;bot.setNextTile(bot.position)}
+   // Each case below deliberately teleports/reuses the same bot. Reset the
+   // v0.15 persistent-intent state between cases so this legacy controller test
+   // isolates the movement behavior it was written to test. Real matches create
+   // fresh bots on restart and do not teleport a live bot between scenarios.
+   function place(bot,x,y){bot.position={x,y};const px=Utils.convertToBitmapPosition(bot.position);bot.bmp.x=px.x;bot.bmp.y=px.y;bot.clearEscapePlan();bot.__v140Motion=null;bot.__v134Bait=null;bot.__v150AI=null;bot.started=true;bot.alive=true;bot.bombs=[];bot.bombsMax=0;bot.setNextTile(bot.position)}
    function frames(n){for(let i=0;i<n;i++){now+=20;for(const bot of [a,b])if(bot.alive)bot.update();if(i%7===0)BomberGameplay134.debug.resolveReservations()}}
    // Actual Player collision, Bot update, all runtime wrappers and real board tiles.
    place(a,5,5);place(b,5,5);d.hardRecover(a,'stuck');d.hardRecover(b,'stuck');frames(90);
