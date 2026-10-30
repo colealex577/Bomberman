@@ -28,7 +28,9 @@ try{
   const bot=gGameEngine.bots.find(b=>b&&b.simulatedHuman&&b.alive!==false)||gGameEngine.bots.find(b=>b&&b.alive!==false);if(!bot)throw Error('bot missing');
   bot.started=true;bot.escapeMode=false;gGameEngine.playing=true;gGameEngine.lobbyOpen=false;gGameEngine.menu.visible=false;
   const horizontal=['1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5','1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5'];
+  const wood=gGameEngine.tiles.filter(t=>t.material==='wood');wood.forEach(t=>{t.material='grass'});
   BomberStability139.debug.setTrail(bot,horizontal);const corridor=BomberStability139.corridorProblem(bot),forced=BomberStability139.forceNovelRoute(bot,corridor),afterRoute=BomberStability139.debug.state(bot);
+  wood.forEach(t=>{t.material='wood'});
   const human=gGameEngine.players[0],oldHuman={x:human.position.x,y:human.position.y},oldTarget=human.targetPosition?{x:human.targetPosition.x,y:human.targetPosition.y}:null,oldBonuses=gGameEngine.bonuses;
   gGameEngine.bonuses=[];human.position={x:bot.position.x,y:bot.position.y};human.targetPosition={x:bot.position.x,y:bot.position.y};bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const invalid=BomberStability139.strictItemAmbush(bot),pruned=BomberStability139.debug.pruneAmbush(bot),cleared=!bot.__v134Bait;
   gGameEngine.bonuses=[{position:{x:bot.position.x,y:bot.position.y},type:'speed'}];bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const valid=BomberStability139.strictItemAmbush(bot);bot.__v134Bait=null;
