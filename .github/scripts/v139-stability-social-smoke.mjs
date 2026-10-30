@@ -9,8 +9,8 @@ async function wait(fn,msg,ms=12000){const end=Date.now()+ms;while(Date.now()<en
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','StabilityTester');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberStability140?.version==='v0.14.0'&&window.BomberAI138&&window.BomberStability137&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion140')?.textContent),'v0.14.0');
+ await p.waitForFunction(()=>window.BomberStability140?.version==='v0.14.1'&&window.BomberAI138&&window.BomberStability137&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion140')?.textContent),'v0.14.1');
 
  const publicGuard=await p.evaluate(()=>{const ok=BomberStability140.debug.latchPublic(),shield=document.getElementById('v140SearchShield');const out={ok,active:BomberStability140.debug.publicState().active,body:document.body.classList.contains('v140_public_latched'),shield:!!shield&&!shield.hidden};BomberStability140.debug.cancelPublic();out.cleared=!BomberStability140.debug.publicState().active&&!document.body.classList.contains('v140_public_latched');return out});
  assert.equal(publicGuard.ok,true,'public matchmaking latch did not start');
