@@ -8,9 +8,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V151Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.1'&&window.BomberMatchmaking151?.version==='v0.15.1'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.1');
- assert.equal(await p.title(),'Bomberman v0.15.1');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2'&&window.BomberMatchmaking151?.version==='v0.15.1'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2');
+ assert.equal(await p.title(),'Bomberman v0.15.2');
 
  // Reproduce the first-load failure deliberately: remove the button's target
  // handler after the repair layer has captured it, then click once. The v0.15.1
@@ -55,7 +55,7 @@ try{
  await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent,{timeout:8000});
  const human=await p.evaluate(()=>{
    const sim=gGameEngine.simulatedOpponent,normal=(gGameEngine.bots||[]).find(b=>b&&!b.simulatedHuman),api=BomberPolish151.debug,vs=BomberPolish151.state(sim);
-   sim.started=false; // keep the board calm while probing the movement layer
+   sim.started=false;
    const fumble=api.forceFumble(sim),q=BomberPolish151.state(sim).humanQuirk;
    const normalFumble=normal?api.forceFumble(normal):false;
    BomberPolish151.state(sim).humanQuirk=null;BomberPolish151.state(sim).microCooldown=0;
