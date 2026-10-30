@@ -17,7 +17,7 @@ try{
   const bot=gGameEngine.bots.find(b=>b&&b.alive!==false),api=BomberAI150.debug||BomberAI150;
   if(!bot)throw Error('no live bot');
   const before=api.state(bot);api.setWait(bot,350,'smoke wait');const wait=api.state(bot);
-  const target=api.chooseTarget(bot,true);
+  const target=BomberAI150.chooseTarget(bot,true);
   const path=target?api.timedPath(bot,bot.position,target.position,true):null;
 
   // Regression for the v0.15 cover-commitment bug: after reaching cover the
