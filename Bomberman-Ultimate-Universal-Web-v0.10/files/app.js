@@ -35,12 +35,12 @@ function loadCompatibility(){
                      loadScript('runtime-v0131-polish-loader','./files/runtime-v0131-polish.js?v=0131',function(){
                       loadScript('runtime-v0132-whole-loader','./files/runtime-v0132-whole.js?v=0132',function(){
                        loadScript('runtime-v0133-maps-loader','./files/runtime-v0133-maps.js?v=0133',function(){
-                        loadScript('runtime-v0134-gameplay-loader','./files/runtime-v0134-gameplay.js?v=0134',function(){
+                        loadScript('runtime-v0134-gameplay-loader','./files/runtime-v0134-gameplay.js?v=0142',function(){
                          loadScript('runtime-v0135-polish-loader','./files/runtime-v0135-polish.js?v=0135',function(){
                           loadScript('runtime-v0136-challenge-loader','./files/runtime-v0136-challenge.js?v=0136',function(){
                            loadScript('runtime-v0137-stability-loader','./files/runtime-v0137-stability.js?v=0137',function(){
-                            loadScript('runtime-v0138-ai-social-loader','./files/runtime-v0138-ai-social.js?v=0138',function(){
-                             loadScript('runtime-v0140-stability-social-loader','./files/runtime-v0140-stability-social.js?v=0141');
+                            loadScript('runtime-v0138-ai-social-loader','./files/runtime-v0138-ai-social.js?v=0142',function(){
+                             loadScript('runtime-v0140-stability-social-loader','./files/runtime-v0140-stability-social.js?v=0142');
                             });
                            });
                           });
@@ -70,5 +70,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0141').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0142').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var VERSION='v0.14.1',S=window.B115,installed=false;
+var VERSION='v0.14.2',S=window.B115,installed=false;
 if(!S)return;
 var publicTxn={active:false,button:null,startedAt:0,deadline:0,retries:0,retrying:false};
 var chatGuardDepth=0;
@@ -77,34 +77,213 @@ function latchPublic(button){if(publicTxn.retrying)return;if(!publicTxn.active){
 function stabilizePublic(){if(!publicTxn.active)return;var lobby=$('multiplayerLobby');if(!lobby||lobby.hidden||S.started||S.role==='simulated'){clearPublicLatch();return}if(publicLive()){clearPublicLatch();return}var age=Date.now()-publicTxn.startedAt,marks=[650,1550,2850];if(publicTxn.retries<marks.length&&age>=marks[publicTxn.retries]){var b=publicTxn.button||$('publicMatchBtn');if(b){publicTxn.retries++;publicTxn.retrying=true;try{b.click()}catch(e){}publicTxn.retrying=false}}if(Date.now()>publicTxn.deadline){var x=$('v140SearchShield');if(x)x.innerHTML='<div>Could not start matchmaking.<small>Please try Search Public Match again.</small></div>';setTimeout(clearPublicLatch,1200)}}
 function patchPublic(){document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('#publicMatchBtn');if(t){setTimeout(function(){latchPublic(t)},0);return}var id=e.target&&e.target.id;if(id==='joinBackBtn'||id==='hostCancelBtn'||id==='lobbyCloseBtn'||id==='onlineDisconnectBtn')clearPublicLatch()},true)}
 
-/* Movement governor: detect no-progress targets and stale escape plans, then commit to a reachable route. */
-function motion(bot){if(!bot.__v140Motion)bot.__v140Motion={lastX:Number(bot.bmp&&bot.bmp.x)||0,lastY:Number(bot.bmp&&bot.bmp.y)||0,lastMovedAt:Date.now(),trail:[],lastBreak:0,breaks:0,hardResets:0,banAxis:'',banX:0,banY:0,banUntil:0,targetKey:key(bot.targetPosition),targetSince:Date.now(),escapeSince:0,lastDecision:'',reverseAxis:'',reverseAt:0,reverseCount:0,exitAxis:'',exitUntil:0,loopBlocks:0};return bot.__v140Motion}
-function movementActive(bot){var g=G();return!!(bot&&bot.alive!==false&&bot.started&&g&&g.playing&&!g.lobbyOpen&&g.menu&&!g.menu.visible)}
-function targetHuman(){var g=G(),p=g&&g.players&&g.players[0];return p&&p.alive!==false?p:null}
-function trackedDanger(bot){try{return!!(bot&&bot.escapeMode&&bot.trackedBombStillDangerous&&bot.trackedBombStillDangerous())}catch(e){return false}}
-function exposedBaitBonus(bot,bait){var g=G();if(!g||!bait)return null;for(var i=0;i<(g.bonuses||[]).length;i++){var b=g.bonuses[i];if(b&&same(b.position,{x:bait.x,y:bait.y})&&g.getTileMaterial(b.position)==='grass')return b}return null}
-function strictItemAmbush(bot){var bait=bot&&bot.__v134Bait;if(!bot||!bot.simulatedHuman||!bait||bait.triggered||!bait.ambush||!same(bot.position,bait.ambush))return false;if(!exposedBaitBonus(bot,bait))return false;var t=targetHuman();if(!t||!t.position)return false;var d=Math.abs(t.position.x-bait.x)+Math.abs(t.position.y-bait.y);if(d>5)return false;var path=null;try{path=bot.findPath(t.position,{x:bait.x,y:bait.y},true)}catch(e){}if(!path||path.length>6)return false;var likely=d<=3;if(t.targetPosition){var td=Math.abs(t.targetPosition.x-bait.x)+Math.abs(t.targetPosition.y-bait.y);if(td<d)likely=true}return likely}
-function pruneAmbush(bot){var bait=bot&&bot.__v134Bait;if(!bait||!bait.ambush||!same(bot.position,bait.ambush)||strictItemAmbush(bot))return false;bot.__v134Bait=null;bot.__v134BaitCooldown=Date.now()+2200;return true}
-function sample(bot){if(!bot||!bot.bmp||!bot.position)return;var m=motion(bot),now=Date.now(),x=Number(bot.bmp.x)||0,y=Number(bot.bmp.y)||0;if(Math.hypot(x-m.lastX,y-m.lastY)>.45){m.lastMovedAt=now;m.lastX=x;m.lastY=y}var k=key(bot.position);if(k&&m.trail[m.trail.length-1]!==k){m.trail.push(k);if(m.trail.length>100)m.trail.splice(0,m.trail.length-100)}var tk=key(bot.targetPosition);if(tk!==m.targetKey){m.targetKey=tk;m.targetSince=now}}
+/* Single AI movement owner. Map collision and host/guest authority remain in the engine. */
+function motion(bot){
+ if(!bot.__v140Motion)bot.__v140Motion={lastX:Number(bot.bmp&&bot.bmp.x)||0,lastY:Number(bot.bmp&&bot.bmp.y)||0,lastMovedAt:Date.now(),trail:[],samples:[],lastBreak:0,breaks:0,hardResets:0,banAxis:'',banX:0,banY:0,banUntil:0,targetKey:'',targetSince:Date.now(),lastDecision:'',reverseAxis:'',reverseAt:0,reverseCount:0,exitAxis:'',exitUntil:0,loopBlocks:0,route:null,routeReason:'',routeUntil:0,ambushSince:0};
+ return bot.__v140Motion;
+}
+function authority(){return S.role!=='guest'}
+function movementActive(bot){var g=G();return!!(authority()&&bot&&bot.alive!==false&&bot.started&&g&&g.playing&&!g.lobbyOpen&&!g.matchFinished&&g.menu&&!g.menu.visible)}
+function targetHuman(){var g=G(),a=g&&g.players||[];for(var i=0;i<a.length;i++)if(a[i]&&a[i].alive!==false&&!a[i].isBot)return a[i];return null}
 function point(k){var a=String(k||'0,0').split(',');return{x:Number(a[0])||0,y:Number(a[1])||0}}
-function corridorProblem(bot){var h=motion(bot).trail.slice(-30);if(h.length<7)return'';var xs={},ys={},hm=0,vm=0,hr=0,vr=0,lastH=0,lastV=0,minX=999,maxX=-999,minY=999,maxY=-999;for(var i=0;i<h.length;i++){var p=point(h[i]);xs[p.x]=1;ys[p.y]=1;minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);if(!i)continue;var q=point(h[i-1]),dx=p.x-q.x,dy=p.y-q.y;if(dx){hm++;var hd=dx>0?1:-1;if(lastH&&hd!==lastH)hr++;lastH=hd}if(dy){vm++;var vd=dy>0?1:-1;if(lastV&&vd!==lastV)vr++;lastV=vd}}var xu=Object.keys(xs).length,yu=Object.keys(ys).length;if(hm>=6&&hr>=2&&maxX-minX>=3&&yu<=2&&vm<=3)return'horizontal';if(vm>=6&&vr>=2&&maxY-minY>=3&&xu<=2&&hm<=3)return'vertical';var unique={};for(var j=0;j<h.length;j++)unique[h[j]]=1;if(h.length>=8&&Object.keys(unique).length<=Math.ceil(h.length*.6)&&(maxX-minX>=2||maxY-minY>=2))return'cycle';return''}
-function recentMap(bot){var a=motion(bot).trail.slice(-56),m={};for(var i=0;i<a.length;i++)m[a[i]]=(m[a[i]]||0)+1;return m}
-function safe(bot,p){var g=G();try{return!!(p&&bot.inBounds(p)&&g.getTileMaterial(p)==='grass'&&!bot.hasBomb(p)&&bot.isSafe(p))}catch(e){return false}}
-function walkable(bot,avoidDanger){try{return(bot.getWalkableNeighbors(bot.position,avoidDanger)||[]).filter(function(p){return p&&!same(p,bot.position)})}catch(e){return[]}}
-function novelPath(bot,reason){var g=G();if(!g||!bot.position)return null;var cur=bot.position,recent=recentMap(bot),c=[];for(var y=1;y<g.tilesY-1;y++)for(var x=1;x<g.tilesX-1;x++){var p={x:x,y:y};if(!safe(bot,p))continue;var dx=Math.abs(x-cur.x),dy=Math.abs(y-cur.y),d=dx+dy;if(d<2)continue;if(reason==='horizontal'&&dy<3)continue;if(reason==='vertical'&&dx<3)continue;var seen=recent[key(p)]||0,novel=seen?0:12,perp=reason==='horizontal'?dy:(reason==='vertical'?dx:Math.min(7,Math.max(dx,dy)));c.push({p:p,score:novel+perp*5+d-seen*18+(hash(key(p)+'|'+clean(bot.displayName||''))%19)/20})}c.sort(function(a,b){return b.score-a.score});for(var i=0;i<Math.min(64,c.length);i++){var path=null;try{path=bot.findPath(bot.position,c[i].p,true)}catch(e){}if(path&&path.length>2)return path}return null}
-function clearStaleIntent(bot){if(!bot)return;try{if(bot.clearEscapePlan)bot.clearEscapePlan()}catch(e){}bot.escapeMode=false;bot.escapePath=null;bot.escapePathIndex=0;bot.escapeThreatBomb=null;bot.escapeDestination=null;if(bot.__v138Motion){bot.__v138Motion.recovery=null;bot.__v138Motion.recoveryReason='';bot.__v138Motion.cooldownUntil=0}var pos=bot.position&&{x:bot.position.x,y:bot.position.y};if(pos){bot.targetPosition={x:pos.x,y:pos.y};try{bot.targetBitmapPosition=Utils.convertToBitmapPosition(pos)}catch(e){}bot.dirX=0;bot.dirY=0}}
-function forceNeighbor(bot,safeOnly){var a=walkable(bot,true);if(!a.length&&!safeOnly)a=walkable(bot,false);if(!a.length)return false;var recent=recentMap(bot);a.sort(function(x,y){return(recent[key(x)]||0)-(recent[key(y)]||0)});try{bot.setNextTile(a[0]);return true}catch(e){return false}}
-function forceNovelRoute(bot,reason){if(!bot||strictItemAmbush(bot))return false;var p=novelPath(bot,reason);if(!p||p.length<2)return forceNeighbor(bot,true);var m=motion(bot),r=p.slice(1,Math.min(p.length,16));m.lastBreak=Date.now();m.breaks++;m.banAxis=reason==='horizontal'||reason==='vertical'?reason:'';m.banX=bot.position.x;m.banY=bot.position.y;m.banUntil=Date.now()+6000;m.trail=m.trail.slice(-3);if(bot.__v138Motion){bot.__v138Motion.recovery=r.slice();bot.__v138Motion.recoveryReason='v140-'+reason;bot.__v138Motion.cooldownUntil=Date.now()+650}try{bot.setNextTile(r[0])}catch(e){return false}return true}
-function hardRecover(bot,reason){if(!bot||strictItemAmbush(bot))return false;var m=motion(bot);clearStaleIntent(bot);var ok=forceNovelRoute(bot,reason||'stuck');if(!ok)ok=forceNeighbor(bot,trackedDanger(bot));m.lastBreak=Date.now();m.lastMovedAt=Date.now();m.breaks++;m.hardResets++;m.escapeSince=0;return ok}
-function escapeDisposition(bot){var m=motion(bot),now=Date.now();if(!trackedDanger(bot)){m.escapeSince=0;return''}if(!m.escapeSince)m.escapeSince=now;var age=now-m.lastMovedAt;if(age<1100)return'hold';var safeNow=true;try{safeNow=bot.isSafe(bot.position)}catch(e){}var safeSteps=walkable(bot,true);if(safeSteps.length)return'recover';var path=null;try{path=bot.findEscapePath&&bot.findEscapePath(null,null)}catch(e){}if(path&&path.length>1)return'recover';if(!safeNow&&age>3400)return'hold';return'hold'}
-function violatesBan(bot){var m=motion(bot),t=bot.targetPosition;if(!t||Date.now()>m.banUntil)return false;if(m.banAxis==='horizontal'&&Number(t.y)===Number(m.banY)&&Number(t.x)!==Number(bot.position.x))return true;if(m.banAxis==='vertical'&&Number(t.x)===Number(m.banX)&&Number(t.y)!==Number(bot.position.y))return true;return false}
-function openBoard(bot){try{return!!(bot&&(bot.hyperAggressive||(bot.remainingWoodCount&&bot.remainingWoodCount()<=10)))}catch(e){return!!(bot&&bot.hyperAggressive)}}
-function corridorAxis(a,b){if(!a||!b)return'';if(Number(a.y)===Number(b.y)&&Number(a.x)!==Number(b.x))return'horizontal';if(Number(a.x)===Number(b.x)&&Number(a.y)!==Number(b.y))return'vertical';return''}
-function corridorDecision(bot){var m=motion(bot),t=bot&&bot.targetPosition,h=m.trail;if(!bot||!t||same(t,bot.position)||h.length<2)return'';var decision=key(bot.position)+'>'+key(t);if(decision===m.lastDecision)return'';m.lastDecision=decision;var prev=point(h[h.length-2]),axis=corridorAxis(bot.position,t),now=Date.now(),reverse=same(t,prev);if(reverse){if(m.reverseAxis===axis&&now-m.reverseAt<12000)m.reverseCount=(m.reverseCount||0)+1;else m.reverseCount=1;m.reverseAxis=axis;m.reverseAt=now;if(m.reverseCount>=2){m.exitAxis=axis||m.exitAxis;m.exitUntil=now+10000;m.loopBlocks++;return axis||'cycle'}}else{var recent=h.slice(-7),tk=key(t),visits=0;for(var i=0;i<recent.length;i++)if(recent[i]===tk)visits++;if(visits>=2){m.exitAxis=axis||m.reverseAxis;m.exitUntil=now+10000;m.loopBlocks++;return axis||'cycle'}if(axis&&m.reverseAxis&&axis!==m.reverseAxis){m.reverseCount=0;m.reverseAxis=''}}return''}
-function forceCorridorExit(bot){var m=motion(bot),axis=m.exitAxis;if(!axis||Date.now()>m.exitUntil){m.exitAxis='';return false}if(bot.escapeMode||strictItemAmbush(bot))return false;var a=walkable(bot,true),perp=[];for(var i=0;i<a.length;i++){var p=a[i];if(axis==='horizontal'&&Number(p.y)!==Number(bot.position.y))perp.push(p);else if(axis==='vertical'&&Number(p.x)!==Number(bot.position.x))perp.push(p)}if(!perp.length)return false;var target=openBoard(bot)?targetHuman():null,recent=recentMap(bot);perp.sort(function(x,y){function sc(p){var seen=recent[key(p)]||0,d=target&&target.position?Math.abs(p.x-target.position.x)+Math.abs(p.y-target.position.y):0;return seen*40+d}return sc(x)-sc(y)});try{bot.setNextTile(perp[0])}catch(e){return false}m.exitAxis='';m.exitUntil=0;m.reverseCount=0;m.reverseAxis='';m.trail=m.trail.slice(-2);return true}
-function patchOpenBoardTargeting(){if(!window.Bot||Bot.prototype.__v141HumanTarget)return;Bot.prototype.__v141HumanTarget=true;var oldOpponent=Bot.prototype.getBestOpponent;Bot.prototype.getBestOpponent=function(){if(openBoard(this)){var human=targetHuman();if(human&&human!==this)return human}return oldOpponent.apply(this,arguments)};var oldBonus=Bot.prototype.getBestBonusPath;Bot.prototype.getBestBonusPath=function(){if(openBoard(this))return null;return oldBonus.apply(this,arguments)}}
-function watchdog(bot){pruneAmbush(bot);sample(bot);try{if(window.BomberAI138&&BomberAI138.ensureSpeed)BomberAI138.ensureSpeed(bot)}catch(e){}if(!movementActive(bot)||strictItemAmbush(bot))return'';var m=motion(bot),now=Date.now(),esc=escapeDisposition(bot);if(esc==='recover'&&now-m.lastBreak>650){hardRecover(bot,'escape-stale');return'escape-stale'}if(esc==='hold')return'';var targetDiff=bot.targetPosition&&!same(bot.position,bot.targetPosition);if(targetDiff&&now-m.lastMovedAt>1250&&now-m.lastBreak>650){hardRecover(bot,'target-stuck');return'target-stuck'}var why=corridorProblem(bot);if(why&&now-m.lastBreak>1050){forceNovelRoute(bot,why);return why}if(now-m.lastMovedAt>1750&&now-m.lastBreak>750){hardRecover(bot,'stuck');return'stuck'}return''}
-function patchMovement(){if(!window.Bot||Bot.prototype.__v140Movement)return false;Bot.prototype.__v140Movement=true;patchOpenBoardTargeting();var ou=Bot.prototype.update;Bot.prototype.update=function(){pruneAmbush(this);var r=ou.apply(this,arguments);watchdog(this);return r};var oc=Bot.prototype.chooseNextAction;Bot.prototype.chooseNextAction=function(){pruneAmbush(this);var m=motion(this);if(!this.escapeMode&&!strictItemAmbush(this)&&forceCorridorExit(this))return;var r=oc.apply(this,arguments);if(this.escapeMode||strictItemAmbush(this))return r;var loop=corridorDecision(this);if(loop){if(!forceCorridorExit(this))forceNovelRoute(this,loop);return r}if(forceCorridorExit(this))return r;if(violatesBan(this))forceNovelRoute(this,m.banAxis||'cycle');return r};return true}
+function distance(a,b){return Math.abs(a.x-b.x)+Math.abs(a.y-b.y)}
+function centered(bot){var p=Utils.convertToBitmapPosition(bot.position);return Math.abs(p.x-bot.bmp.x)<.01&&Math.abs(p.y-bot.bmp.y)<.01}
+function trackedDanger(bot){var g=G(),b=bot.escapeThreatBomb;return!!(bot.escapeMode&&b&&g&&g.bombs.indexOf(b)>=0&&(!b.exploded||(b.fires&&b.fires.length)))}
+function exposedBaitBonus(bot,bait){var g=G();if(!g||!bait)return null;for(var i=0;i<(g.bonuses||[]).length;i++){var b=g.bonuses[i];if(b&&same(b.position,bait)&&g.getTileMaterial(b.position)==='grass')return b}return null}
+function strictItemAmbush(bot){
+ var bait=bot&&bot.__v134Bait,m=bot&&motion(bot),t=targetHuman(),now=Date.now();
+ if(!bot||!bot.simulatedHuman||!bait||bait.triggered||!bait.ambush||!same(bot.position,bait.ambush)||!centered(bot)||!safe(bot,bot.position)||!exposedBaitBonus(bot,bait)||!t||!bot.blastWouldHit(bot.position,bait))return false;
+ if(m.ambushBait!==bait){m.ambushBait=bait;m.ambushSince=now}
+ if(now-m.ambushSince>4000||now-bait.created>14000)return false;
+ var d=distance(t.position,bait);if(d>5)return false;
+ var path=bot.findPath(t.position,{x:bait.x,y:bait.y},true);if(!path||path.length>6)return false;
+ return d<=3||!!(t.targetPosition&&distance(t.targetPosition,bait)<d);
+}
+function pruneAmbush(bot){var bait=bot&&bot.__v134Bait;if(!bait)return false;var expired=Date.now()-bait.created>14000||!exposedBaitBonus(bot,bait)||!targetHuman();if(!expired&&(!same(bot.position,bait.ambush)||strictItemAmbush(bot)))return false;bot.__v134Bait=null;bot.__v134BaitCooldown=Date.now()+2200;return true}
+function sample(bot){
+ if(!bot||!bot.bmp||!bot.position)return;var m=motion(bot),now=Date.now(),x=Number(bot.bmp.x)||0,y=Number(bot.bmp.y)||0,threshold=Math.max(4,(G().tileSize||50)*.2);
+ // Small jitter and changing intentions do not reset the spatial progress clock.
+ if(Math.hypot(x-m.lastX,y-m.lastY)>=threshold){m.lastMovedAt=now;m.lastX=x;m.lastY=y}
+ if(centered(bot)){var k=key(bot.position);if(k&&m.trail[m.trail.length-1]!==k){m.trail.push(k);m.samples.push({k:k,t:now});if(m.trail.length>160)m.trail.shift()}}
+ m.samples=m.samples.filter(function(s){return now-s.t<16000}).slice(-160);
+ var tk=key(bot.targetPosition);if(tk!==m.targetKey){m.targetKey=tk;m.targetSince=now}
+}
+function corridorProblem(bot){
+ var m=motion(bot),h=m.samples.length?m.samples.map(function(s){return s.k}):m.trail.slice(-160);if(h.length<7)return'';
+ // Work in a moving row/column band, not a fixed number of adjacent tiles.
+ // Minor lane detours are allowed; three substantial alternating runs are not.
+ for(var axis=0;axis<2;axis++){
+  var runs=[],sign=0,start=null,last=null,minLane=Infinity,maxLane=-Infinity;
+  for(var i=0;i<h.length;i++){
+   var p=point(h[i]),along=axis?p.y:p.x,lane=axis?p.x:p.y;
+   if(lane<minLane-2||lane>maxLane+2){runs=[];sign=0;start=null;last=null;minLane=lane;maxLane=lane}
+   minLane=Math.min(minLane,lane);maxLane=Math.max(maxLane,lane);
+   if(last!==null&&along!==last){var dir=along>last?1:-1;if(sign&&dir!==sign){if(Math.abs(last-start)>=3)runs.push({sign:sign,length:Math.abs(last-start)});start=last}if(start===null)start=last;sign=dir}
+   last=along;
+   if(runs.length>=2&&sign&&runs[runs.length-1].sign!==sign&&Math.abs(along-start)>=1)return axis?'vertical':'horizontal';
+  }
+ }
+ var w=h.slice(-24),seen={};w.forEach(function(k){seen[k]=(seen[k]||0)+1});
+ if(w.length>=8&&Object.keys(seen).length<=w.length*.5)return'cycle';return'';
+}
+function recentMap(bot){var r={};motion(bot).trail.slice(-56).forEach(function(k){r[k]=(r[k]||0)+1});return r}
+function safe(bot,p){var g=G();return!!(p&&bot.inBounds(p)&&g.getTileMaterial(p)==='grass'&&!bot.hasBomb(p)&&bot.isSafe(p))}
+function walkable(bot,avoidDanger){return(bot.getWalkableNeighbors(bot.position,avoidDanger)||[]).filter(function(p){return p&&!same(p,bot.position)})}
+function onBannedLane(m,p){return m.banAxis==='horizontal'?Number(p.y)===m.banY:m.banAxis==='vertical'?Number(p.x)===m.banX:false}
+function blockedByBan(bot,from,to){var m=motion(bot);if(Date.now()>m.banUntil||!m.banAxis)return false;return onBannedLane(m,to)&&(!onBannedLane(m,from)||corridorAxis(from,to)===m.banAxis)}
+function botSlot(bot){var a=G().bots||[],i=a.indexOf(bot);return i<0?Number(bot.statSlot)||0:i}
+// One flood fill per plan. Actors affect tie-breaking only; they never remove edges.
+function routes(bot,ignoreBan){
+ var start={x:bot.position.x,y:bot.position.y},queue=[[start]],seen={};seen[key(start)]=true;
+ for(var i=0;i<queue.length;i++){
+  var path=queue[i],cur=path[path.length-1],a=bot.getWalkableNeighbors(cur,true)||[],slot=botSlot(bot);
+  a.sort(function(x,y){return(hash(key(x)+'|'+slot)%31)-(hash(key(y)+'|'+slot)%31)});
+  for(var j=0;j<a.length;j++){var n=a[j],k=key(n);if(seen[k]||(!ignoreBan&&blockedByBan(bot,cur,n)))continue;seen[k]=true;queue.push(path.concat([{x:n.x,y:n.y}]))}
+ }
+ return queue;
+}
+function occupancyCost(bot,path){var a=G().bots||[],cost=0;for(var i=0;i<a.length;i++){var b=a[i];if(b===bot||b.alive===false)continue;var other=b.__v140Motion&&b.__v140Motion.route;for(var j=1;j<Math.min(path.length,5);j++)if(same(path[j],b.position)||other&&other.some(function(p){return same(p,path[j])}))cost+=2}return cost}
+function novelPath(bot,reason){
+ var m=motion(bot),axis=reason==='horizontal'||reason==='vertical'?reason:'',all=routes(bot,!!axis),cur=bot.position,recent=recentMap(bot),human=openBoard(bot)?targetHuman():null,c=[];
+ for(var i=0;i<all.length;i++){
+  var path=all[i],end=path[path.length-1];if(path.length<3)continue;
+  var firstExit=-1,off=axis==='horizontal'?Math.abs(end.y-cur.y):Math.abs(end.x-cur.x);
+  if(axis){for(var j=1;j<path.length;j++)if(axis==='horizontal'?path[j].y!==cur.y:path[j].x!==cur.x){firstExit=j;break}if(firstExit<0||off<1||(off<2&&path.length-firstExit<3))continue;
+   // Do not leave for one tile and then return to the abandoned corridor.
+   if(path.slice(firstExit).some(function(p){return axis==='horizontal'?p.y===cur.y:p.x===cur.x}))continue;
+  }
+  var score=(axis?firstExit*1000:0)+path.length*3+(recent[key(end)]||0)*12+occupancyCost(bot,path)+(human?distance(end,human.position)*2:0);
+  if(!axis&&path.length>7)score+=(path.length-7)*10;
+  c.push({path:path,score:score});
+ }
+ c.sort(function(a,b){return a.score-b.score});return c.length?c[0].path:null;
+}
+function clearRoute(bot){var m=motion(bot);m.route=null;m.routeReason='';m.routeUntil=0;if(bot.__v138Motion)bot.__v138Motion.recovery=null}
+function clearStaleIntent(bot){
+ bot.clearEscapePlan();clearRoute(bot);bot.__v137BreakPath=null;bot.__v135PowerupTarget=null;bot.__v134Bait=null;bot.__v134BaitCooldown=Date.now()+2200;
+ var m=motion(bot);m.exitAxis='';m.exitUntil=0;m.lastDecision='';m.reverseCount=0;
+ bot.setNextTile(bot.position); // Pixel-based steering recenters without teleporting.
+}
+function commitRoute(bot,path,reason){
+ if(!path||path.length<2)return false;var m=motion(bot);m.route=path.slice(1);m.routeReason=reason;m.routeUntil=Date.now()+Math.max(4000,path.length*(G().tileSize/Math.max(1,bot.velocity))*40+2000);
+ if(bot.__v138Motion)bot.__v138Motion.recovery=m.route;
+ bot.setNextTile(m.route[0]);return true;
+}
+function followRoute(bot){
+ var m=motion(bot);if(!m.route)return false;if(Date.now()>m.routeUntil){clearRoute(bot);return false}
+ while(m.route.length&&same(m.route[0],bot.position)&&centered(bot))m.route.shift();
+ if(!m.route.length){clearRoute(bot);m.banUntil=Math.max(m.banUntil,Date.now()+4500);m.trail=m.trail.slice(-1);m.samples=[];return false}
+ var next=m.route[0];if(!safe(bot,next)||distance(bot.position,next)>1){clearRoute(bot);return false}
+ bot.setNextTile(next);return true;
+}
+function forceNeighbor(bot){var a=walkable(bot,true).filter(function(p){return!blockedByBan(bot,bot.position,p)});if(!a.length)return false;return commitRoute(bot,[bot.position,a[botSlot(bot)%a.length]],'neighbor')}
+function forceNovelRoute(bot,reason){
+ if(!authority()||!bot||strictItemAmbush(bot)||!bot.isSafe(bot.position))return false;
+ var m=motion(bot),axis=reason==='horizontal'||reason==='vertical'?reason:'',p=novelPath(bot,reason);
+ if(!p)return axis?false:forceNeighbor(bot);
+ m.lastBreak=Date.now();m.breaks++;m.trail=m.trail.slice(-1);m.samples=[];m.lastDecision='';m.reverseCount=0;
+ if(axis){m.banAxis=axis;m.banX=bot.position.x;m.banY=bot.position.y;m.banUntil=Date.now()+12000;m.exitAxis='';m.exitUntil=0}
+ return commitRoute(bot,p,reason);
+}
+function hardRecover(bot,reason){
+ if(!authority()||!bot||strictItemAmbush(bot))return false;var m=motion(bot),unsafe=!bot.isSafe(bot.position),path=unsafe?bot.findEscapePath(null,null):null;
+ // If every exit is unsafe, holding is preferable to forcing a random step.
+ if(unsafe&&(!path||path.length<2))return false;
+ clearStaleIntent(bot);var ok;
+ if(unsafe){bot.beginEscapePlan(path,bot.getMostImmediateThreatBomb());bot.setNextTile(path[1]);ok=true}else ok=forceNovelRoute(bot,reason||'stuck');
+ m.lastBreak=Date.now();m.lastMovedAt=Date.now();m.hardResets++;m.lastX=bot.bmp.x;m.lastY=bot.bmp.y;return ok;
+}
+function escapeDisposition(bot){
+ if(!bot.escapeMode)return'';var m=motion(bot),age=Date.now()-m.lastMovedAt,real=trackedDanger(bot),path=bot.escapePath,done=!path||bot.escapePathIndex>=path.length||same(bot.position,bot.escapeDestination)&&centered(bot);
+ if(real&&done&&centered(bot)&&bot.isSafe(bot.position))return'hold';
+ if(age>=1750)return'recover';
+ if(!real&&done)return'recover';return'hold';
+}
+function openBoard(bot){return!!(bot&&(bot.hyperAggressive||(bot.remainingWoodCount&&bot.remainingWoodCount()<=10)))}
+function corridorAxis(a,b){if(!a||!b)return'';if(a.y===b.y&&a.x!==b.x)return'horizontal';if(a.x===b.x&&a.y!==b.y)return'vertical';return''}
+function corridorDecision(bot){
+ var m=motion(bot),t=bot.targetPosition,h=m.trail;if(!t||same(t,bot.position)||h.length<2)return'';
+ var decision=key(bot.position)+'>'+key(t);if(decision===m.lastDecision)return'';m.lastDecision=decision;
+ var axis=corridorAxis(bot.position,t),prev=point(h[h.length-2]),now=Date.now();
+ if(same(t,prev)){if(m.reverseAxis===axis&&now-m.reverseAt<16000)m.reverseCount++;else m.reverseCount=1;m.reverseAxis=axis;m.reverseAt=now;
+  if(m.reverseCount>=2){m.exitAxis=axis;m.exitUntil=now+12000;m.loopBlocks++;return axis}}
+ return'';
+}
+function forceCorridorExit(bot){var m=motion(bot);if(!m.exitAxis||Date.now()>m.exitUntil)return false;return forceNovelRoute(bot,m.exitAxis)}
+function patchOpenBoardTargeting(){
+ if(Bot.prototype.__v141HumanTarget)return;Bot.prototype.__v141HumanTarget=true;
+ var oldOpponent=Bot.prototype.getBestOpponent,oldBonus=Bot.prototype.__v134BonusPath||Bot.prototype.getBestBonusPath;
+ Bot.prototype.getBestOpponent=function(){if(openBoard(this)){var h=targetHuman();if(h&&h!==this)return h}return oldOpponent.apply(this,arguments)};
+ Bot.prototype.getBestBonusPath=function(){return openBoard(this)?null:oldBonus.apply(this,arguments)};
+}
+function ensureSpeed(bot){
+ if(!bot||!authority())return bot&&bot.velocity;var base={easy:1.55,normal:2,hard:2.4,expert:2.75},g=G(),step=g.ultimateMode?4:.8;
+ if(bot.__v138Shoes==null)bot.__v138Shoes=Math.max(0,Number(bot.bonusCounts&&bot.bonusCounts.speed)||0);
+ if(bot.__v138BaseSpeed==null)bot.__v138BaseSpeed=Math.max(g.ultimateMode?4:2,Number(bot.velocity)||0);
+ var b=!bot.simulatedHuman&&base[bot.v125Difficulty]||bot.__v138BaseSpeed,shoes=Math.max(0,Number(bot.__v138Shoes)||0),v=b+shoes*step;
+ if(bot.hyperAggroSpeedApplied){if(!bot.simulatedHuman){var floor={easy:2.25,hard:3.15,expert:3.65}[bot.v125Difficulty];v=floor?Math.max(v,floor):Math.max(b*1.6,g.ultimateMode?6:3.2)+shoes*step}else v=Math.max(v,2.65+(Number(bot.humanSkill)||0)*.82)}
+ bot.velocity=v;return v;
+}
+function watchdog(bot){
+ if(!movementActive(bot))return'';pruneAmbush(bot);sample(bot);ensureSpeed(bot);if(strictItemAmbush(bot))return'';
+ var m=motion(bot),now=Date.now(),esc=escapeDisposition(bot);
+ if(esc==='hold')return'';
+ if(esc==='recover'&&now-m.lastBreak>650){hardRecover(bot,'escape-stale');return'escape-stale'}
+ if(now-m.lastMovedAt>=1750&&now-m.lastBreak>750){hardRecover(bot,'stuck');return'stuck'}
+ // Route decisions happen at actual centers, never at rounded half-tile positions.
+ if(!centered(bot)||m.route)return'';
+ var why=corridorProblem(bot);if(why&&now-m.lastBreak>1000){m.exitAxis=why;m.exitUntil=now+12000;forceNovelRoute(bot,why);return why}return'';
+}
+function huntRoute(bot){
+ var opponent=bot.getBestOpponent();if(!opponent)return false;
+ var all=routes(bot,false),best=null,bestScore=Infinity,recent=recentMap(bot);
+ for(var i=1;i<all.length;i++){var p=all[i],end=p[p.length-1],d=distance(end,opponent.position),lane=bot.blastWouldHit(end,opponent.position),score=p.length+ d*2-(lane?5:0)+(recent[key(end)]||0)*.7+occupancyCost(bot,p)*.25;if(score<bestScore){best=p;bestScore=score}}
+ return best&&commitRoute(bot,best.slice(0,7),'hunt');
+}
+function patchMovement(){
+ if(!window.Bot||Bot.prototype.__v140Movement)return false;Bot.prototype.__v140Movement=true;patchOpenBoardTargeting();
+ var strategy=Bot.prototype.__v134Strategy||Bot.prototype.chooseNextAction,oldUpdate=Bot.prototype.update,oldMove=Bot.prototype.moveToTargetPosition,rawSet=Bot.prototype.__v134OldSetNextTile||Bot.prototype.setNextTile;
+ window.BomberMovementController={ensureSpeed:ensureSpeed};
+ // Replace the AI steering boundary instead of wrapping each historical avoidance rule.
+ Bot.prototype.setNextTile=function(p){if(!authority()||!p)return;rawSet.call(this,p);var dx=this.targetBitmapPosition.x-this.bmp.x,dy=this.targetBitmapPosition.y-this.bmp.y;
+  // Finish centering the current lane before turning across a perpendicular lane.
+  var center=Utils.convertToBitmapPosition(this.position);
+  if(Math.abs(dx)>.01&&Math.abs(dy)>.01){if(Math.abs(this.bmp.x-center.x)>.01){dx=center.x-this.bmp.x;dy=0}else{dy=center.y-this.bmp.y;dx=0}}
+  this.dirX=Math.abs(dx)>.01?(dx>0?1:-1):0;this.dirY=this.dirX?0:Math.abs(dy)>.01?(dy>0?1:-1):0;
+  if(this.dirX)this.direction=this.dirX>0?'right':'left';else if(this.dirY)this.direction=this.dirY>0?'down':'up';
+ };
+ Bot.prototype.moveToTargetPosition=function(){if(!authority())return;this.setNextTile(this.targetPosition);var before={x:this.bmp.x,y:this.bmp.y};
+  // Clamp a centering step too: the base mover clamps only against the final target.
+  var velocity=this.velocity,center=Utils.convertToBitmapPosition(this.position),dx=this.targetBitmapPosition.x-this.bmp.x,dy=this.targetBitmapPosition.y-this.bmp.y;
+  if(Math.abs(dx)>.01&&Math.abs(dy)>.01){var gap=this.dirX?Math.abs(center.x-this.bmp.x):Math.abs(center.y-this.bmp.y);this.velocity=Math.min(velocity,gap)}
+  try{oldMove.call(this)}finally{this.velocity=velocity}
+  if(this.bmp.x===before.x&&this.bmp.y===before.y&&!centered(this)){clearRoute(this);this.setNextTile(this.position)}
+ };
+ Bot.prototype.chooseNextAction=function(){
+  if(!authority())return;pruneAmbush(this);sample(this);ensureSpeed(this);
+  if(!centered(this)){this.setNextTile(this.position);return}
+  // The original committed escape planner always outranks ordinary route commitment.
+  if(this.escapeMode||!this.isSafe(this.position)){clearRoute(this);return strategy.apply(this,arguments)}
+  if(strictItemAmbush(this)){if(window.BomberGameplay134)BomberGameplay134.tryBaitTrap(this);return}
+  var m=motion(this);if(followRoute(this)||forceCorridorExit(this))return;
+  if(openBoard(this)){
+   this.__v134Bait=null;
+   // Preserve tactical placement and timed escape validation, without reselecting a lane each tile.
+   var op=this.getBestOpponent(),spare=this.bombsMax-this.activeBombCount();
+   if(op&&spare>0&&!this.hasBomb(this.position)&&(this.blastWouldHit(this.position,op.position)||distance(this.position,op.position)<=5&&this.scoreBombPlacement(this.position)>=8)){
+    var esc=this.findEscapePath(this.position,this.bombStrength,spare>1);if(esc&&esc.length>1){var b=this.plantBomb();if(b){this.beginEscapePlan(esc,b);this.setNextTile(esc[1]);return}}
+   }
+   if(huntRoute(this))return;
+   // No safe route: wait rather than walking into projected fire.
+   this.setNextTile(this.position);return;
+  }
+  var r;
+  if(window.BomberGameplay134&&BomberGameplay134.tryBaitTrap(this))return;
+  r=strategy.apply(this,arguments);
+  if(!this.escapeMode){var why=corridorDecision(this)||corridorProblem(this);if(why)forceNovelRoute(this,why);else if(blockedByBan(this,this.position,this.targetPosition)){if(!forceNovelRoute(this,'stuck'))this.setNextTile(this.position)}}return r;
+ };
+ Bot.prototype.update=function(){var r=oldUpdate.apply(this,arguments);watchdog(this);return r};return true;
+}
 
 /* One visible owner for the post-match score text. Older rating/score writers update a hidden legacy node. */
 function ensurePostOwner(){var post=$('qolPostMatch');if(!post)return null;var legacy=post.querySelector('.qol_copy:not(#v140PostCopy)');if(legacy)legacy.classList.add('v140_legacy_result_copy');var stable=$('v140PostCopy');if(!stable){stable=document.createElement('p');stable.id='v140PostCopy';stable.className='qol_copy';if(legacy)legacy.insertAdjacentElement('afterend',stable);else{var card=post.querySelector('.qol_card');if(card)card.insertBefore(stable,card.querySelector('.qol_actions'))}}return stable}
@@ -139,6 +318,7 @@ function patchPickupBrag(){if(!window.Bot||Bot.prototype.__v140PickupBrag)return
 function patchMatchReset(){if(S.__v140MatchReset)return;S.__v140MatchReset=true;if(typeof S.startSimulated==='function'){var os=S.startSimulated;S.startSimulated=function(){resetMatchSocial('');var r=os.apply(S,arguments);social.name=clean(S.remoteName||'Opponent');setTimeout(resetPickupCounters,0);return r}}if(window.GameEngine&&!GameEngine.prototype.__v140SocialReset){GameEngine.prototype.__v140SocialReset=true;var or=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){if(S.role==='simulated')resetMatchSocial(clean(S.remoteName||'Opponent'));var r=or.apply(this,arguments);setTimeout(resetPickupCounters,0);return r}}}
 function tickSocial(){if(S.role!=='simulated')return;if(!social.name)social.name=clean(S.remoteName||'Opponent');var g=G(),me=localPlayer(),sim=simBot();if(!g||!me||!sim||!g.playing||g.menu.visible||g.matchFinished)return;var bots=liveRegularBots(),count=bots.length,pickups=pickupTotal(me),danger=inBombDanger(me),now=Date.now();if(social.lastBotCount===null)social.lastBotCount=count;if(!social.lastPickupTotal)social.lastPickupTotal=pickups;tickPowerHints(now,me);if(sim.alive===false&&me.alive!==false){if(!social.spectating){social.spectating=true;if(Math.random()<.7)say(SPEC_START,'spec-start',650)}if(count<social.lastBotCount){if(Math.random()<.45)say(count===1?SPEC_ONE:SPEC_KILL,'spec-kill-'+count+'-'+social.lastBotCount,700);social.nextSpectator=now+12000}if(pickups>social.lastPickupTotal&&Math.random()<SPECTATOR_PICK_CHANCE)say(SPEC_PICK,'spec-pick-'+pickups,650);if(social.lastDanger&&!danger&&Math.random()<.35)say(SPEC_CLOSE,'spec-close-'+now,600);if(now>=social.nextSpectator&&count>0){if(Math.random()<.5)say(SPEC_AMBIENT,'spec-ambient-'+count+'-'+Math.floor(now/8000),700);social.nextSpectator=now+16000+Math.floor(Math.random()*12000)}}var justTwo=sim.alive!==false&&me.alive!==false&&count===0;if(justTwo&&!social.duel){social.duel=true;if(Math.random()<.6)say(DUEL_LINES,'duel-start',650);social.nextDuel=now+11000+Math.floor(Math.random()*8000)}if(!justTwo)social.duel=false;if(justTwo&&now>=social.nextDuel){var did=false;if(now>=social.nextQuestion&&Math.random()<.16)did=askQuestion();if(!did&&Math.random()<DUEL_CHAT_CHANCE)say(DUEL_RELEVANT,'duel-relevant-'+Math.floor(now/8000),620+Math.floor(Math.random()*550));social.nextDuel=now+12000+Math.floor(Math.random()*10000)}else if(!social.spectating&&now>=social.nextQuestion&&Math.random()<.07)askQuestion();social.lastBotCount=count;social.lastPickupTotal=pickups;social.lastDanger=danger}
 
-function install(){if(installed)return true;if(!window.Bot||!window.BomberAI138||!window.BomberStability137||!S.els)return false;installed=true;style();badge();patchPublic();patchMovement();patchChatDedupe();patchChatAnswers();patchPickupBrag();patchMatchReset();expandLegacyPools();ensurePostOwner();var api={version:VERSION,corridorProblem:corridorProblem,strictItemAmbush:strictItemAmbush,forceNovelRoute:forceNovelRoute,watchdog:watchdog,answerFor:answerFor,syncPostOwner:syncPostOwner};window.BomberStability140=api;window.BomberStability139=api;if(/[?&]netdebug=1(?:&|$)/.test(location.search))api.debug={setTrail:function(bot,a){motion(bot).trail=(a||[]).slice();return motion(bot).trail},setStuck:function(bot,ms){motion(bot).lastMovedAt=Date.now()-(ms||2500);return motion(bot).lastMovedAt},state:function(bot){var m=motion(bot);return{problem:corridorProblem(bot),breaks:m.breaks,hardResets:m.hardResets,recovery:bot.__v138Motion&&bot.__v138Motion.recovery?bot.__v138Motion.recovery.slice():[],banAxis:m.banAxis,strictAmbush:strictItemAmbush(bot),escapeMode:!!bot.escapeMode,exitAxis:m.exitAxis,reverseCount:m.reverseCount,loopBlocks:m.loopBlocks}},pruneAmbush:pruneAmbush,latchPublic:function(){latchPublic($('publicMatchBtn'));return publicTxn.active},cancelPublic:clearPublicLatch,publicState:function(){return{active:publicTxn.active,retries:publicTxn.retries,live:publicLive()}},spectatorLine:function(){return pickUnused(SPEC_AMBIENT,'debug-spec')},duelLine:function(){return pickUnused(DUEL_RELEVANT,'debug-duel')},question:function(){var a=QUESTIONS[persona()]||QUESTIONS.chill;for(var i=0;i<a.length;i++)if(!unavailable(a[i][1]))return a[i][1];return''},resetSocial:function(){return resetMatchSocial(clean(S.remoteName||'Opponent')).matchSerial},uniqueLines:function(pool,n){var out=[];for(var i=0;i<n;i++){var x=pickUnused(pool,'debug-unique-'+i);if(!x)break;markUsed(x);out.push(x)}return out},powerHintLine:powerHintLine,bragLine:bragLine,hardRecover:hardRecover,clearStaleIntent:clearStaleIntent,forceEscapeStale:function(bot){if(!bot)return'';bot.escapeMode=true;motion(bot).lastMovedAt=Date.now()-3000;var old=bot.trackedBombStillDangerous,oldSafe=bot.isSafe,oldWalk=bot.getWalkableNeighbors;bot.trackedBombStillDangerous=function(){return true};bot.isSafe=function(){return true};bot.getWalkableNeighbors=function(){return[{x:bot.position.x+(bot.position.x+1<G().tilesX-1?1:-1),y:bot.position.y}]};var r=watchdog(bot);bot.trackedBombStillDangerous=old;bot.isSafe=oldSafe;bot.getWalkableNeighbors=oldWalk;return r},postText:function(){return syncPostOwner()},corridorDecision:corridorDecision,chatConfig:function(){return{minGap:CHAT_MIN_GAP,powerHintChance:POWER_HINT_CHANCE,spectatorPickupChance:SPECTATOR_PICK_CHANCE,bragChance:BRAG_CHANCE,duelChatChance:DUEL_CHAT_CHANCE}}};return true}
+function install(){if(installed)return true;if(!window.Bot||!window.BomberAI138||!window.BomberStability137||!S.els)return false;installed=true;style();badge();patchPublic();patchMovement();patchChatDedupe();patchChatAnswers();patchPickupBrag();patchMatchReset();expandLegacyPools();ensurePostOwner();var api={version:VERSION,corridorProblem:corridorProblem,strictItemAmbush:strictItemAmbush,forceNovelRoute:forceNovelRoute,watchdog:watchdog,answerFor:answerFor,syncPostOwner:syncPostOwner};window.BomberStability140=api;window.BomberStability139=api;if(/[?&]netdebug=1(?:&|$)/.test(location.search))api.debug={setTrail:function(bot,a){var m=motion(bot);m.trail=(a||[]).slice();m.samples=m.trail.map(function(k){return{k:k,t:Date.now()}});return m.trail},setStuck:function(bot,ms){var m=motion(bot);m.lastX=bot.bmp.x;m.lastY=bot.bmp.y;m.lastMovedAt=Date.now()-(ms||2500);return m.lastMovedAt},state:function(bot){var m=motion(bot);return{problem:corridorProblem(bot),breaks:m.breaks,hardResets:m.hardResets,recovery:m.route?m.route.slice():[],banAxis:m.banAxis,strictAmbush:strictItemAmbush(bot),escapeMode:!!bot.escapeMode,exitAxis:m.exitAxis,reverseCount:m.reverseCount,loopBlocks:m.loopBlocks}},pruneAmbush:pruneAmbush,latchPublic:function(){latchPublic($('publicMatchBtn'));return publicTxn.active},cancelPublic:clearPublicLatch,publicState:function(){return{active:publicTxn.active,retries:publicTxn.retries,live:publicLive()}},spectatorLine:function(){return pickUnused(SPEC_AMBIENT,'debug-spec')},duelLine:function(){return pickUnused(DUEL_RELEVANT,'debug-duel')},question:function(){var a=QUESTIONS[persona()]||QUESTIONS.chill;for(var i=0;i<a.length;i++)if(!unavailable(a[i][1]))return a[i][1];return''},resetSocial:function(){return resetMatchSocial(clean(S.remoteName||'Opponent')).matchSerial},uniqueLines:function(pool,n){var out=[];for(var i=0;i<n;i++){var x=pickUnused(pool,'debug-unique-'+i);if(!x)break;markUsed(x);out.push(x)}return out},powerHintLine:powerHintLine,bragLine:bragLine,hardRecover:hardRecover,clearStaleIntent:clearStaleIntent,forceEscapeStale:function(bot){if(!bot)return'';bot.escapeMode=true;motion(bot).lastMovedAt=Date.now()-3000;var old=bot.trackedBombStillDangerous,oldSafe=bot.isSafe,oldWalk=bot.getWalkableNeighbors;bot.trackedBombStillDangerous=function(){return true};bot.isSafe=function(){return true};bot.getWalkableNeighbors=function(){return[{x:bot.position.x+(bot.position.x+1<G().tilesX-1?1:-1),y:bot.position.y}]};var r=watchdog(bot);bot.trackedBombStillDangerous=old;bot.isSafe=oldSafe;bot.getWalkableNeighbors=oldWalk;return r},postText:function(){return syncPostOwner()},corridorDecision:corridorDecision,chatConfig:function(){return{minGap:CHAT_MIN_GAP,powerHintChance:POWER_HINT_CHANCE,spectatorPickupChance:SPECTATOR_PICK_CHANCE,bragChance:BRAG_CHANCE,duelChatChance:DUEL_CHAT_CHANCE}}};return true}
 style();badge();var tries=0,t=setInterval(function(){if(install()||++tries>900)clearInterval(t)},40);setInterval(function(){if(!installed)return;badge();stabilizePublic();patchChatDedupe();expandLegacyPools();syncPostOwner();var g=G(),bots=g&&g.bots||[];for(var i=0;i<bots.length;i++)if(bots[i]&&bots[i].alive!==false)watchdog(bots[i]);tickSocial()},100);
 })();
+
