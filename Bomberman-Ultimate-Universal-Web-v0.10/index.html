@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>Bomberman v0.12.9</title>
+    <title>Bomberman v0.15.0</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,9 +24,10 @@
     <script src="./files/js/Menu.js"></script>
     <script src="./files/js/InputEngine.js"></script>
     <script src="./files/js/GameEngine.js?v=0119"></script>
+    <script src="./files/preload-v0150.js?v=0150"></script>
     <script src="./files/online.js?v=0119"></script>
     <script src="./files/mobile.js?v=0119"></script>
-    <script src="./files/app.js?v=0129"></script>
+    <script src="./files/app.js?v=0150"></script>
     <script src="./files/hotfix-0117.js?v=0119"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
@@ -195,11 +196,6 @@
     </div>
 
 <script>
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js?v=0129').catch(function () {}); });
-}
-</script>
-<script>
 (function () {
   if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
   function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); }
@@ -210,4 +206,3 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 </body>
 </html>
-
