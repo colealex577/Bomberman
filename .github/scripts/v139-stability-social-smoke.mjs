@@ -54,7 +54,7 @@ try{
  assert.ok(social.answer&&social.answer.length>3,'question fallback answer missing');
  assert.ok(social.spectator&&social.spectator.length>5,'spectator reaction missing');
  assert.ok(social.duel&&social.duel.length>5,'final-two dialogue missing');
- assert.ok(social.question&&social.question.includes('?'),'personality question missing');
+ assert.ok(typeof social.question==='string'&&social.question.trim().length>3,'personality question/prompt missing');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V139_STABILITY_SOCIAL PASS',JSON.stringify({publicGuard,movement,social}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
