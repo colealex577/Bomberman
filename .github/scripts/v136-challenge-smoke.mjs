@@ -36,7 +36,7 @@ try{
   if(!a)return{ok:false,reason:'no safe bot neighbor'};b=bots.find(x=>x!==a);if(!b)return{ok:false,reason:'no second bot'};
   const savePos={x:b.position.x,y:b.position.y},saveTarget={x:b.targetPosition.x,y:b.targetPosition.y},before=a.__v136PassThroughs||0;
   b.position={x:target.x,y:target.y};b.targetPosition={x:target.x,y:target.y};a.setNextTile(target);
-  const ok=a.targetPosition.x===target.x&&a.targetPosition.y===target.y&&(a.__v136PassThroughs||0)>before;
+  const aimed=a.targetPosition.x===target.x&&a.targetPosition.y===target.y,px=Utils.convertToBitmapPosition(a.position);a.bmp.x=px.x;a.bmp.y=px.y;a.moveToTargetPosition();const moved=Math.hypot(a.bmp.x-px.x,a.bmp.y-px.y);const ok=aimed&&moved>0;
   b.position=savePos;b.targetPosition=saveTarget;return{ok,target:{...target},passes:a.__v136PassThroughs||0}
  });
  assert.equal(pass.ok,true,pass.reason||'AI did not target occupied safe tile');
@@ -49,3 +49,4 @@ try{
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V136_CHALLENGE_SMOKE PASS',JSON.stringify({board,distribution,pass,target,match}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
+
