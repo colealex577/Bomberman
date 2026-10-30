@@ -29,17 +29,23 @@ try{
    const sims=gGameEngine.bots.filter(b=>b.simulatedHuman),normal=gGameEngine.bots.find(b=>!b.simulatedHuman),api=BomberHumanObserver152.debug;
    sims.forEach(b=>b.started=false);gGameEngine.bombs.length=0;
    const arrival=api.forceArrival(sims[0]),normalArrival=api.forceArrival(normal),a=sims[0].__v152Arrival;
-   const c60=api.endgameChance(60000),c180=api.endgameChance(180000),slip=api.armSlip(sims[1]),normalSlip=api.armSlip(normal);
+   const c59=api.endgameChance(59999),c60=api.endgameChance(60000),c180=api.endgameChance(180000),slip=api.armSlip(sims[1]),normalSlip=api.armSlip(normal);
+   const planted=slip?sims[1].plantBomb():null,slipDelay=sims[1].__v152SlipUntil?Math.max(0,sims[1].__v152SlipUntil-Date.now()):0;
+   if(planted){Utils.removeFromArray(gGameEngine.bombs,planted);Utils.removeFromArray(sims[1].bombs,planted);try{gGameEngine.stage.removeChild(planted.bmp)}catch(e){}}
+   sims[1].__v152SlipUntil=0;sims[1].__v152SlipBomb=null;
    api.forceChat();
    const text=Array.from(document.querySelectorAll('#chatMessages .chat_line')).map(x=>x.textContent).join('|');
-   return{arrival,normalArrival,offset:a?Math.hypot(a.offset.x-a.center.x,a.offset.y-a.center.y):0,c60,c180,slip,normalSlip,chat:text,names:sims.map(b=>b.displayName)};
+   return{arrival,normalArrival,offset:a?Math.hypot(a.offset.x-a.center.x,a.offset.y-a.center.y):0,c59,c60,c180,slip,normalSlip,planted:!!planted,slipDelay,chat:text,names:sims.map(b=>b.displayName)};
  });
  assert.equal(humanization.arrival,true,'simulated human could not arm a destination micro-correction');
  assert.equal(humanization.normalArrival,false,'standard AI received human arrival mistakes');
  assert.ok(humanization.offset>=2.4&&humanization.offset<=6.6,'arrival overshoot/undershoot exceeded safe within-tile range');
+ assert.equal(humanization.c59,0,'endgame mistakes became possible before the one-minute grace period');
  assert.ok(humanization.c60>0&&humanization.c180>humanization.c60,'endgame mistake chance did not rise over time');
  assert.equal(humanization.slip,true,'simulated human could not arm an endgame slip');
  assert.equal(humanization.normalSlip,false,'standard AI received endgame human-slip behavior');
+ assert.equal(humanization.planted,true,'armed endgame slip did not wait for a real bomb placement');
+ assert.ok(humanization.slipDelay>=800,'endgame slip did not create a real late-reaction hesitation');
  assert.ok(humanization.chat.includes(humanization.names[0])&&humanization.chat.includes(humanization.names[1]),'both observed players did not communicate in chat');
 
  const before=await p.evaluate(()=>({serial:BomberHumanObserver152.state().roundSerial,names:BomberHumanObserver152.state().profiles.map(p=>p.name)}));
