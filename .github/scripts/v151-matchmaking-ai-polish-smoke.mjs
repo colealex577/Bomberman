@@ -17,6 +17,7 @@ try{
  // capture repair must still enter public matchmaking without a page refresh.
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&BomberMatchmaking151.debug?.captured(),{timeout:5000});
+ console.log('V151_OWNER',await p.evaluate(()=>BomberMatchmaking151.debug.ownerSource()));
  const firstClick=await p.evaluate(async()=>{
    BomberMatchmaking151.debug.dropHandler();
    document.getElementById('publicMatchBtn').click();
