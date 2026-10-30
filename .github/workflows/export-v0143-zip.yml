@@ -1,0 +1,25 @@
+name: Export Bomberman v0.14.3 ZIP
+
+on:
+  push:
+    branches: [export-v0143-zip]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage clean game folder
+        run: |
+          mkdir -p export
+          cp -a Bomberman-Ultimate-Universal-Web-v0.10 export/Bomberman-v0.14.3
+      - name: Upload game ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bomberman-v0.14.3
+          path: export
+          retention-days: 1
+          if-no-files-found: error
