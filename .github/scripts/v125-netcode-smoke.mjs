@@ -63,8 +63,10 @@ try{
   if(a.difficulty!=='hard'||b.difficulty!=='hard')throw new Error('AI difficulty did not synchronize from host');
   if(a.bots.filter(x=>!x.sim).length!==2||b.bots.filter(x=>!x.sim).length!==2)throw new Error('AI bots missing in difficulty test');
   if(a.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2.4)>.05)||b.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2.4)>.08))throw new Error('hard difficulty speed not applied consistently');
-  const samples=[];for(let i=0;i<12;i++){samples.push(await Promise.all([humanPoints(A.page),humanPoints(B.page)]));await sleep(70)}
   const expected=JSON.stringify([{0:{points:'610',pseudo:'none'},3:{points:'830',pseudo:'none'}},{0:{points:'610',pseudo:'none'},3:{points:'830',pseudo:'none'}}]);
+  const labelsReady=await waitFor(async()=>JSON.stringify(await Promise.all([humanPoints(A.page),humanPoints(B.page)]))===expected,5000,70);
+  if(!labelsReady)throw new Error('point labels did not populate with the correct player scores');
+  const samples=[];for(let i=0;i<12;i++){samples.push(await Promise.all([humanPoints(A.page),humanPoints(B.page)]));await sleep(70)}
   for(const s of samples){if(JSON.stringify(s)!==expected)throw new Error('point labels flicker or map to wrong player: '+JSON.stringify(s))}
   console.log('REVERSE_DIFFICULTY_SCORE PASS');
   if([...A.errors,...B.errors].length)throw new Error('phase 1 browser errors: '+[...A.errors,...B.errors].join(' | '));
@@ -78,4 +80,3 @@ try{
 }finally{
   await closeClient(A);await closeClient(B);await closeClient(C);await closeClient(D);await browser.close().catch(()=>{});
 }
-
