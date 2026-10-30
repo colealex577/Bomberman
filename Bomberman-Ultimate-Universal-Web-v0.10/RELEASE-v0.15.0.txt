@@ -1,0 +1,17 @@
+Bomberman v0.15.0 — AI Overhaul
+
+Gameplay/AI
+- Persistent goals with hysteresis: attack, collect, clear, reposition, and intentional wait.
+- Time-aware A* routing that can safely cross future blast lanes instead of treating all projected fire as immediately blocked.
+- Live escape-route revalidation against the combined bomb/chain-reaction timeline.
+- Short-horizon AI tile reservations with stable yielding to reduce collisions and head-on deadlocks.
+- Edge-specific loop penalties and decision-state loop detection instead of broad row/column bans.
+- Intentional waiting is recognized as a valid decision rather than a stuck state.
+- Contestant-neutral target selection with short target commitment, reducing robotic human tunnel-vision.
+- Bomb scoring rewards cutting off opponent escape options.
+- Simulated opponents receive light personality biases while retaining fallible behavior.
+
+Stability
+- Replaces the legacy PreloadJS image queue at startup with native browser Image loading to prevent the permanent Loading screen seen on modern Chromium/local servers.
+- Preserves the v0.14.4 simulated-opponent opening-pocket breakout fix.
+- Uses a new v0.15.0 service-worker cache while keeping the same GitHub Pages path.
