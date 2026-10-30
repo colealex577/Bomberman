@@ -1,7 +1,7 @@
 name: Data multiplayer branch smoke
 on:
   push:
-    branches: [sim-opening-breakout-v0144, ai-intelligence-social-v0143, ai-controller-route-commitment, authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133, gameplay-ai-chat-v0134, ai-polish-v0135, ai-challenge-v0136, stability-chat-v0137, ai-movement-social-v0138, ai-matchmaking-social-v0139, ai-social-stability-v0140, ai-chat-openhunt-v0141]
+    branches: [ai-overhaul-v0150, sim-opening-breakout-v0144, ai-intelligence-social-v0143, ai-controller-route-commitment, authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133, gameplay-ai-chat-v0134, ai-polish-v0135, ai-challenge-v0136, stability-chat-v0137, ai-movement-social-v0138, ai-matchmaking-social-v0139, ai-social-stability-v0140, ai-chat-openhunt-v0141]
   workflow_dispatch:
 concurrency:
   group: data-multiplayer-${{ github.ref }}
@@ -16,8 +16,8 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        # v144-opening-smoke verifies the no-regular-AI simulated opponent breaks out of its tiny starting pocket instead of shuttling among the three spawn tiles.
-        test: [ai-controller-browser, ai-controller-regression, data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke, v132-whole-smoke, v133-maps-smoke, v134-gameplay-smoke, v135-polish-smoke, v136-challenge-smoke, v137-stability-chat-smoke, v138-ai-social-smoke, v139-stability-social-smoke, v141-ai-chat-smoke, v143-intelligence-smoke, v144-opening-smoke]
+        # v150-ai-overhaul-smoke verifies the native loader, release wiring, persistent wait state, contestant targeting, and preserves the v0.14.4 opening fix.
+        test: [ai-controller-browser, ai-controller-regression, data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke, v132-whole-smoke, v133-maps-smoke, v134-gameplay-smoke, v135-polish-smoke, v136-challenge-smoke, v137-stability-chat-smoke, v138-ai-social-smoke, v139-stability-social-smoke, v141-ai-chat-smoke, v143-intelligence-smoke, v144-opening-smoke, v150-ai-overhaul-smoke]
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
