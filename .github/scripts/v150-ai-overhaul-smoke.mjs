@@ -7,10 +7,10 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V150Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.0'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.15.0'&&window.BomberOpening144?.version==='v0.14.4'&&window.gGameEngine?.menu,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.15.1'&&window.BomberOpening144?.version==='v0.14.4'&&window.gGameEngine?.menu,{timeout:30000});
  await p.waitForFunction(()=>gGameEngine.playerBoyImg&&gGameEngine.playerBoyImg.complete&&gGameEngine.tilesImgs?.grass,{timeout:15000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.0');
- assert.equal(await p.title(),'Bomberman v0.15.0');
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.1');
+ assert.equal(await p.title(),'Bomberman v0.15.1');
  await p.evaluate(()=>{B115.setRole('offline');gGameEngine.menu.setMode('single')});
  await p.waitForFunction(()=>gGameEngine.bots?.length>=2&&!gGameEngine.menu.visible,{timeout:8000});
  const result=await p.evaluate(()=>{
@@ -19,12 +19,6 @@ try{
   const before=api.state(bot);api.setWait(bot,350,'smoke wait');const wait=api.state(bot);
   const target=BomberAI150.chooseTarget(bot,true);
   const path=target?api.timedPath(bot,bot.position,target.position,true):null;
-
-  // Regression for the v0.15 cover-commitment bug: after reaching cover the
-  // remaining route no longer intersects the bot's own blast, but that bomb is
-  // still dangerous until its fuse/fire clears. trackedBombStillDangerous()
-  // must therefore retain the original escapeThreatBomb independently of the
-  // dynamically refreshed route threat set.
   const saved={escapeMode:bot.escapeMode,escapePath:bot.escapePath,escapePathIndex:bot.escapePathIndex,escapeThreatBomb:bot.escapeThreatBomb,escapeThreats:bot.escapeThreats,escapeDestination:bot.escapeDestination};
   const own={exploded:false,fires:[],position:{x:-90,y:-90},getDangerPositions(){return[{x:-90,y:-90}]}};
   gGameEngine.bombs.push(own);
@@ -32,7 +26,6 @@ try{
   const holdsOwnBomb=bot.trackedBombStillDangerous();
   Utils.removeFromArray(gGameEngine.bombs,own);
   bot.escapeMode=saved.escapeMode;bot.escapePath=saved.escapePath;bot.escapePathIndex=saved.escapePathIndex;bot.escapeThreatBomb=saved.escapeThreatBomb;bot.escapeThreats=saved.escapeThreats;bot.escapeDestination=saved.escapeDestination;
-
   return{preload:BomberPreload150.nativeImages,waitMs:wait.waitUntil-Date.now(),target:!!target,pathLength:path&&path.length,opening:BomberOpening144.version,replans:before.replans||0,holdsOwnBomb};
  });
  assert.equal(result.preload,true,'native image loader was not active');
