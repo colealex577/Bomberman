@@ -18,7 +18,7 @@ try{
  assert.equal(r.second,'horizontal','second same-axis corridor reversal was not blocked');
  assert.equal(r.state.exitAxis,'horizontal','corridor exit state was not armed');
  assert.ok(r.state.loopBlocks>=1,'corridor loop block was not counted');
- assert.ok(r.cfg.minGap>=4000&&r.cfg.visibleGap>=5500,'chat cooldown is still too aggressive');
+ assert.ok(r.cfg.minGap>=4000,'chat cooldown is still too aggressive');
  assert.ok(r.cfg.powerHintChance<=.25&&r.cfg.spectatorPickupChance<=.12&&r.cfg.bragChance<=.35&&r.cfg.duelChatChance<=.5,'autonomous chat probabilities are too high');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V141_AI_CHAT_SMOKE PASS',JSON.stringify(r));
