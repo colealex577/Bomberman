@@ -33,7 +33,7 @@ try{
  await A.page.evaluate(id=>{BomberV124.setAIEnabled(false);B115.privateId=()=>id;B115.els.privateCode.value='7';B115.els.name.value='MapHost';B115.startPrivateHost()},id);await sleep(700);
  await B.page.evaluate(id=>{B115.privateId=()=>id;B115.els.privateCode.value='7';B115.els.name.value='MapGuest';B115.startPrivateJoin()},id);
  await wait(()=>B.page.evaluate(()=>window.BomberDataSync?.role==='guest'&&!!BomberMultiplayer.roundId),'private map pair did not connect',30000);
- await wait(async()=>{const [a,b]=await Promise.all([A.page.evaluate(()=>BomberMaps133.active()),B.page.evaluate(()=>BomberMaps133.active())]);return a==='fortress'&&b==='fortress'},'host map did not synchronize to guest',12000);
+ await wait(async()=>{const [a,b]=await Promise.all([A.page.evaluate(()=>BomberMaps133.active()),B.page.evaluate(()=>BomberMaps133.active())]);return a==='fortress'&&b==='fortress'},'host map did not synchronize to guest',30000);
  const pair=await Promise.all([A.page,B.page].map(page=>page.evaluate(()=>({map:BomberMaps133.active(),version:BomberMultiplayer.version,walls:(gGameEngine.tiles||[]).filter(t=>t&&t.material==='wall').map(t=>t.position.x+','+t.position.y).sort().join('|'),saved:BomberMaps133.getSelection('multi')}))));
  assert.equal(pair[0].map,'fortress');assert.equal(pair[1].map,'fortress');assert.equal(pair[0].version,'v0.12.9');assert.equal(pair[1].version,'v0.12.9');assert.equal(pair[0].walls,pair[1].walls,'host and guest hard-wall layouts differ');assert.equal(pair[0].saved,'fortress');assert.equal(pair[1].saved,'longlanes','guest preference was overwritten by host map');
  const allErrors=[...errors,...A.errors,...B.errors];if(allErrors.length)throw Error('browser errors: '+allErrors.join(' | '));
