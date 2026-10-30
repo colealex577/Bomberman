@@ -54,8 +54,8 @@ try{
  assert.ok(rates.bot>.26&&rates.bot<.42,'bot-talk rate '+rates.bot);assert.ok(rates.reply&&rates.reply.length>1);
  await wait(()=>p.evaluate(reply=>Array.from(document.querySelectorAll('#chatMessages .chat_line')).some(x=>x.textContent.includes(reply)),rates.reply),'simulated chat reply did not appear',2500);
 
- // Detect a long corridor shuttle pattern that the old 10-position loop detector missed.
- const loop=await p.evaluate(()=>{const bot=gGameEngine.bots.find(b=>b&&b.alive!==false);if(!bot)return false;bot.hyperAggressive=true;const trail=['1,1','2,1','3,1','4,1','5,1','6,1','7,1','8,1','9,1','8,1','7,1','6,1','5,1','4,1','3,1','2,1','1,1'];BomberStability137.debug.setTrail(bot,trail);return BomberStability137.longLoop(bot)});
+ // Detect a long corridor shuttle pattern that the old 10-position loop detector missed; escape mode is disabled so this isolates shuttle detection.
+ const loop=await p.evaluate(()=>{const bot=gGameEngine.bots.find(b=>b&&b.alive!==false);if(!bot)return false;bot.escapeMode=false;bot.hyperAggressive=true;const trail=['1,1','2,1','3,1','4,1','5,1','6,1','7,1','8,1','9,1','8,1','7,1','6,1','5,1','4,1','3,1','2,1','1,1'];BomberStability137.debug.setTrail(bot,trail);return BomberStability137.longLoop(bot)});
  assert.equal(loop,true,'long shuttle loop was not detected');
 
  const delays=await p.evaluate(()=>Array.from({length:100},()=>BomberStability137.decisionDelay()));assert.ok(delays.every(x=>x>=3000&&x<=5000));
