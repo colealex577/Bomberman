@@ -43,10 +43,11 @@ try{
  await wait(()=>p.evaluate(name=>B115.role==='simulated'&&B115.remoteName===name,challenged.name),'accepted challenge did not start',6000);
  const elapsed=await p.evaluate(t=>performance.now()-t,challenged.t);assert.ok(elapsed>=3000,'challenge delay '+elapsed);assert.ok(elapsed<=5600,'challenge delay '+elapsed);
 
- // The stable match/set UI owns visible text; legacy competing summaries are hidden.
+ // Visible match text is stable; volatile post-round set text is replaced by a stable copy outside the rebuilt stats region.
  await sleep(500);
- const stableMatch=await p.evaluate(()=>({status:document.getElementById('v137MatchStatus')?.textContent||'',legacy:getComputedStyle(document.getElementById('onlineMatchStatus')).display,summary:document.getElementById('v137MatchSummary')?.textContent||'',oldSummary:document.getElementById('v132MatchSummary')?getComputedStyle(document.getElementById('v132MatchSummary')).display:'none'}));
- assert.ok(stableMatch.status.includes(challenged.name),stableMatch.status);assert.equal(stableMatch.legacy,'none');assert.equal(stableMatch.oldSummary,'none');assert.ok(/best of 3/i.test(stableMatch.summary),stableMatch.summary);
+ const stableMatch=await p.evaluate(()=>({status:document.getElementById('v137MatchStatus')?.textContent||'',legacy:getComputedStyle(document.getElementById('onlineMatchStatus')).display,summary:document.getElementById('v132MatchSummary')?.textContent||'',summaryDisplay:document.getElementById('v132MatchSummary')?getComputedStyle(document.getElementById('v132MatchSummary')).display:'none',post:document.getElementById('v137PostSetSummary')?.textContent||'',volatile:document.querySelector('#v130PostStats>.v132_set_post')?getComputedStyle(document.querySelector('#v130PostStats>.v132_set_post')).display:'none'}));
+ assert.ok(stableMatch.status.includes(challenged.name),stableMatch.status);assert.equal(stableMatch.legacy,'none');assert.notEqual(stableMatch.summaryDisplay,'none');assert.ok(/best of 3/i.test(stableMatch.summary),stableMatch.summary);assert.ok(/set/i.test(stableMatch.post),stableMatch.post);assert.equal(stableMatch.volatile,'none');
+ const postBefore=stableMatch.post;await sleep(700);assert.equal(await p.evaluate(()=>document.getElementById('v137PostSetSummary')?.textContent||''),postBefore);
 
  // Simulated players support basic chat-back and roughly one third carry bot-related chatter personality.
  const rates=await p.evaluate(()=>{const names=BomberLeaderboard127.population().map(x=>x.name);return{bot:BomberStability137.debug.botRate(names),reply:BomberStability137.debug.forceReply('are you a bot?')}});
