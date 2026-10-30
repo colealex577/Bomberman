@@ -9,8 +9,8 @@ async function wait(fn,msg,ms=12000){const end=Date.now()+ms;while(Date.now()<en
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','StabilityTester');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberStability140?.version==='v0.14.1'&&window.BomberAI138&&window.BomberStability137&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion140')?.textContent),'v0.14.1');
+ await p.waitForFunction(()=>window.BomberStability140?.version==='v0.14.2'&&window.BomberAI138&&window.BomberStability137&&window.BomberLeaderboard127&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion140')?.textContent),'v0.14.2');
 
  const publicGuard=await p.evaluate(()=>{const ok=BomberStability140.debug.latchPublic(),shield=document.getElementById('v140SearchShield');const out={ok,active:BomberStability140.debug.publicState().active,body:document.body.classList.contains('v140_public_latched'),shield:!!shield&&!shield.hidden};BomberStability140.debug.cancelPublic();out.cleared=!BomberStability140.debug.publicState().active&&!document.body.classList.contains('v140_public_latched');return out});
  assert.equal(publicGuard.ok,true,'public matchmaking latch did not start');
@@ -24,20 +24,20 @@ try{
  await wait(()=>p.evaluate(name=>B115.role==='simulated'&&B115.remoteName===name,name),'simulated match did not start',7000);
  await wait(()=>p.evaluate(()=>gGameEngine.bots&&gGameEngine.bots.some(b=>b&&b.alive!==false)),'no live bot',5000);
 
- const movement=await p.evaluate(async()=>{
+ const movement=await p.evaluate(()=>{
   const bot=gGameEngine.bots.find(b=>b&&b.simulatedHuman&&b.alive!==false)||gGameEngine.bots.find(b=>b&&b.alive!==false);if(!bot)throw Error('bot missing');
-  bot.started=true;bot.escapeMode=false;gGameEngine.playing=true;gGameEngine.lobbyOpen=false;gGameEngine.menu.visible=false;
+  bot.started=true;bot.escapeMode=false;bot.clearEscapePlan();gGameEngine.bombs=[];bot.position={x:5,y:5};var px=Utils.convertToBitmapPosition(bot.position);bot.bmp.x=px.x;bot.bmp.y=px.y;bot.setNextTile(bot.position);gGameEngine.playing=true;gGameEngine.lobbyOpen=false;gGameEngine.menu.visible=false;
   const horizontal=['1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5','1,5','2,5','3,5','4,5','5,5','6,5','7,5','8,5','7,5','6,5','5,5','4,5','3,5','2,5'];
   const wood=gGameEngine.tiles.filter(t=>t.material==='wood');wood.forEach(t=>{t.material='grass'});
   BomberStability140.debug.setTrail(bot,horizontal);const corridor=BomberStability140.corridorProblem(bot),forced=BomberStability140.forceNovelRoute(bot,corridor),afterRoute=BomberStability140.debug.state(bot);
-  wood.forEach(t=>{t.material='wood'});
+  
   const human=gGameEngine.players[0],oldHuman={x:human.position.x,y:human.position.y},oldTarget=human.targetPosition?{x:human.targetPosition.x,y:human.targetPosition.y}:null,oldBonuses=gGameEngine.bonuses;
-  gGameEngine.bonuses=[];human.position={x:bot.position.x,y:bot.position.y};human.targetPosition={x:bot.position.x,y:bot.position.y};bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const invalid=BomberStability140.strictItemAmbush(bot),pruned=BomberStability140.debug.pruneAmbush(bot),cleared=!bot.__v134Bait;
-  gGameEngine.bonuses=[{position:{x:bot.position.x,y:bot.position.y},type:'speed'}];bot.__v134Bait={x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const valid=BomberStability140.strictItemAmbush(bot);bot.__v134Bait=null;
+  gGameEngine.bonuses=[];human.position={x:bot.position.x,y:bot.position.y};human.targetPosition={x:bot.position.x,y:bot.position.y};bot.__v134Bait={created:Date.now(),x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const invalid=BomberStability140.strictItemAmbush(bot),pruned=BomberStability140.debug.pruneAmbush(bot),cleared=!bot.__v134Bait;
+  gGameEngine.bonuses=[{position:{x:bot.position.x,y:bot.position.y},type:'speed'}];bot.__v134Bait={created:Date.now(),x:bot.position.x,y:bot.position.y,triggered:false,ambush:{x:bot.position.x,y:bot.position.y}};const valid=BomberStability140.strictItemAmbush(bot);bot.__v134Bait=null;
   gGameEngine.bonuses=oldBonuses;human.position=oldHuman;if(oldTarget)human.targetPosition=oldTarget;
-  await new Promise(r=>setTimeout(r,800));
+  bot.__v140Motion.lastBreak=0;
   BomberStability140.debug.setTrail(bot,[]);BomberStability140.debug.setStuck(bot,2500);const before=BomberStability140.debug.state(bot).hardResets,reason=BomberStability140.watchdog(bot),after=BomberStability140.debug.state(bot);
-  await new Promise(r=>setTimeout(r,800));
+  bot.__v140Motion.lastBreak=0;
   const escapeReason=BomberStability140.debug.forceEscapeStale(bot),afterEscape=BomberStability140.debug.state(bot);
   return{corridor,forced,recovery:afterRoute.recovery.length,banAxis:afterRoute.banAxis,invalid,pruned,cleared,valid,reason,before,hardResets:after.hardResets,escapeReason,escapeCleared:!afterEscape.escapeMode,escapeHardResets:afterEscape.hardResets};
  });

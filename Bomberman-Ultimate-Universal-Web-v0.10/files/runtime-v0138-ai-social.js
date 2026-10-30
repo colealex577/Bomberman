@@ -48,6 +48,7 @@ function motion(bot){if(!bot.__v138Motion){bot.__v138Motion={lastPxX:Number(bot.
 function speedStep(){var g=G();return g&&g.ultimateMode?4:.8}
 function baseSpeed(){var g=G();return g&&g.ultimateMode?4:2}
 function ensureSpeed(bot){
+ if(window.BomberMovementController)return BomberMovementController.ensureSpeed(bot);
  if(!bot)return 0;if(bot.__v138BaseSpeed==null){var raw=Number(bot.velocity);bot.__v138BaseSpeed=isFinite(raw)&&raw>0?raw:baseSpeed();if(bot.__v138Shoes==null)bot.__v138Shoes=0}
  var exact=bot.__v138BaseSpeed+Math.max(0,Number(bot.__v138Shoes)||0)*speedStep();if(Math.abs((Number(bot.velocity)||0)-exact)>.001)bot.velocity=exact;return exact
 }
@@ -85,7 +86,7 @@ function recoveryPath(bot,reason){
 }
 function startRecovery(bot,reason){var m=motion(bot),now=Date.now();if(!reason||now<m.cooldownUntil||bot.escapeMode||intentionalAmbush(bot))return false;var p=recoveryPath(bot,reason);if(!p||!p.length)return false;m.recovery=p.slice();m.recoveryReason=reason;m.lastAxis=reason;m.cooldownUntil=now+850;m.breaks++;if(reason==='stuck')m.stuckBreaks++;m.trail=m.trail.slice(-4);return followRecovery(bot)}
 function followRecovery(bot){var m=motion(bot),p=m.recovery;if(!p||!p.length||bot.escapeMode)return false;if(intentionalAmbush(bot)){m.recovery=null;m.recoveryReason='';return false}while(p.length&&same(p[0],bot.position))p.shift();if(!p.length){m.recovery=null;m.recoveryReason='';m.cooldownUntil=Date.now()+900;return false}if(!safe(bot,p[0])){m.recovery=null;m.recoveryReason='';return false}try{bot.setNextTile(p[0]);return true}catch(e){m.recovery=null;m.recoveryReason='';return false}}
-function watchdog(bot){record(bot);ensureSpeed(bot);var why=problem(bot);if(why)startRecovery(bot,why)}
+function watchdog(bot){if(window.BomberMovementController)return;record(bot);ensureSpeed(bot);var why=problem(bot);if(why)startRecovery(bot,why)}
 function patchMovement(){
  if(!window.Bot||Bot.prototype.__v138Movement)return false;Bot.prototype.__v138Movement=true;
  var oldApply=Bot.prototype.applyBonus;Bot.prototype.applyBonus=function(bonus){ensureSpeed(this);var isSpeed=bonus&&bonus.type==='speed',r=oldApply.apply(this,arguments);if(isSpeed)this.__v138Shoes=(Number(this.__v138Shoes)||0)+1;ensureSpeed(this);return r};
@@ -109,3 +110,4 @@ function install(){if(installed)return true;if(!window.Bot||!window.BomberStabil
 var tries=0,t=setInterval(function(){if(install()||++tries>900)clearInterval(t)},40);
 setInterval(function(){if(!installed)return;badge();syncBots();ambientSocial()},120);
 })();
+
