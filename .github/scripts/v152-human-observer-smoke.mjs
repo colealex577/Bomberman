@@ -27,7 +27,7 @@ try{
 
  const humanization=await p.evaluate(()=>{
    const sims=gGameEngine.bots.filter(b=>b.simulatedHuman),normal=gGameEngine.bots.find(b=>!b.simulatedHuman),api=BomberHumanObserver152.debug;
-   sims.forEach(b=>b.started=false);gGameEngine.bombs.length=0;
+   sims.forEach(b=>{b.started=false;b.bombs=[];b.bombsMax=Math.max(1,Number(b.bombsMax)||1)});gGameEngine.bombs.length=0;
    const arrival=api.forceArrival(sims[0]),normalArrival=api.forceArrival(normal),a=sims[0].__v152Arrival;
    const c59=api.endgameChance(59999),c60=api.endgameChance(60000),c180=api.endgameChance(180000),slip=api.armSlip(sims[1]),normalSlip=api.armSlip(normal);
    const planted=slip?sims[1].plantBomb():null,slipDelay=sims[1].__v152SlipUntil?Math.max(0,sims[1].__v152SlipUntil-Date.now()):0;
