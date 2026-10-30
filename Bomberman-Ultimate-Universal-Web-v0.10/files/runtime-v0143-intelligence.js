@@ -34,7 +34,7 @@ function merge(base,extra){var a=Array.isArray(base)?base.slice():[],seen={};for
 function authority(){return S.role!=='guest'}
 function openBoard(bot){try{return!!(bot&&(bot.hyperAggressive||(bot.remainingWoodCount&&bot.remainingWoodCount()<=10)))}catch(e){return!!(bot&&bot.hyperAggressive)}}
 function localHuman(){var g=G(),a=g&&g.players||[];for(var i=0;i<a.length;i++)if(a[i]&&!a[i].isBot)return a[i];return null}
-function livingHuman(){var h=localHuman();return h&&h.alive!==false?h:null}
+function livingHuman(){var g=G(),a=g&&g.players||[];for(var i=0;i<a.length;i++)if(a[i]&&!a[i].isBot&&a[i].alive!==false)return a[i];return null}
 function contestants(bot){var g=G(),src=g&&g.getPlayersAndBots?g.getPlayersAndBots().slice():[],out=[],seen=[];if(g&&g.simulatedOpponent&&src.indexOf(g.simulatedOpponent)<0)src.push(g.simulatedOpponent);for(var i=0;i<src.length;i++){var x=src[i];if(!x||x===bot||x.alive===false||seen.indexOf(x)>=0)continue;seen.push(x);out.push(x)}return out}
 function botKey(bot){var g=G(),i=g&&g.bots?g.bots.indexOf(bot):-1;return String(bot&&bot.statSlot!=null?bot.statSlot:(i>=0?'b'+i:clean(bot&&bot.displayName||'bot')))}
 function mistakeChance(bot){if(bot&&bot.simulatedHuman&&isFinite(Number(bot.humanSkill)))return clamp(.15-Number(bot.humanSkill)*.11,.025,.14);var d=String(bot&&bot.v125Difficulty||G()&&G().aiDifficulty||'normal').toLowerCase();if(d==='expert')return .025;if(d==='hard')return .05;if(d==='easy')return .14;return .085}
