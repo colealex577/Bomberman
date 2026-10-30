@@ -39,6 +39,17 @@ try{
  assert.equal(farm.near,true,'multi-block farming did not win an otherwise-equal choice');
  assert.equal(farm.far,false,'farming yield overrode a clearly better route');
 
+ // Missed-bomb humanization should be rare: about 1% at the top end and
+ // about 4% for the least-skilled simulated humans, with smooth scaling between.
+ const fumbleRates=await p.evaluate(()=>({
+   high:BomberPolish151.fumbleChance({humanSkill:1}),
+   low:BomberPolish151.fumbleChance({humanSkill:.08}),
+   mid:BomberPolish151.fumbleChance({humanSkill:.54})
+ }));
+ assert.ok(Math.abs(fumbleRates.high-.01)<1e-9,'high-skill fumble rate was not 1%');
+ assert.ok(Math.abs(fumbleRates.low-.04)<1e-9,'low-skill fumble rate was not 4%');
+ assert.ok(fumbleRates.mid>fumbleRates.high&&fumbleRates.mid<fumbleRates.low,'mid-skill fumble rate did not scale between endpoints');
+
  // Spawn a public fallback opponent and verify human-only movement polish.
  await p.evaluate(()=>{B115.kind='public';B115.setRole('host');B115.startSimulated()});
  await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent,{timeout:8000});
@@ -60,5 +71,5 @@ try{
  assert.deepEqual(human.afterTarget,human.before,'fractional stance changed the logical grid tile');
  assert.ok(human.offset>=5&&human.offset<16,'fractional stance was outside the safe within-tile range');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V151_MATCHMAKING_AI_POLISH_SMOKE PASS',JSON.stringify({firstClick,farm,human}));
+ console.log('V151_MATCHMAKING_AI_POLISH_SMOKE PASS',JSON.stringify({firstClick,farm,fumbleRates,human}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
