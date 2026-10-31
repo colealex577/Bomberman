@@ -4,8 +4,8 @@ on:
     branches: [v01532-online-polish]
   workflow_dispatch:
 concurrency:
-  group: v1532-release-${{ github.sha }}
-  cancel-in-progress: false
+  group: v1532-release-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
