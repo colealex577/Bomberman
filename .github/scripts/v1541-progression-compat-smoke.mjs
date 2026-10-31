@@ -7,7 +7,7 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','Progress1541');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.4.4'&&window.BomberObserver153?.version==='v0.15.3.2'&&window.BomberObserver153?.handledObserveSerial&&window.BomberHumanObserver152?.debug?.primeObservedRound&&window.gGameEngine?.menu,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberObserver153?.version==='v0.15.3.2'&&window.BomberObserver153?.handledObserveSerial&&window.BomberHumanObserver152?.debug?.primeObservedRound&&window.gGameEngine?.menu,{timeout:30000});
  await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&gGameEngine.bots?.length===4&&BomberObserver153.handledObserveSerial()===BomberHumanObserver152.state().roundSerial,{timeout:10000});
  const states=await p.evaluate(()=>{const out=[];for(let n=1;n<=10;n++){BomberHumanObserver152.debug.primeObservedRound(n);out.push(BomberObserver153.audit())}return out});
