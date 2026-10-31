@@ -9,6 +9,7 @@ early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observe
 early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-controls.js?v=01541');
 early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0155');
 early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-polish.js?v=0156');
+early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
