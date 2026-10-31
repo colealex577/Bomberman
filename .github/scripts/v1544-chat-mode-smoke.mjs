@@ -1,0 +1,34 @@
+import puppeteer from 'puppeteer-core';
+import assert from 'node:assert/strict';
+const base=process.env.TEST_URL,exe=process.env.CHROME_PATH;if(!base||!exe)throw Error('TEST_URL/CHROME_PATH missing');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
+const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];await p.setViewport({width:1280,height:800});
+p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text())&&!/PeerJS/i.test(m.text()))errors.push(m.text())});
+await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','ModeTester467');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
+try{
+ await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
+ await p.waitForFunction(()=>window.BomberChatFix1544?.version==='v0.15.4.4'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
+ await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
+ await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&B115.role==='roster'&&BomberChatFix1544.state().active,{timeout:10000});
+ await sleep(150);
+ const observe=await p.evaluate(()=>{const panel=document.getElementById('chatPanel'),form=document.getElementById('chatForm'),cs=getComputedStyle(panel);return{hidden:panel.hidden,display:cs.display,visibility:cs.visibility,opacity:cs.opacity,formHidden:form.hidden,sims:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length}});
+ assert.equal(observe.hidden,false,'desktop observer chat panel is hidden');assert.notEqual(observe.display,'none','desktop observer chat panel is display:none');assert.equal(observe.visibility,'visible');assert.equal(observe.sims,2);assert.equal(observe.formHidden,true,'observer desktop chat should be read-only');
+ const opening=await p.evaluate(()=>{const root=document.getElementById('chatMessages'),name=BomberHumanObserver152.state().profiles[0].name;root.innerHTML='';const before=root.children.length;B115.appendChat(name,'nice dodge call',false);const row=root.lastElementChild;return{delta:root.children.length-before,text:row?.querySelector('span')?.textContent||row?.textContent||''}});
+ assert.equal(opening.delta,1,'one opening chatter opportunity should emit exactly one line');assert.ok(!/nice dodge|nice escape|good pressure|almost had|that was clean/i.test(opening.text),'fresh-round grace emitted action-implying chatter: '+opening.text);
+ await p.evaluate(()=>{BomberHumanObserver152.requestJoinNext();BomberHumanObserver152.debug.finishObservedRound()});
+ await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='joined'&&B115.role==='roster'&&BomberChatFix1544.state().active,{timeout:6000});await sleep(150);
+ const joined=await p.evaluate(()=>{const panel=document.getElementById('chatPanel'),form=document.getElementById('chatForm'),cs=getComputedStyle(panel);return{hidden:panel.hidden,display:cs.display,formHidden:form.hidden,sims:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length}});
+ assert.equal(joined.hidden,false,'desktop joined chat panel is hidden');assert.notEqual(joined.display,'none','desktop joined chat panel is display:none');assert.equal(joined.formHidden,false,'joined desktop chat input should be available');assert.equal(joined.sims,2);
+ await p.evaluate(()=>BomberMatchmaking151.startPublic());await sleep(180);
+ const cleaned=await p.evaluate(()=>({mode:BomberHumanObserver152.state().mode,flag:gGameEngine.__v152RosterMode||'',role:B115.role,started:B115.started}));
+ assert.equal(cleaned.mode,'','public matchmaking did not clear observer internal mode');assert.equal(cleaned.flag,'','public matchmaking did not clear roster game flag');assert.notEqual(cleaned.role,'roster','public matchmaking retained roster chat role');
+ await p.evaluate(()=>{B115.destroyNetwork();B115.kind='public';B115.started=false;B115.setRole('host');B115.startSimulated()});
+ await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.playing,{timeout:6000});await sleep(250);
+ const publicShape=await p.evaluate(()=>({sims:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length,active:BomberChatFix1544.state().active,mode:BomberHumanObserver152.state().mode,flag:gGameEngine.__v152RosterMode||'',remote:B115.remoteName}));
+ assert.equal(publicShape.sims,1,'public fallback spawned more than one simulated human');assert.equal(publicShape.active,false,'expanded two-person dialogue stayed active in public 1v1');assert.equal(publicShape.mode,'');assert.equal(publicShape.flag,'');
+ const publicChat=await p.evaluate(()=>{const root=document.getElementById('chatMessages');root.innerHTML='';B115.appendChat(B115.remoteName,'public single opponent line',false);const rows=[...root.querySelectorAll('.chat_line')];return{count:rows.length,names:rows.map(r=>r.querySelector('strong')?.textContent||''),texts:rows.map(r=>r.querySelector('span')?.textContent||'')}});
+ assert.equal(publicChat.count,1);assert.deepEqual(publicChat.names,[publicShape.remote]);assert.deepEqual(publicChat.texts,['public single opponent line'],'public 1v1 chat was rewritten by roster dialogue');
+ if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+ console.log('V1544_CHAT_MODE_SMOKE PASS',JSON.stringify({observe,opening,joined,cleaned,publicShape,publicChat}));
+} finally {await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}

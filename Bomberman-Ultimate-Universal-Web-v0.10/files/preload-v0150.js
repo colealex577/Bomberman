@@ -1,13 +1,13 @@
 (function(){
 'use strict';
-var VERSION='v0.15.4.1';
+var VERSION='v0.15.4.4';
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
-early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=0154');
+early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=0152');
 early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0153');
 early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observer-progression.js?v=01541');
 early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-controls.js?v=01541');
-early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01541');
+early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01544');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
