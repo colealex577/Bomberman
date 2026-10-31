@@ -46,7 +46,9 @@ function loadCompatibility(){
                                 loadScript('runtime-v0144-opening-loader','./files/runtime-v0144-opening.js?v=0144',function(){
                                  loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0152',function(){
                                   loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01521',function(){
-                                   loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=01543');
+                                   loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=01543',function(){
+                                    var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
+                                   });
                                   });
                                  });
                                 });
