@@ -1,9 +1,10 @@
 (function(){
 'use strict';
-var VERSION='v0.15.4',active=false,searchGeneration=0,publicIndex=0,lastStart=0;
+var VERSION='v0.15.4.4',active=false,searchGeneration=0,publicIndex=0,lastStart=0;
 function S(){return window.B115||null}
 function button(){return document.getElementById('publicMatchBtn')}
 function live(){var s=S();return!!(s&&(s.started||s.role==='simulated'||(s.kind==='public'&&(s.role==='host'||s.role==='guest'))))}
+function clearRosterBeforePublic(){var a=window.BomberHumanObserver152,g=window.gGameEngine,st=null;try{st=a&&a.state?a.state():null}catch(e){}if(st&&(st.mode==='observe'||st.mode==='joined')&&a&&a.leaveObserver){try{a.leaveObserver()}catch(x){}}if(g){g.__v152RosterMode='';g.__v152ObserverMode=false;g.__v152JoinedMode=false}return true}
 function activityForHour(hour){hour=Number(hour);if(!isFinite(hour))hour=(new Date()).getHours();hour=(hour+24)%24;if(hour<6)return{band:'overnight',minSeconds:18,maxSeconds:28,activity:.28};if(hour<9)return{band:'early-morning',minSeconds:12,maxSeconds:18,activity:.46};if(hour<17)return{band:'daytime',minSeconds:7,maxSeconds:11,activity:.72};if(hour<23)return{band:'peak',minSeconds:4,maxSeconds:7,activity:1};return{band:'late-night',minSeconds:12,maxSeconds:20,activity:.52}}
 function fallbackSeconds(a){return a.minSeconds+Math.floor(Math.random()*(a.maxSeconds-a.minSeconds+1))}
 function startTimeAwareFallback(){var s=S();if(!s)return;if(s.fallback)clearInterval(s.fallback);var a=activityForHour(),seconds=fallbackSeconds(a),end=Date.now()+seconds*1000;s.__v0154Activity=a;s.__v0154FallbackSeconds=seconds;s.status('Searching public matches…','working');s.fallback=setInterval(function(){if(s.started||!s.online()){if(s.fallback)clearInterval(s.fallback);s.fallback=null;return}if(Date.now()>=end){if(s.fallback)clearInterval(s.fallback);s.fallback=null;s.startSimulated()}},250)}
@@ -30,7 +31,7 @@ function claimOrJoin(i,g){
  })
 }
 function startPublic(){
- var s=S(),now=Date.now();if(!s)return false;if(live())return true;if(now-lastStart<80)return live();lastStart=now;
+ var s=S(),now=Date.now();if(!s)return false;clearRosterBeforePublic();if(live())return true;if(now-lastStart<80)return live();lastStart=now;
  if(!s.PUBLIC||!s.PUBLIC.length||typeof s.connectFresh!=='function'||typeof s.acceptHost!=='function'||typeof s.loadPeer!=='function')return false;
  s.destroyNetwork();s.readName();active=true;publicIndex=0;s.kind='public';s.code='';s.setRole('host');
  if(typeof s.waiting==='function')s.waiting('Searching for a public match','Looking for an available opponent…');
@@ -41,7 +42,7 @@ function startPublic(){
 }
 function cancelIfNeeded(){var s=S();if(!s||s.kind!=='public'||s.started)return;if(s.role==='offline'){active=false}}
 function install(){
- window.BomberMatchmaking151={version:VERSION,ready:function(){var s=S();return!!(s&&s.PUBLIC&&s.connectFresh&&s.acceptHost&&s.loadPeer)},ensureStarted:startPublic,startPublic:startPublic,isLive:live,activityForHour:activityForHour,currentActivity:function(){return activityForHour()},debug:{captured:function(){return!!button()},dropHandler:function(){var b=button();if(b)b.onclick=null;return!!b},restoreHandler:function(){return!!button()},repair:startPublic,ownerSource:function(){return'v0.15.4 automatic public owner'},active:function(){return active},index:function(){return publicIndex},fallbackSeconds:function(hour){return fallbackSeconds(activityForHour(hour))}}};
+ window.BomberMatchmaking151={version:VERSION,ready:function(){var s=S();return!!(s&&s.PUBLIC&&s.connectFresh&&s.acceptHost&&s.loadPeer)},ensureStarted:startPublic,startPublic:startPublic,isLive:live,activityForHour:activityForHour,currentActivity:function(){return activityForHour()},debug:{captured:function(){return!!button()},dropHandler:function(){var b=button();if(b)b.onclick=null;return!!b},restoreHandler:function(){return!!button()},repair:startPublic,clearRosterBeforePublic:clearRosterBeforePublic,ownerSource:function(){return'v0.15.4.4 automatic public owner'},active:function(){return active},index:function(){return publicIndex},fallbackSeconds:function(hour){return fallbackSeconds(activityForHour(hour))}}};
  return true
 }
 document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#publicMatchBtn');if(!b)return;if(live())return;e.preventDefault();e.stopImmediatePropagation();startPublic()},true);
