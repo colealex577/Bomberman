@@ -8,10 +8,10 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','PolishTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberPolish156?.version==='v0.15.6'&&window.BomberHumanObserver152&&window.BomberSocial155&&window.gGameEngine?.menu,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberPolish156?.version==='v0.15.6'&&window.BomberKillNames156?.version==='v0.15.6'&&window.BomberBehavior157?.version==='v0.15.7'&&window.BomberHumanObserver152&&window.BomberSocial155&&window.gGameEngine?.menu,{timeout:30000});
  assert.equal(await p.evaluate(()=>document.getElementById('buildVersion156')?.textContent),'v0.15.6');
 
- // Observer chat ownership must survive a simulated-human elimination.
+ // Observer chat ownership must survive a simulated-human elimination, and the eliminated actor must retain its real displayed username.
  await p.evaluate(()=>BomberHumanObserver152.startObserver());
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&gGameEngine.__v152RosterMode==='observe',{timeout:6000});
  await sleep(450);
@@ -20,11 +20,11 @@ try{
  assert.deepEqual(arranged[0].pos,{x:1,y:1});
  assert.deepEqual(arranged[1].pos,await p.evaluate(()=>({x:gGameEngine.tilesX-2,y:gGameEngine.tilesY-2})));
  const deadName=arranged[1].name;
- await p.evaluate(()=>{const b=gGameEngine.bots.find(x=>x.simulatedHuman&&x.statSlot===3);b.__v130AiName='AI 4';b.die()});
+ await p.evaluate(()=>{const b=gGameEngine.bots.find(x=>x.simulatedHuman&&x.statSlot===3);window.__v156KilledActor=b;b.__v130AiName='AI 4';b.die()});
  await sleep(450);
- const afterSimDeath=await p.evaluate(()=>({mode:BomberHumanObserver152.state().mode,owner:document.body.getAttribute('data-v156-roster-chat'),hidden:document.getElementById('chatPanel').hidden,display:getComputedStyle(document.getElementById('chatPanel')).display,cached:(gGameEngine.__v130RoundBots||[]).filter(b=>b&&b.simulatedHuman).map(b=>b.__v130AiName),toast:document.getElementById('v130Toast')?.textContent||''}));
+ const afterSimDeath=await p.evaluate(()=>({mode:BomberHumanObserver152.state().mode,owner:document.body.getAttribute('data-v156-roster-chat'),hidden:document.getElementById('chatPanel').hidden,display:getComputedStyle(document.getElementById('chatPanel')).display,locked:window.__v156KilledActor?.__v130AiName||'',cached:(gGameEngine.__v130RoundBots||[]).filter(b=>b&&b.simulatedHuman).map(b=>b.__v130AiName),toast:document.getElementById('v130Toast')?.textContent||''}));
  assert.equal(afterSimDeath.mode,'observe');assert.equal(afterSimDeath.owner,'1');assert.equal(afterSimDeath.hidden,false);assert.notEqual(afterSimDeath.display,'none');
- assert.ok(afterSimDeath.cached.includes(deadName),'simulated-human kill-log cache did not retain the displayed name');
+ assert.equal(afterSimDeath.locked,deadName,'eliminated simulated human lost its displayed username');
  if(afterSimDeath.toast)assert.ok(!/\bAI\s*\d+/i.test(afterSimDeath.toast),'kill log exposed a generic AI label: '+afterSimDeath.toast);
  console.log('OBSERVER_DEATH_CHAT_AND_NAMES PASS');
 
