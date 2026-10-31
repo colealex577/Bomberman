@@ -15,6 +15,7 @@ try{
  assert.ok(counts.pickup>=30&&counts.death>=35&&counts.response>=45,'event/response dialogue pools are too small');
  await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&B115.role==='roster'&&BomberDialogue1543.state().simNames.length>=2,{timeout:10000});
+ await p.waitForFunction(()=>B115.appendChat&&B115.appendChat.__v01543Dialogue===true,{timeout:3000});
  await p.evaluate(()=>{const root=document.getElementById('chatMessages');if(root)root.innerHTML='';BomberDialogue1543.debug.clearConversation()});
  const one=await p.evaluate(()=>{const root=document.getElementById('chatMessages'),name=BomberDialogue1543.state().simNames[0],before=root.children.length;B115.appendChat(name,'legacy generic trigger',false);return{before,after:root.children.length,text:root.lastElementChild?.textContent||''}});
  assert.equal(one.after-one.before,1,'dialogue wrapper changed message frequency for one chat opportunity');
