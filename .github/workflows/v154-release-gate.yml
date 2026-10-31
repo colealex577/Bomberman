@@ -1,7 +1,7 @@
 name: v0.15.4.x observer/chat release gate
 on:
   push:
-    branches: [v0154-observer-chat-controls, v01541-mobile-chat-queue-ui, v01542-mobile-chat-row-fix, v01543-expanded-roster-banter, v01544-chat-mode-fixes, v0155-dialogue-observer-population, v0156-observer-gameplay-polish, v01561-first-run-version-cleanup]
+    branches: [v0154-observer-chat-controls, v01541-mobile-chat-queue-ui, v01542-mobile-chat-row-fix, v01543-expanded-roster-banter, v01544-chat-mode-fixes, v0155-dialogue-observer-population, v0156-observer-gameplay-polish, v01561-first-run-version-cleanup, v0157-ai-chat-death-flow]
   workflow_dispatch:
 concurrency:
   group: v154-release-${{ github.ref }}
@@ -14,9 +14,9 @@ jobs:
     timeout-minutes: 8
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 11
       matrix:
-        test: [v125-netcode-smoke, authoritative-network-test, v1541-progression-compat-smoke, v1541-mobile-chat-smoke, v1543-dialogue-smoke, v1544-chat-mode-smoke, v155-social-population-smoke, v156-gameplay-polish-smoke, v1561-onboarding-brand-smoke, v1562-public-chat-stability-smoke]
+        test: [v125-netcode-smoke, authoritative-network-test, v1541-progression-compat-smoke, v1541-mobile-chat-smoke, v1543-dialogue-smoke, v1544-chat-mode-smoke, v155-social-population-smoke, v156-gameplay-polish-smoke, v1561-onboarding-brand-smoke, v1562-public-chat-stability-smoke, v157-ai-chat-death-flow-smoke]
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
