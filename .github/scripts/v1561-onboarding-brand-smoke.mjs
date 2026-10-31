@@ -1,0 +1,30 @@
+import puppeteer from 'puppeteer-core';
+import assert from 'node:assert/strict';
+const base=process.env.TEST_URL,exe=process.env.CHROME_PATH;if(!base||!exe)throw Error('TEST_URL/CHROME_PATH missing');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
+const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];await p.setViewport({width:1280,height:800});
+p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text()))errors.push(m.text())});
+await p.evaluateOnNewDocument(()=>{try{localStorage.removeItem('BombermanPlayerName')}catch(e){};if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
+try{
+ await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
+ await p.waitForFunction(()=>window.BomberOnboarding1561?.version==='v0.15.6.2'&&document.getElementById('v01561FirstRun')&&!document.getElementById('v01561FirstRun').hidden,{timeout:30000});
+ const first=await p.evaluate(()=>{const gate=document.getElementById('v01561FirstRun'),card=document.getElementById('v01561FirstRunCard'),btn=document.getElementById('v01561Continue'),cs=getComputedStyle(btn),old=[...document.querySelectorAll('[id^="buildVersion"]')].filter(x=>getComputedStyle(x).display!=='none');return{gateHidden:gate.hidden,title:document.getElementById('v01561FirstRunTitle')?.textContent||'',text:card?.innerText||'',inputs:card?.querySelectorAll('input').length||0,buttons:card?.querySelectorAll('button').length||0,buttonText:btn?.textContent||'',buttonColor:cs.backgroundColor,oldVisible:old.map(x=>x.id),badge:document.getElementById('releaseBadge1561')?.innerText||'',badgeDisplay:getComputedStyle(document.getElementById('releaseBadge1561')).display,lobbyHidden:document.getElementById('multiplayerLobby')?.hidden}});
+ assert.equal(first.gateHidden,false);assert.equal(first.title,'Choose a username');assert.equal(first.inputs,1);assert.equal(first.buttons,1);assert.equal(first.buttonText,'Continue');
+ assert.ok(!/\b(Map|Rounds|Game mode|Online Multiplayer|Single player|Multiplayer)\b/i.test(first.text),'first-run screen exposed settings/mode content: '+first.text);
+ const rgb=(first.buttonColor.match(/\d+/g)||[]).map(Number);assert.ok(rgb.length>=3&&rgb[1]>rgb[0]&&rgb[1]>rgb[2],'Continue button is not green: '+first.buttonColor);
+ assert.deepEqual(first.oldVisible,[],'legacy version badge is still visible');assert.match(first.badge,/v0\.15\.6\.2/);assert.match(first.badge,/Remastered by Cole Alexander/);assert.notEqual(first.badgeDisplay,'none');assert.equal(first.lobbyHidden,true);
+ await sleep(1300);
+ const stable=await p.evaluate(()=>({badge:document.getElementById('releaseBadge1561')?.innerText||'',oldVisible:[...document.querySelectorAll('[id^="buildVersion"]')].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.id)}));
+ assert.equal(stable.badge,first.badge,'release badge changed/flashed');assert.deepEqual(stable.oldVisible,[],'legacy version badge reappeared');
+ console.log('FIRST_RUN_NAME_ONLY_AND_STABLE_BADGE PASS');
+ await p.type('#v01561Name','Cole');await p.click('#v01561Continue');
+ await p.waitForFunction(()=>localStorage.getItem('BombermanPlayerName')==='Cole'&&document.getElementById('v01561FirstRun').hidden,{timeout:5000});await sleep(900);
+ const after=await p.evaluate(()=>({saved:localStorage.getItem('BombermanPlayerName'),gateHidden:document.getElementById('v01561FirstRun').hidden,lobbyHidden:document.getElementById('multiplayerLobby').hidden,menuVisible:!!window.gGameEngine?.menu?.visible,input:document.getElementById('playerNameInput')?.value||'',local:window.B115?.localName||''}));
+ assert.equal(after.saved,'Cole');assert.equal(after.gateHidden,true);assert.equal(after.lobbyHidden,true);assert.equal(after.menuVisible,true);assert.equal(after.input,'Cole');assert.equal(after.local,'Cole');
+ console.log('CONTINUE_RETURNS_TO_MAIN_MENU PASS');
+ const p2=await ctx.newPage();await p2.setViewport({width:1280,height:800});await p2.evaluateOnNewDocument(()=>{if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});await p2.goto(base,{waitUntil:'domcontentloaded',timeout:20000});await p2.waitForFunction(()=>window.BomberOnboarding1561?.version==='v0.15.6.2',{timeout:30000});await sleep(300);
+ const repeat=await p2.evaluate(()=>({saved:localStorage.getItem('BombermanPlayerName'),gate:document.getElementById('v01561FirstRun'),badge:document.getElementById('releaseBadge1561')?.innerText||''}));assert.equal(repeat.saved,'Cole');assert.ok(!repeat.gate||repeat.gate.hidden,'first-run prompt returned after username was saved');assert.match(repeat.badge,/Remastered by Cole Alexander/);await p2.close();
+ if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+ console.log('V1561_ONBOARDING_BRAND_SMOKE PASS');
+}finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
