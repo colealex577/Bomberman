@@ -8,10 +8,11 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','DialogueTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberDialogue1543?.version==='v0.15.4.2-dialogue'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberObserver154&&window.BomberObserver153&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberDialogue1543?.version==='v0.15.4.2-dialogue'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberBehavior157?.version==='v0.15.7'&&window.BomberObserver154&&window.BomberObserver153&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
  const counts=await p.evaluate(()=>BomberDialogue1543.poolCounts);
  assert.ok(counts.context>=190,'legacy contextual dialogue pool unexpectedly disappeared');assert.ok(counts.conversations>=40,'legacy scripted pool unexpectedly disappeared');assert.ok(counts.pickup>=30&&counts.death>=35&&counts.response>=45,'legacy event/response pools unexpectedly disappeared');
- await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
+ await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
+ await p.evaluate(()=>{const old=Math.random;Math.random=()=>.99;document.getElementById('v152ObserveBtn').click();Math.random=old});
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&B115.role==='roster'&&BomberDialogue1543.state().simNames.length>=2,{timeout:10000});
  await p.waitForFunction(()=>B115.appendChat&&B115.appendChat.__v0155Social===true,{timeout:3000});
  await p.evaluate(()=>{const root=document.getElementById('chatMessages');if(root)root.innerHTML='';BomberDialogue1543.debug.clearConversation();BomberSocial155.debug.cancelScript()});
