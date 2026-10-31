@@ -8,9 +8,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','Observer153');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.3'&&window.BomberHumanObserver152?.version==='v0.15.3'&&window.BomberObserver153?.version==='v0.15.3'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.3');
- assert.equal(await p.title(),'Bomberman v0.15.3');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.3.1'&&window.BomberHumanObserver152?.version==='v0.15.3'&&window.BomberObserver153?.version==='v0.15.3'&&window.BomberRoster1531?.version==='v0.15.3.1'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.3.1');
+ assert.equal(await p.title(),'Bomberman v0.15.3.1');
 
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
@@ -41,6 +41,8 @@ try{
  await sleep(700);
  let roster=await p.evaluate(()=>BomberHumanObserver152.debug.auditRoster());
  assert.deepEqual(roster,{players:1,bots:3,sims:2,ais:1,shape:true,duplicate:false,playerAtSpawn:true,botOnPlayerSpawn:false},'queued join did not produce the exact clean 1 human + 2 simulated humans + 1 AI layout');
+ const exact=await p.evaluate(()=>BomberRoster1531.audit());
+ assert.equal(exact.players,1);assert.equal(exact.bots,3);assert.equal(exact.sims,2);assert.equal(exact.ais,1);assert.deepEqual(exact.slots.map(x=>[x.slot,x.sim]),[[0,false],[1,true],[2,true],[3,false]],'final roster owner did not preserve exact joined slot ownership');
  const joinedNames=await p.evaluate(()=>gGameEngine.bots.filter(b=>b.simulatedHuman).sort((a,b)=>a.statSlot-b.statSlot).map(b=>b.displayName));
  assert.deepEqual(joinedNames,names,'queued join did not preserve the two observed human-style opponents');
 
