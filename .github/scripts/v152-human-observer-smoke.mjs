@@ -7,9 +7,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','ObserverTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2'&&window.BomberHumanObserver152?.version==='v0.15.2'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.title(),'Bomberman v0.15.2');
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2.1'&&window.BomberHumanObserver152?.version==='v0.15.2'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.title(),'Bomberman v0.15.2.1');
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2.1');
 
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
@@ -17,13 +17,13 @@ try{
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&gGameEngine.playersCount===0&&gGameEngine.bots?.length===4,{timeout:10000});
  const observed=await p.evaluate(()=>{
    const sims=gGameEngine.bots.filter(b=>b.simulatedHuman),ais=gGameEngine.bots.filter(b=>!b.simulatedHuman),st=BomberHumanObserver152.state();
-   return{players:gGameEngine.players.length,bots:gGameEngine.bots.length,sims:sims.length,ais:ais.length,names:sims.map(b=>b.displayName),progress:st.observedProgress,hud:!document.getElementById('v152ObserverHud').hidden,joinText:document.getElementById('v152JoinNextBtn').textContent};
+   return{players:gGameEngine.players.length,bots:gGameEngine.bots.length,sims:sims.length,ais:ais.length,names:sims.map(b=>b.displayName),progress:st.observedProgress,hud:!document.getElementById('v152ObserverHud').hidden,joinText:document.getElementById('v152JoinNextBtn').textContent,rosterChatClass:document.body.classList.contains('v01521_roster_chat')};
  });
  assert.equal(observed.players,0,'observer round spawned a controllable player');
  assert.equal(observed.bots,4);assert.equal(observed.sims,2,'observer round did not contain two human-style opponents');assert.equal(observed.ais,2,'observer round did not contain two standard AI');
  assert.notEqual(observed.names[0],observed.names[1],'human-style opponents reused the same identity');
  assert.ok(observed.progress>=.12&&observed.progress<=.90,'observer did not enter at a randomized round point');
- assert.equal(observed.hud,true);assert.equal(observed.joinText,'Join next round');
+ assert.equal(observed.hud,true);assert.equal(observed.joinText,'Join next round');assert.equal(observed.rosterChatClass,true,'observer round did not enable stable roster chat mode');
 
  const humanization=await p.evaluate(()=>{
    const sims=gGameEngine.bots.filter(b=>b.simulatedHuman),normal=gGameEngine.bots.find(b=>!b.simulatedHuman),api=BomberHumanObserver152.debug;
@@ -34,8 +34,9 @@ try{
    if(planted){Utils.removeFromArray(gGameEngine.bombs,planted);Utils.removeFromArray(sims[1].bombs,planted);try{gGameEngine.stage.removeChild(planted.bmp)}catch(e){}}
    sims[1].__v152SlipUntil=0;sims[1].__v152SlipBomb=null;
    api.forceChat();
+   const toast=document.getElementById('chatToast');
    const text=Array.from(document.querySelectorAll('#chatMessages .chat_line')).map(x=>x.textContent).join('|');
-   return{arrival,normalArrival,offset:a?Math.hypot(a.offset.x-a.center.x,a.offset.y-a.center.y):0,c59,c60,c180,slip,normalSlip,planted:!!planted,slipDelay,chat:text,names:sims.map(b=>b.displayName)};
+   return{arrival,normalArrival,offset:a?Math.hypot(a.offset.x-a.center.x,a.offset.y-a.center.y):0,c59,c60,c180,slip,normalSlip,planted:!!planted,slipDelay,chat:text,names:sims.map(b=>b.displayName),toastHidden:!toast||toast.hidden||getComputedStyle(toast).display==='none'};
  });
  assert.equal(humanization.arrival,true,'simulated human could not arm a destination micro-correction');
  assert.equal(humanization.normalArrival,false,'standard AI received human arrival mistakes');
@@ -47,6 +48,7 @@ try{
  assert.equal(humanization.planted,true,'armed endgame slip did not wait for a real bomb placement');
  assert.ok(humanization.slipDelay>=800,'endgame slip did not create a real late-reaction hesitation');
  assert.ok(humanization.chat.includes(humanization.names[0])&&humanization.chat.includes(humanization.names[1]),'both observed players did not communicate in chat');
+ assert.equal(humanization.toastHidden,true,'observer simulated chat flashed the transient chat toast');
 
  const before=await p.evaluate(()=>({serial:BomberHumanObserver152.state().roundSerial,names:BomberHumanObserver152.state().profiles.map(p=>p.name)}));
  await p.click('#v152JoinNextBtn');
@@ -55,8 +57,11 @@ try{
  assert.equal(queued.mode,'observe');assert.equal(queued.queued,true);assert.equal(queued.serial,before.serial,'join request restarted the current round');assert.equal(queued.players,0,'join request entered before the current round finished');
  await p.evaluate(()=>BomberHumanObserver152.debug.finishObservedRound());
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='joined'&&gGameEngine.playersCount===1&&gGameEngine.bots?.length===3,{timeout:7000});
- const joined=await p.evaluate(()=>({sims:gGameEngine.bots.filter(b=>b.simulatedHuman).length,ais:gGameEngine.bots.filter(b=>!b.simulatedHuman).length,names:gGameEngine.bots.filter(b=>b.simulatedHuman).map(b=>b.displayName),player:gGameEngine.players[0]?.displayName||gGameEngine.playerNames[0]}));
- assert.equal(joined.sims,2);assert.equal(joined.ais,1);assert.deepEqual(joined.names,before.names,'queued join did not preserve the two observed opponents');assert.equal(joined.player,'ObserverTest');
+ const joined=await p.evaluate(()=>({sims:gGameEngine.bots.filter(b=>b.simulatedHuman).length,ais:gGameEngine.bots.filter(b=>!b.simulatedHuman).length,names:gGameEngine.bots.filter(b=>b.simulatedHuman).map(b=>b.displayName),player:gGameEngine.players[0]?.displayName||gGameEngine.playerNames[0],rosterChatClass:document.body.classList.contains('v01521_roster_chat')}));
+ assert.equal(joined.sims,2);assert.equal(joined.ais,1);assert.deepEqual(joined.names,before.names,'queued join did not preserve the two observed opponents');assert.equal(joined.player,'ObserverTest');assert.equal(joined.rosterChatClass,true,'joined three-player round lost stable roster chat mode');
+ const joinedChat=await p.evaluate(()=>{BomberHumanObserver152.debug.forceChat();const t=document.getElementById('chatToast');return{hidden:!t||t.hidden||getComputedStyle(t).display==='none',lines:document.querySelectorAll('#chatMessages .chat_line').length}});
+ assert.equal(joinedChat.hidden,true,'joined three-player simulated chat flashed the transient chat toast');
+ assert.ok(joinedChat.lines>0,'joined three-player chat stopped recording messages');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V152_HUMAN_OBSERVER_SMOKE PASS',JSON.stringify({observed,humanization,queued,joined}));
+ console.log('V152_HUMAN_OBSERVER_SMOKE PASS',JSON.stringify({observed,humanization,queued,joined,joinedChat}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
