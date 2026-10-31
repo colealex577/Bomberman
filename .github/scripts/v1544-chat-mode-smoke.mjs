@@ -8,8 +8,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','ModeTester467');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberChatFix1544?.version==='v0.15.4.4'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
- await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
+ await p.waitForFunction(()=>window.BomberChatFix1544?.version==='v0.15.4.4'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberBehavior157?.version==='v0.15.7'&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
+ await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
+ await p.evaluate(()=>{const old=Math.random;Math.random=()=>.99;document.getElementById('v152ObserveBtn').click();Math.random=old});
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&B115.role==='roster'&&BomberChatFix1544.state().active,{timeout:10000});
  await sleep(150);
  const observe=await p.evaluate(()=>{const panel=document.getElementById('chatPanel'),form=document.getElementById('chatForm'),cs=getComputedStyle(panel);return{hidden:panel.hidden,display:cs.display,visibility:cs.visibility,opacity:cs.opacity,formHidden:form.hidden,sims:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length}});
