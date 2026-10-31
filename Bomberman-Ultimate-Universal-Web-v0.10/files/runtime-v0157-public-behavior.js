@@ -29,11 +29,96 @@ function append(name,text,self){var f=window.BomberChatFix1544;try{if(f&&f.debug
 function typing(name,delay,cb){clearTyping();var r=S()&&S().els&&S().els.chatMessages||$('chatMessages');if(!r){setTimeout(cb,delay);return}var row=document.createElement('div');row.id='v157Typing';row.className='chat_line v157_typing';var who=document.createElement('strong'),body=document.createElement('span');who.textContent=clean(name,14);body.textContent='is typing…';row.appendChild(who);row.appendChild(body);r.appendChild(row);r.scrollTop=r.scrollHeight;chat.typingTimer=setTimeout(function(){clearTyping();cb()},delay)}
 function sessionKey(){var s=S(),st=obs(),m=rosterMode();if(m)return'r|'+localName()+'|'+((st&&st.profiles||[]).map(function(p){return p.name}).join(','));if(s&&s.kind==='public'&&s.role!=='offline')return'p|'+String(s.generation||0);return''}
 function sessionTick(){var k=sessionKey();if(k!==chat.session){if(chat.session)clearChat();chat.session=k}}
-var TALK={opening:[['im clearing this side first','yeah im staying out of the middle for a bit'],['i need one clean exit before i do anything dumb','same, the corners get bad fast'],['im taking this start slow','probably smart, there is nowhere to move yet']],early:[['okay there is finally some room','yeah now it actually feels playable'],['you keep using that same gap','because nobody has closed it yet lol'],['that pickup was worth the detour','yeah i needed the speed']],mid:[['that whole side is a mess now','yeah im not going back through there'],['i almost took the wrong exit','i thought you were done for a second'],['this round got fast out of nowhere','too many lanes opened at once']],late:[['there is basically nowhere to hide now','yeah every bomb covers half the map'],['im staying off the edge','same, once it closes you have no turn'],['this is all timing now','pretty much, everybody can see everything']],duel:[['alright just us now','yeah this got quiet fast'],['im waiting for you to commit first','same, so this could take a while lol'],['one clean cutoff ends it','yep, thats why im not rushing']],overnight:[['why are we both still awake','i was about to ask you the same thing'],['this is such a late-night match','yeah i should probably not start another one']],morning:[['this is way too early for bomberman','yeah my brain is not fully online yet']],peak:[['lobbies are actually busy right now','yeah i found this one pretty fast']]};
+var TALK={
+ opening:[
+  ['im clearing this side first','yeah im staying out of the middle for a bit'],
+  ['i need one clean exit before i do anything dumb','same, the corners get bad fast'],
+  ['im taking this start slow','probably smart, there is nowhere to move yet'],
+  ['im gonna clear toward the long lane','yeah i just want somewhere to turn first'],
+  ['i almost trapped myself off the first bomb','that wouldve been a rough start lol'],
+  ['im leaving middle alone for now','same, too many blocks and no exits'],
+  ['you going for that pickup if it drops?','if i can get there without boxing myself in'],
+  ['i always forget how tight the start is','yeah the first couple bombs feel sketchy'],
+  ['im trying not to block my own way out','good plan, i almost just did exactly that']
+ ],
+ early:[
+  ['okay there is finally some room','yeah now it actually feels playable'],
+  ['you keep using that same gap','because nobody has closed it yet lol'],
+  ['that pickup was worth the detour','yeah i needed the speed'],
+  ['okay now i can actually move','yeah the first minute was cramped'],
+  ['i thought you were taking that opening','i was until the second bomb landed'],
+  ['everybody keeps crossing that same tile','yeah somebody is gonna close it eventually'],
+  ['you almost beat me to that pickup','i thought i had it too'],
+  ['this side opened way faster than mine','give it another chain and yours will too'],
+  ['im finally fast enough to cross that lane','just dont overshoot the turn lol']
+ ],
+ mid:[
+  ['that whole side is a mess now','yeah im not going back through there'],
+  ['i almost took the wrong exit','i thought you were done for a second'],
+  ['this round got fast out of nowhere','too many lanes opened at once'],
+  ['i keep changing my route every ten seconds','same, nothing stays safe for long'],
+  ['that chain opened way more than i expected','yeah the whole side is exposed now'],
+  ['i saw that bomb late','i was wondering why you turned back'],
+  ['you nearly cut me off there','i was trying to, you got out early'],
+  ['there are too many bombs in the middle','yeah im rotating around it for a bit'],
+  ['i keep thinking a lane is safe and then someone plants','same, you cant stay committed too long'],
+  ['that was a weird escape','i just picked a direction and hoped lol']
+ ],
+ late:[
+  ['there is basically nowhere to hide now','yeah every bomb covers half the map'],
+  ['im staying off the edge','same, once it closes you have no turn'],
+  ['this is all timing now','pretty much, everybody can see everything'],
+  ['im not chasing through a straight row now','yeah one cutoff and youre done'],
+  ['there is too much range on the board','every bomb feels huge now'],
+  ['i keep wanting to plant and then changing my mind','same, every exit is visible'],
+  ['the outside looked safe until that bomb landed','yeah the edge is a trap this late'],
+  ['im trying to keep two ways out','thats getting harder every second'],
+  ['one chain could end this instantly','yeah im watching the first fuse more than anything']
+ ],
+ duel:[
+  ['alright just us now','yeah this got quiet fast'],
+  ['im waiting for you to commit first','same, so this could take a while lol'],
+  ['one clean cutoff ends it','yep, thats why im not rushing'],
+  ['you almost got me on that turn','i thought you were one tile slower'],
+  ['im not following you into that lane','good because that was the plan lol'],
+  ['we keep rotating around the same two rows','neither of us wants to be first to commit'],
+  ['i know youre waiting for me to cross','and i know you know, which is the problem'],
+  ['that fake retreat almost worked','almost isnt enough unfortunately'],
+  ['this is turning into a staring contest','pretty much, somebody has to move first']
+ ],
+ overnight:[
+  ['why are we both still awake','i was about to ask you the same thing'],
+  ['this is such a late-night match','yeah i should probably not start another one'],
+  ['i said one more game like three games ago','same lol'],
+  ['this lobby is weirdly quiet tonight','yeah there cant be many people on'],
+  ['okay this is definitely a 2am decision','probably not my smartest one'],
+  ['i was not expecting to find a match this late','same, i figured it would be empty']
+ ],
+ lateNight:[
+  ['late-night lobbies are always kind of random','yeah you never know who is still on'],
+  ['i should probably stop after this one','thats what everyone says before another round'],
+  ['this feels way quieter than earlier','yeah the crowd definitely dropped off'],
+  ['im too tired to be this aggressive','apparently not lol']
+ ],
+ morning:[
+  ['this is way too early for bomberman','yeah my brain is not fully online yet'],
+  ['i barely woke up and im already trapping myself','solid start lol'],
+  ['morning lobbies feel completely different','yeah way quieter than later'],
+  ['i need coffee before i try that route again','same honestly'],
+  ['i did not expect anybody else to be on this early','apparently we had the same idea']
+ ],
+ peak:[
+  ['lobbies are actually busy right now','yeah i found this one pretty fast'],
+  ['that search was basically instant','yeah people are actually on right now'],
+  ['this feels way busier than usual','every lobby is filling fast'],
+  ['i keep seeing new names tonight','same, peak hours for sure'],
+  ['i barely had time to look away before this loaded','same, that was quick']
+ ]
+};
 function stage(){var g=G(),alive=0,wood=0;(g&&g.players||[]).forEach(function(e){if(e&&e.alive!==false)alive++});(g&&g.bots||[]).forEach(function(e){if(e&&e.alive!==false)alive++});(g&&g.tiles||[]).forEach(function(t){if(t&&t.material==='wood')wood++});return alive<=2?'duel':wood<=14?'late':wood<=42?'mid':wood<=70?'early':'opening'}
 function names(){var g=G(),s=S(),out=[];(g&&g.bots||[]).forEach(function(b){if(b&&b.simulatedHuman&&b.alive!==false&&b.displayName&&out.indexOf(clean(b.displayName,14))<0)out.push(clean(b.displayName,14))});if(s&&s.role==='simulated'&&s.remoteName&&out.indexOf(clean(s.remoteName,14))<0)out.push(clean(s.remoteName,14));return out}
 function chatBusy(){var r=S()&&S().els&&S().els.chatMessages||$('chatMessages'),n=r?r.children.length:0;if(n!==chat.lastCount){chat.lastCount=n;chat.lastAt=now();return true}return now()-chat.lastAt<9000}
-function chatter(){if(!publicActive())return;if(!chat.nextAt)chat.nextAt=now()+18000+Math.random()*15000;if(now()<chat.nextAt)return;chat.nextAt=now()+26000+Math.random()*25000;if(chatBusy())return;var ns=names();if(ns.length<2)return;var pool=(TALK[stage()]||TALK.mid).slice(),b=band();if(Math.random()<.18){if(b==='overnight')pool=pool.concat(TALK.overnight);else if(b==='early-morning')pool=pool.concat(TALK.morning);else if(b==='peak')pool=pool.concat(TALK.peak)}var lines=pick(pool),a=ns[Math.floor(Math.random()*ns.length)],other=ns.filter(function(n){return n!==a})[0];if(!lines||!other)return;typing(a,500+Math.random()*600,function(){if(!publicActive())return;append(a,lines[0],false);chat.lastAt=now();setTimeout(function(){if(!publicActive())return;typing(other,550+Math.random()*700,function(){if(publicActive()){append(other,lines[1],false);chat.lastAt=now()}})},450+Math.random()*600)})}
+function chatter(){if(!publicActive())return;if(!chat.nextAt)chat.nextAt=now()+18000+Math.random()*15000;if(now()<chat.nextAt)return;chat.nextAt=now()+26000+Math.random()*25000;if(chatBusy())return;var ns=names();if(ns.length<2)return;var pool=(TALK[stage()]||TALK.mid).slice(),b=band();if(Math.random()<.18){if(b==='overnight')pool=pool.concat(TALK.overnight);else if(b==='late-night')pool=pool.concat(TALK.lateNight);else if(b==='early-morning')pool=pool.concat(TALK.morning);else if(b==='peak')pool=pool.concat(TALK.peak)}var lines=pick(pool),a=ns[Math.floor(Math.random()*ns.length)],other=ns.filter(function(n){return n!==a})[0];if(!lines||!other)return;typing(a,500+Math.random()*600,function(){if(!publicActive())return;append(a,lines[0],false);chat.lastAt=now();setTimeout(function(){if(!publicActive())return;typing(other,550+Math.random()*700,function(){if(publicActive()){append(other,lines[1],false);chat.lastAt=now()}})},450+Math.random()*600)})}
 function clickSession(e){var el=e.target&&e.target.closest&&e.target.closest('#publicMatchBtn,#onlineHostBtn,#onlineShowJoinBtn,#localMultiBtn,#lobbyCloseBtn,#onlineDisconnectBtn');if(!el)return;if(/^(publicMatchBtn|onlineHostBtn|onlineShowJoinBtn|localMultiBtn)$/.test(el.id)){clearChat();chat.session=''}else setTimeout(function(){if(!publicActive()){clearChat();chat.session=''}},50)}
 
 /* Observer availability and local observer/queue chat notices. */

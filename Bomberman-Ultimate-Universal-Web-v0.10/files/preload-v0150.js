@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var VERSION='v0.15.6.2';
+var VERSION='v0.15.7';
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=0152');
@@ -10,7 +10,7 @@ early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-c
 early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0155');
 early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-polish.js?v=0156');
 early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
-early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=01562');
+early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=0157');
 early('runtime-v01562-public-chat-stability-loader','./files/runtime-v01562-public-chat-stability.js?v=01562');
 early('runtime-v0157-public-behavior-loader','./files/runtime-v0157-public-behavior.js?v=0157');
 if(!window.gGameEngine)return;
