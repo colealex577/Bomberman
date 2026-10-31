@@ -45,7 +45,7 @@ function loadCompatibility(){
                                loadScript('runtime-v0150-ai-loader','./files/runtime-v0150-ai.js?v=0150',function(){
                                 loadScript('runtime-v0144-opening-loader','./files/runtime-v0144-opening.js?v=0144',function(){
                                  loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0152',function(){
-                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0152');
+                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01521');
                                  });
                                 });
                                });
@@ -80,5 +80,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=0152').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01521').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
