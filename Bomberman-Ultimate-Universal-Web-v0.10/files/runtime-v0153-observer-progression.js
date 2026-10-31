@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var VERSION='v0.15.3',installed=false,apiStateBase=null,startBase=null;
+var VERSION='v0.15.3.2',installed=false,apiStateBase=null,startBase=null;
 var local={observeSerial:0,joinedSerial:0,state:0,progress:0,lastPrime:null,lastRoster:null,repairing:false};
 var STATES=[
 {id:1,remove:.10,travel:.16},{id:2,remove:.18,travel:.23},{id:3,remove:.27,travel:.31},{id:4,remove:.36,travel:.39},{id:5,remove:.46,travel:.48},
@@ -36,6 +36,13 @@ function carve(g,spec){
  while(removed<target&&stalls<16){var f=frontier(g,slot,spec.id,removed),t=f.length?f[0]:null;if(t&&removeWood(g,t)){removed++;stalls=0}else stalls++;slot=(slot+1)%4}
  return{initial:initial,removed:removed,progress:initial?removed/initial:0}
 }
+function destroyBonus(g,b){try{if(b.destroy)b.destroy();else{g.stage.removeChild(b.bmp);Utils.removeFromArray(g.bonuses,b)}}catch(e){try{Utils.removeFromArray(g.bonuses,b)}catch(x){}}}
+function settleBonuses(g,spec){
+ var list=(g&&g.bonuses||[]).filter(function(b){return b&&b.position&&g.getTileMaterial(b.position)==='grass'}),removed=0,cap=spec.id<=1?1:spec.id===2?2:spec.id<=6?3:4;
+ list.sort(function(a,b){function score(x){var p=x.position,t=String(x.type||'');return((p.x*47+p.y*61+spec.id*31+t.length*17)%997)}return score(a)-score(b)});
+ for(var i=cap;i<list.length;i++){destroyBonus(g,list[i]);removed++}
+ return{kept:Math.min(cap,list.length),removed:removed,cap:cap}
+}
 function living(){var g=G(),a=[];if(!g)return a;(g.players||[]).forEach(function(x){if(x&&x.alive!==false)a.push(x)});(g.bots||[]).forEach(function(x){if(x&&x.alive!==false)a.push(x)});return a}
 function move(e,p){
  var g=G();if(!e||!p||!g)return;var px=Utils.convertToBitmapPosition(p);e.position=clone(p);
@@ -45,6 +52,33 @@ function move(e,p){
  if(e.dirX!==undefined)e.dirX=0;if(e.dirY!==undefined)e.dirY=0;
  if(e.updatePosition)e.updatePosition();if(e.updateNameLabel)e.updateNameLabel()
 }
+function loadout(spec,slot){
+ var id=spec.id,bomb=0,fire=0,speed=0,j=(slot*11+id*7)%3;
+ if(id===1){if(slot===3)speed=1}
+ else if(id===2){if(j===0)bomb=1;else if(j===1)fire=1;else speed=1}
+ else if(id<=4){bomb=1;fire=((slot+id)%2===0)?1:0;speed=((slot+id)%2===1||id===4)?1:0}
+ else if(id<=6){bomb=1+(((slot+id)%3===0)?1:0);fire=1+((id===6&&(slot%2===0))?1:0);speed=1}
+ else if(id<=8){bomb=2;fire=1+(((slot+id)%2===0)?1:0);speed=1+(((slot+id)%2===1)?1:0)}
+ else{bomb=2+(((slot+id)%2===0)?1:0);fire=2+(((slot+id)%3===0)?1:0);speed=2+(((slot+id)%3===1)?1:0)}
+ return{bomb:bomb,fire:fire,speed:speed}
+}
+function boost(e,spec,slot){
+ if(!e)return{bomb:0,fire:0,speed:0};var c=loadout(spec,slot),g=G(),step=g&&g.ultimateMode?4:.8,base=Number(e.__v138BaseSpeed);if(!isFinite(base)||base<=0)base=Number(e.velocity)||2;
+ e.bombsMax=Math.max(Number(e.bombsMax)||1,1+c.bomb);e.bombStrength=Math.max(Number(e.bombStrength)||1,1+c.fire);
+ e.__v138BaseSpeed=base;e.__v138Shoes=Math.max(Number(e.__v138Shoes)||0,c.speed);e.velocity=Math.max(Number(e.velocity)||base,base+c.speed*step);
+ if(!e.bonusCounts)e.bonusCounts={speed:0,bomb:0,fire:0,heart:0};
+ e.bonusCounts.bomb=Math.max(Number(e.bonusCounts.bomb)||0,c.bomb);e.bonusCounts.fire=Math.max(Number(e.bonusCounts.fire)||0,c.fire);e.bonusCounts.speed=Math.max(Number(e.bonusCounts.speed)||0,c.speed);
+ if(window.BomberMovementController&&BomberMovementController.ensureSpeed&&e.isBot)try{BomberMovementController.ensureSpeed(e)}catch(x){}
+ return c
+}
+function prime(forceState){
+ var g=G();if(!g)return 0;var n=Number(forceState);if(!isFinite(n)||n<1||n>10)n=1+Math.floor(Math.random()*STATES.length);var spec=STATES[n-1],c=carve(g,spec),bonusState=settleBonuses(g,spec),actors=living(),used={},positions=[],loadouts=[];
+ for(var i=0;i<actors.length;i++){var slot=Number(actors[i].statSlot);if(!isFinite(slot))slot=i;var p=actorPosition(g,slot,spec,used);used[key(p)]=1;move(actors[i],p);var l=boost(actors[i],spec,slot);positions.push({slot:slot,x:p.x,y:p.y});loadouts.push({slot:slot,bomb:l.bomb,fire:l.fire,speed:l.speed})}
+ local.state=spec.id;local.progress=c.progress;local.lastPrime={state:spec.id,initialWood:c.initial,removedWood:c.removed,progress:c.progress,visibleBonuses:bonusState.kept,collectedBonuses:bonusState.removed,bonusCap:bonusState.cap,positions:positions,loadouts:loadouts};
+ if(g.updateStatHud)g.updateStatHud();
+ var status=document.getElementById('v152ObserverStatus');if(status)status.textContent='Dropped into a believable match state '+spec.id+' of 10. You can queue for the next round.';
+ return c.progress
+}
 function actorPosition(g,slot,spec,used){
  var start=spawn(g,slot),cells=reachable(g,start),cx=(g.tilesX-1)/2,cy=(g.tilesY-1)/2,maxD=Math.max(1,Math.abs(start.x-cx)+Math.abs(start.y-cy)),want=Math.max(1,maxD*spec.travel),best=null,bestScore=1e9;
  for(var i=0;i<cells.length;i++){var p=cells[i],k=key(p);if(used[k])continue;var d=Math.abs(p.x-start.x)+Math.abs(p.y-start.y),center=Math.abs(p.x-cx)+Math.abs(p.y-cy),sep=true;
@@ -53,29 +87,10 @@ function actorPosition(g,slot,spec,used){
  }
  return best||start
 }
-function settleBonuses(g,spec){
- var list=(g&&g.bonuses||[]).slice(),kept=0,removed=0,collect=Math.max(0,Math.min(.88,(spec.id-1)*.085));
- for(var i=0;i<list.length;i++){var b=list[i];if(!b||!b.position||g.getTileMaterial(b.position)!=='grass')continue;var h=((b.position.x*47+b.position.y*61+spec.id*31)%100)/100;if(h<collect){try{if(b.destroy)b.destroy();else{g.stage.removeChild(b.bmp);Utils.removeFromArray(g.bonuses,b)}}catch(e){}removed++}else kept++}
- return{kept:kept,removed:removed}
-}
-function boost(e,spec,slot){
- if(!e)return;var tier=Math.floor((spec.id-1)/3),bomb=tier>0&&((slot+spec.id)%3!==0)?1:0,fire=tier>0&&((slot+spec.id)%2===0)?1:0,speed=tier>1&&((slot+spec.id)%2===1)?.45:0;
- e.bombsMax=Math.max(Number(e.bombsMax)||1,1+bomb);e.bombStrength=Math.max(Number(e.bombStrength)||1,1+fire);if(speed)e.velocity=(Number(e.velocity)||2)+speed;
- if(!e.bonusCounts)e.bonusCounts={speed:0,bomb:0,fire:0,heart:0};
- e.bonusCounts.bomb=Math.max(e.bonusCounts.bomb||0,e.bombsMax-1);e.bonusCounts.fire=Math.max(e.bonusCounts.fire||0,e.bombStrength-1);if(speed)e.bonusCounts.speed=Math.max(e.bonusCounts.speed||0,1)
-}
-function prime(forceState){
- var g=G();if(!g)return 0;var n=Number(forceState);if(!isFinite(n)||n<1||n>10)n=1+Math.floor(Math.random()*STATES.length);var spec=STATES[n-1],c=carve(g,spec),bonusState=settleBonuses(g,spec),actors=living(),used={},positions=[];
- for(var i=0;i<actors.length;i++){var slot=Number(actors[i].statSlot);if(!isFinite(slot))slot=i;var p=actorPosition(g,slot,spec,used);used[key(p)]=1;move(actors[i],p);boost(actors[i],spec,slot);positions.push({slot:slot,x:p.x,y:p.y})}
- local.state=spec.id;local.progress=c.progress;local.lastPrime={state:spec.id,initialWood:c.initial,removedWood:c.removed,progress:c.progress,visibleBonuses:bonusState.kept,collectedBonuses:bonusState.removed,positions:positions};
- if(g.updateStatHud)g.updateStatHud();
- var status=document.getElementById('v152ObserverStatus');if(status)status.textContent='Dropped into a believable match state '+spec.id+' of 10. You can queue for the next round.';
- return c.progress
-}
 function observeAudit(){
  var g=G(),p=local.lastPrime;if(!g||!p)return null;var actors=living(),paths=true,dupe=false,seen={};
  for(var a=0;a<actors.length;a++){var slot=Number(actors[a].statSlot);if(!isFinite(slot))slot=a;var cells=reachable(g,spawn(g,slot)),own={};for(var i=0;i<cells.length;i++)own[key(cells[i])]=1;if(!own[key(actors[a].position)])paths=false;var k=key(actors[a].position);if(seen[k])dupe=true;seen[k]=1}
- return{state:p.state,initialWood:p.initialWood,removedWood:p.removedWood,progress:p.progress,visibleBonuses:p.visibleBonuses,collectedBonuses:p.collectedBonuses,actorPaths:paths,duplicateActors:dupe,positions:p.positions.slice()}
+ return{state:p.state,initialWood:p.initialWood,removedWood:p.removedWood,progress:p.progress,visibleBonuses:p.visibleBonuses,collectedBonuses:p.collectedBonuses,bonusCap:p.bonusCap,loadouts:p.loadouts.slice(),actorPaths:paths,duplicateActors:dupe,positions:p.positions.slice()}
 }
 function roster(){
  var g=G(),bots=g&&g.bots||[],players=g&&g.players||[],sims=bots.filter(function(b){return!!b.simulatedHuman}),ais=bots.filter(function(b){return!b.simulatedHuman}),slot0=spawn(g,0),seen={},duplicate=false,all=players.concat(bots);
@@ -127,7 +142,7 @@ function tick(){
  else if(s.mode==='joined'&&s.roundSerial!==local.joinedSerial)handleJoined(s.roundSerial)
 }
 function install(){
- if(installed)return true;if(!A()||!G()||!window.Utils)return false;installed=true;patchApi();window.BomberObserver153={version:VERSION,states:STATES.slice(),prime:prime,audit:observeAudit,roster:roster,stabilizeJoined:stabilizeJoined};return true
+ if(installed)return true;if(!A()||!G()||!window.Utils)return false;installed=true;patchApi();window.BomberObserver153={version:VERSION,states:STATES.slice(),prime:prime,audit:observeAudit,roster:roster,stabilizeJoined:stabilizeJoined,loadout:loadout};return true
 }
 var tries=0,t=setInterval(function(){if(install()||++tries>1200)clearInterval(t)},30);setInterval(tick,40);
 })();
