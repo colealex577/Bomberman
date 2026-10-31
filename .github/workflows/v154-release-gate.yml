@@ -1,7 +1,7 @@
-name: v0.15.4 observer/chat release gate
+name: v0.15.4.x observer/chat release gate
 on:
   push:
-    branches: [v0154-observer-chat-controls]
+    branches: [v0154-observer-chat-controls, v01541-mobile-chat-queue-ui]
   workflow_dispatch:
 concurrency:
   group: v154-release-${{ github.ref }}
