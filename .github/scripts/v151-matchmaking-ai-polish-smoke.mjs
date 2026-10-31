@@ -8,13 +8,10 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V151Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2'&&window.BomberMatchmaking151?.version==='v0.15.1'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2');
- assert.equal(await p.title(),'Bomberman v0.15.2');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2.1'&&window.BomberMatchmaking151?.version==='v0.15.1'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2.1');
+ assert.equal(await p.title(),'Bomberman v0.15.2.1');
 
- // Reproduce the first-load failure deliberately: remove the button's target
- // handler after the repair layer has captured it, then click once. The v0.15.1
- // capture repair must still enter public matchmaking without a page refresh.
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&BomberMatchmaking151.debug?.captured(),{timeout:5000});
  console.log('V151_OWNER',await p.evaluate(()=>BomberMatchmaking151.debug.ownerSource()));
@@ -30,8 +27,6 @@ try{
  assert.ok(firstClick.role==='host'||firstClick.role==='guest','first click never entered a matchmaking role');
  assert.equal(firstClick.live,true,'matchmaking repair did not become live');
 
- // Farming preference is a tie-breaker: a 3-block clear wins over a 1-block
- // clear at near-equal route cost, but not when it requires a much worse route.
  const farm=await p.evaluate(()=>({
    near:BomberPolish151.debug.betterFarm({base:5.2,rank:3,yield:3},{base:5,rank:1,yield:1}),
    far:BomberPolish151.debug.betterFarm({base:7,rank:3,yield:3},{base:5,rank:1,yield:1})
@@ -39,8 +34,6 @@ try{
  assert.equal(farm.near,true,'multi-block farming did not win an otherwise-equal choice');
  assert.equal(farm.far,false,'farming yield overrode a clearly better route');
 
- // Missed-bomb humanization should be rare: about 1% at the top end and
- // about 4% for the least-skilled simulated humans, with smooth scaling between.
  const fumbleRates=await p.evaluate(()=>({
    high:BomberPolish151.fumbleChance({humanSkill:1}),
    low:BomberPolish151.fumbleChance({humanSkill:.08}),
@@ -50,7 +43,6 @@ try{
  assert.ok(Math.abs(fumbleRates.low-.04)<1e-9,'low-skill fumble rate was not 4%');
  assert.ok(fumbleRates.mid>fumbleRates.high&&fumbleRates.mid<fumbleRates.low,'mid-skill fumble rate did not scale between endpoints');
 
- // Spawn a public fallback opponent and verify human-only movement polish.
  await p.evaluate(()=>{B115.kind='public';B115.setRole('host');B115.startSimulated()});
  await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.simulatedOpponent,{timeout:8000});
  const human=await p.evaluate(()=>{
