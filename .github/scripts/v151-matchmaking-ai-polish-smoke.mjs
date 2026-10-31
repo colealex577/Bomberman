@@ -8,9 +8,11 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V151Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.2.1'&&window.BomberMatchmaking151?.version==='v0.15.1'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.2.1');
- assert.equal(await p.title(),'Bomberman v0.15.2.1');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.3.2'&&window.BomberMatchmaking151?.version==='v0.15.3.2'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.3.2');
+ assert.equal(await p.title(),'Bomberman v0.15.3.2');
+ const activity=await p.evaluate(()=>({overnight:BomberMatchmaking151.activityForHour(2),early:BomberMatchmaking151.activityForHour(7),day:BomberMatchmaking151.activityForHour(13),peak:BomberMatchmaking151.activityForHour(20)}));
+ assert.equal(activity.overnight.band,'overnight');assert.equal(activity.peak.band,'peak');assert.ok(activity.overnight.activity<activity.early.activity&&activity.early.activity<activity.day.activity&&activity.day.activity<activity.peak.activity,'time-of-day activity model did not rise from overnight toward peak');assert.ok(activity.overnight.minSeconds>activity.peak.maxSeconds,'overnight empty-queue fallback was not clearly slower than peak hours');
 
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&BomberMatchmaking151.debug?.captured(),{timeout:5000});
@@ -19,13 +21,13 @@ try{
    BomberMatchmaking151.debug.dropHandler();
    document.getElementById('publicMatchBtn').click();
    await new Promise(r=>setTimeout(r,350));
-   const out={kind:B115.kind,role:B115.role,live:BomberMatchmaking151.isLive()};
+   const out={kind:B115.kind,role:B115.role,live:BomberMatchmaking151.isLive(),activity:B115.__v01532Activity,fallbackSeconds:B115.__v01532FallbackSeconds};
    B115.destroyNetwork();B115.kind='';B115.setRole('offline');
    return out;
  });
  assert.equal(firstClick.kind,'public','first click did not start public matchmaking');
  assert.ok(firstClick.role==='host'||firstClick.role==='guest','first click never entered a matchmaking role');
- assert.equal(firstClick.live,true,'matchmaking repair did not become live');
+ assert.equal(firstClick.live,true,'matchmaking repair did not become live');assert.ok(firstClick.activity&&firstClick.activity.band,'public matchmaking did not capture a time-of-day activity band');assert.ok(firstClick.fallbackSeconds>=firstClick.activity.minSeconds&&firstClick.fallbackSeconds<=firstClick.activity.maxSeconds,'fallback timing was outside the selected time band');
 
  const farm=await p.evaluate(()=>({
    near:BomberPolish151.debug.betterFarm({base:5.2,rank:3,yield:3},{base:5,rank:1,yield:1}),
@@ -63,5 +65,5 @@ try{
  assert.deepEqual(human.afterTarget,human.before,'fractional stance changed the logical grid tile');
  assert.ok(human.offset>=5&&human.offset<16,'fractional stance was outside the safe within-tile range');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V151_MATCHMAKING_AI_POLISH_SMOKE PASS',JSON.stringify({firstClick,farm,fumbleRates,human}));
+ console.log('V151_MATCHMAKING_AI_POLISH_SMOKE PASS',JSON.stringify({activity,firstClick,farm,fumbleRates,human}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}

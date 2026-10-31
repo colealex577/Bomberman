@@ -1,0 +1,36 @@
+name: v0.15.3.2 online polish release gate
+on:
+  push:
+    branches: [v01532-online-polish]
+  workflow_dispatch:
+concurrency:
+  group: v1532-release-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        test: [v125-netcode-smoke, authoritative-network-test, v151-matchmaking-ai-polish-smoke, v153-observer-progression-smoke, v1531-roster-chat-smoke]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check
+        run: find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n 1 node --check
+      - name: Install browser test helper
+        run: npm install --no-save puppeteer-core@24.27.0
+      - name: Run browser regression
+        env:
+          TEST_URL: http://127.0.0.1:8080/Bomberman-Ultimate-Universal-Web-v0.10/index.html?netdebug=1
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 >/tmp/bm-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS "$TEST_URL" >/dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 210s node .github/scripts/${{ matrix.test }}.mjs
