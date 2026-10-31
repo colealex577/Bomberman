@@ -6,7 +6,6 @@ early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=0152');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=0152');
 early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0153');
 early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observer-progression.js?v=0153');
-early('runtime-v01531-roster-chat-loader','./files/runtime-v01531-roster-chat.js?v=01531');
 early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01531');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
