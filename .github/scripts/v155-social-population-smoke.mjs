@@ -1,0 +1,45 @@
+import puppeteer from 'puppeteer-core';
+import assert from 'node:assert/strict';
+const base=process.env.TEST_URL,exe=process.env.CHROME_PATH;if(!base||!exe)throw Error('TEST_URL/CHROME_PATH missing');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const browser=await puppeteer.launch({executablePath:exe,headless:true,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],timeout:30000});
+const ctx=await browser.createBrowserContext(),p=await ctx.newPage(),errors=[];await p.setViewport({width:1280,height:800});
+p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource.*404/i.test(m.text())&&!/PeerJS/i.test(m.text()))errors.push(m.text())});
+await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','Social155Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
+try{
+ await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberChatFix1544&&window.gGameEngine?.menu&&window.B115,{timeout:30000});
+ const corpus=await p.evaluate(()=>({scripts:BomberSocial155.debug.scriptCorpus(),ambient:BomberSocial155.debug.ambientCorpus(),peak:BomberSocial155.observerChance(2,{activity:1},true),quiet:BomberSocial155.observerChance(2,{activity:.28},false),three:BomberSocial155.observerChance(3,{activity:1},true),full:BomberSocial155.observerChance(4,{activity:1},true),replyCats:[BomberSocial155.replyFor('gg','X').category,BomberSocial155.replyFor('are you a bot?','X').category,BomberSocial155.replyFor('how did you survive that?','X').category,BomberSocial155.replyFor('why did you go back there?','X').category]}));
+ assert.ok(corpus.scripts.length>=120,'scripted dialogue corpus is too small');
+ for(const line of corpus.scripts.concat(corpus.ambient)){assert.ok(!line.includes('?'),'AI-initiated dialogue contains a question: '+line);assert.ok(!/prefer|bombs or shoes|aggressive or patient|which map|favorite map|how many bombs/i.test(line),'odd gameplay/preference prompt remains: '+line)}
+ assert.ok(corpus.peak>corpus.quiet,'busy-hour observer chance should exceed quiet-hour chance');assert.ok(corpus.peak>corpus.three,'2-player matches should be more likely to gain an observer than 3-player matches');assert.equal(corpus.full,0,'4-player matches must not add another observer');assert.deepEqual(corpus.replyCats,['gg','bot','survival','why']);
+ await p.evaluate(()=>{B115.destroyNetwork();B115.kind='public';B115.started=false;B115.setRole('host');B115.startSimulated()});
+ await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.playing&&BomberSocial155.state().publicMode==='simulated',{timeout:7000});await sleep(250);
+ const initial=await p.evaluate(()=>({remote:B115.remoteName,participants:BomberSocial155.state().population.participants,simBots:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length}));
+ assert.equal(initial.participants,2,'public fallback should begin as a 1v1');assert.equal(initial.simBots,1,'public fallback should begin with one simulated-human opponent');
+ const forced1=await p.evaluate(()=>BomberSocial155.debug.forceObserver('Watcher321'));assert.equal(forced1,true,'first observer could not enter');
+ await p.waitForFunction(()=>BomberSocial155.state().population.pending?.queued===true,{timeout:2500});
+ const queued=await p.evaluate(()=>({pending:BomberSocial155.state().population.pending,chat:document.getElementById('chatMessages')?.textContent||'',notice:document.getElementById('v155ObserverNotice')?.textContent||''}));
+ assert.equal(queued.pending.name,'Watcher321');assert.ok(/observ|queued/i.test(queued.chat),'observer arrival/queue was not shown in chat');
+ await p.evaluate(()=>gGameEngine.restart());
+ await p.waitForFunction(()=>BomberSocial155.state().population.active.some(x=>x.name==='Watcher321')&&BomberSocial155.state().population.participants===3&&gGameEngine.bots.some(b=>b&&b.__v155Population&&b.displayName==='Watcher321'),{timeout:6000});
+ const three=await p.evaluate(()=>({state:BomberSocial155.state(),bot:gGameEngine.bots.find(b=>b&&b.__v155Population&&b.displayName==='Watcher321')&&{slot:gGameEngine.bots.find(b=>b&&b.__v155Population&&b.displayName==='Watcher321').statSlot,alive:gGameEngine.bots.find(b=>b&&b.__v155Population&&b.displayName==='Watcher321').alive!==false}}));
+ assert.equal(three.state.population.participants,3);assert.equal(three.bot.alive,true);assert.ok(Number.isInteger(Number(three.bot.slot))&&Number(three.bot.slot)>=0&&Number(three.bot.slot)<=3,'joined observer did not receive a valid player slot');
+ await p.evaluate(()=>{const root=document.getElementById('chatMessages');root.innerHTML='';BomberSocial155.debug.forceScript()});
+ await p.waitForFunction(()=>BomberSocial155.state().scriptActive===true,{timeout:2000});
+ await p.evaluate(()=>B115.appendChat(B115.remoteName,'do you prefer bombs or shoes?',false));
+ await sleep(3500);
+ const scriptRun=await p.evaluate(()=>({active:BomberSocial155.state().scriptActive,rows:[...document.querySelectorAll('#chatMessages .chat_line')].map(r=>({name:r.querySelector('strong')?.textContent||'',text:r.querySelector('span')?.textContent||''}))}));
+ assert.ok(scriptRun.rows.length>=3,'scripted conversation did not complete its turns');assert.ok(!scriptRun.rows.some(r=>/prefer bombs or shoes|how many bombs|which map|aggressive or patient/i.test(r.text)),'random/legacy gameplay question interjected into scripted dialogue');assert.ok(!scriptRun.rows.some(r=>r.text.includes('?')),'scripted dialogue emitted an AI-initiated question');
+ await p.evaluate(()=>{BomberSocial155.debug.cancelScript();const root=document.getElementById('chatMessages');root.innerHTML='';B115.appendChat(B115.localName,'Watcher321 how did you survive that?',true)});
+ await p.waitForFunction(()=>[...document.querySelectorAll('#chatMessages .chat_line')].some(r=>r.querySelector('strong')?.textContent==='Watcher321'&&r.querySelector('span')?.textContent),{timeout:3500});
+ const targeted=await p.evaluate(()=>[...document.querySelectorAll('#chatMessages .chat_line')].map(r=>({name:r.querySelector('strong')?.textContent||'',text:r.querySelector('span')?.textContent||''})));
+ assert.ok(targeted.some(r=>r.name==='Watcher321'&&r.text&&!r.text.includes('?')),'named second opponent did not answer the user');
+ const forced2=await p.evaluate(()=>BomberSocial155.debug.forceObserver('LateJoiner88'));assert.equal(forced2,true,'second observer could not enter a 3-player match');
+ await p.waitForFunction(()=>BomberSocial155.state().population.pending?.queued===true,{timeout:2500});await p.evaluate(()=>gGameEngine.restart());
+ await p.waitForFunction(()=>BomberSocial155.state().population.participants===4&&BomberSocial155.state().population.active.some(x=>x.name==='LateJoiner88')&&gGameEngine.bots.some(b=>b&&b.__v155Population&&b.displayName==='LateJoiner88'),{timeout:6000});
+ const four=await p.evaluate(()=>({participants:BomberSocial155.state().population.participants,active:BomberSocial155.state().population.active.map(x=>x.name),slots:gGameEngine.players.concat(gGameEngine.bots).filter(e=>e&&(e.simulatedHuman||gGameEngine.players.includes(e))).map(e=>e.statSlot)}));
+ assert.equal(four.participants,4);assert.deepEqual(new Set(four.slots).size,four.slots.length,'human-like participants overlap stat slots');assert.equal(await p.evaluate(()=>BomberSocial155.debug.forceObserver('TooMany')),false,'observer population exceeded four human-like participants');
+ if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+ console.log('V155_SOCIAL_POPULATION_SMOKE PASS',JSON.stringify({corpus:{scripts:corpus.scripts.length,peak:corpus.peak,quiet:corpus.quiet,three:corpus.three},initial,queued,three,scriptRun,targeted,four}));
+} finally {await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}

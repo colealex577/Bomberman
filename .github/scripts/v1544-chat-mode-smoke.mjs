@@ -8,7 +8,7 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','ModeTester467');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberChatFix1544?.version==='v0.15.4.4'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberChatFix1544?.version==='v0.15.4.4'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberSocial155?.version==='v0.15.5'&&window.BomberHumanObserver152&&window.B115,{timeout:30000});
  await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&B115.role==='roster'&&BomberChatFix1544.state().active,{timeout:10000});
  await sleep(150);
@@ -26,9 +26,9 @@ try{
  await p.evaluate(()=>{B115.destroyNetwork();B115.kind='public';B115.started=false;B115.setRole('host');B115.startSimulated()});
  await p.waitForFunction(()=>B115.role==='simulated'&&gGameEngine.playing,{timeout:6000});await sleep(250);
  const publicShape=await p.evaluate(()=>({sims:gGameEngine.bots.filter(b=>b&&b.simulatedHuman).length,active:BomberChatFix1544.state().active,mode:BomberHumanObserver152.state().mode,flag:gGameEngine.__v152RosterMode||'',remote:B115.remoteName}));
- assert.equal(publicShape.sims,1,'public fallback spawned more than one simulated human');assert.equal(publicShape.active,false,'expanded two-person dialogue stayed active in public 1v1');assert.equal(publicShape.mode,'');assert.equal(publicShape.flag,'');
- const publicChat=await p.evaluate(()=>{const root=document.getElementById('chatMessages');root.innerHTML='';B115.appendChat(B115.remoteName,'public single opponent line',false);const rows=[...root.querySelectorAll('.chat_line')];return{count:rows.length,names:rows.map(r=>r.querySelector('strong')?.textContent||''),texts:rows.map(r=>r.querySelector('span')?.textContent||'')}});
- assert.equal(publicChat.count,1);assert.deepEqual(publicChat.names,[publicShape.remote]);assert.deepEqual(publicChat.texts,['public single opponent line'],'public 1v1 chat was rewritten by roster dialogue');
+ assert.equal(publicShape.sims,1,'public fallback spawned more than one simulated human');assert.equal(publicShape.active,false,'expanded two-person roster dialogue stayed active in public 1v1');assert.equal(publicShape.mode,'');assert.equal(publicShape.flag,'');
+ const publicChat=await p.evaluate(()=>{const root=document.getElementById('chatMessages');root.innerHTML='';B115.appendChat(B115.remoteName,'how many bombs is too many bombs',false);const rows=[...root.querySelectorAll('.chat_line')];return{count:rows.length,names:rows.map(r=>r.querySelector('strong')?.textContent||''),texts:rows.map(r=>r.querySelector('span')?.textContent||'')}});
+ assert.equal(publicChat.count,1);assert.deepEqual(publicChat.names,[publicShape.remote]);assert.ok(publicChat.texts[0]&&!/how many bombs|prefer|aggressive or patient|which map/i.test(publicChat.texts[0]),'public 1v1 leaked legacy preference/gameplay question: '+publicChat.texts[0]);
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V1544_CHAT_MODE_SMOKE PASS',JSON.stringify({observe,opening,joined,cleaned,publicShape,publicChat}));
 } finally {await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
