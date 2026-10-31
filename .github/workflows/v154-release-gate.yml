@@ -14,9 +14,9 @@ jobs:
     timeout-minutes: 8
     strategy:
       fail-fast: false
-      max-parallel: 11
+      max-parallel: 12
       matrix:
-        test: [v125-netcode-smoke, authoritative-network-test, v1541-progression-compat-smoke, v1541-mobile-chat-smoke, v1543-dialogue-smoke, v1544-chat-mode-smoke, v155-social-population-smoke, v156-gameplay-polish-smoke, v1561-onboarding-brand-smoke, v1562-public-chat-stability-smoke, v157-ai-chat-death-flow-smoke]
+        test: [v125-netcode-smoke, authoritative-network-test, v1541-progression-compat-smoke, v1541-mobile-chat-smoke, v1543-dialogue-smoke, v1544-chat-mode-smoke, v155-social-population-smoke, v156-gameplay-polish-smoke, v1561-onboarding-brand-smoke, v1562-public-chat-stability-smoke, v157-ai-chat-death-flow-smoke, v157-public-chat-debug]
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
