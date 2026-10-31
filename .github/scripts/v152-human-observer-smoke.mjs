@@ -15,6 +15,7 @@ try{
  await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
  await p.click('#v152ObserveBtn');
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&gGameEngine.playersCount===0&&gGameEngine.bots?.length===4,{timeout:10000});
+ await p.waitForFunction(()=>document.body.classList.contains('v01521_roster_chat'),{timeout:1500});
  const observed=await p.evaluate(()=>{
    const sims=gGameEngine.bots.filter(b=>b.simulatedHuman),ais=gGameEngine.bots.filter(b=>!b.simulatedHuman),st=BomberHumanObserver152.state();
    return{players:gGameEngine.players.length,bots:gGameEngine.bots.length,sims:sims.length,ais:ais.length,names:sims.map(b=>b.displayName),progress:st.observedProgress,hud:!document.getElementById('v152ObserverHud').hidden,joinText:document.getElementById('v152JoinNextBtn').textContent,rosterChatClass:document.body.classList.contains('v01521_roster_chat')};
@@ -57,6 +58,7 @@ try{
  assert.equal(queued.mode,'observe');assert.equal(queued.queued,true);assert.equal(queued.serial,before.serial,'join request restarted the current round');assert.equal(queued.players,0,'join request entered before the current round finished');
  await p.evaluate(()=>BomberHumanObserver152.debug.finishObservedRound());
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='joined'&&gGameEngine.playersCount===1&&gGameEngine.bots?.length===3,{timeout:7000});
+ await p.waitForFunction(()=>document.body.classList.contains('v01521_roster_chat'),{timeout:1500});
  const joined=await p.evaluate(()=>({sims:gGameEngine.bots.filter(b=>b.simulatedHuman).length,ais:gGameEngine.bots.filter(b=>!b.simulatedHuman).length,names:gGameEngine.bots.filter(b=>b.simulatedHuman).map(b=>b.displayName),player:gGameEngine.players[0]?.displayName||gGameEngine.playerNames[0],rosterChatClass:document.body.classList.contains('v01521_roster_chat')}));
  assert.equal(joined.sims,2);assert.equal(joined.ais,1);assert.deepEqual(joined.names,before.names,'queued join did not preserve the two observed opponents');assert.equal(joined.player,'ObserverTest');assert.equal(joined.rosterChatClass,true,'joined three-player round lost stable roster chat mode');
  const joinedChat=await p.evaluate(()=>{BomberHumanObserver152.debug.forceChat();const t=document.getElementById('chatToast');return{hidden:!t||t.hidden||getComputedStyle(t).display==='none',lines:document.querySelectorAll('#chatMessages .chat_line').length}});
