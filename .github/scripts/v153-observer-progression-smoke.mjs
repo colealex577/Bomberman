@@ -8,9 +8,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','Observer153');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.3.1'&&window.BomberHumanObserver152?.version==='v0.15.3'&&window.BomberObserver153?.version==='v0.15.3'&&window.BomberRoster1531?.version==='v0.15.3.1'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.3.1');
- assert.equal(await p.title(),'Bomberman v0.15.3.1');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.3.2'&&window.BomberHumanObserver152?.version==='v0.15.3.2'&&window.BomberObserver153?.version==='v0.15.3.2'&&window.BomberRoster1531?.version==='v0.15.3.2'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>document.getElementById('buildVersion150')?.textContent),'v0.15.3.2');
+ assert.equal(await p.title(),'Bomberman v0.15.3.2');
 
  await p.evaluate(()=>BomberOnline.openLobby());
  await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
@@ -19,18 +19,23 @@ try{
 
  const stages=[];
  for(let i=1;i<=10;i++){
-   const audit=await p.evaluate(n=>{BomberHumanObserver152.debug.primeObservedRound(n);return BomberHumanObserver152.debug.progressionAudit()},i);
+   const state=await p.evaluate(n=>{BomberHumanObserver152.debug.primeObservedRound(n);const audit=BomberHumanObserver152.debug.progressionAudit();const actual=gGameEngine.bots.map(b=>({slot:Number(b.statSlot),bomb:Number(b.bonusCounts?.bomb)||0,fire:Number(b.bonusCounts?.fire)||0,speed:Number(b.bonusCounts?.speed)||0,bombsMax:b.bombsMax,bombStrength:b.bombStrength}));return{audit,actual}},i),audit=state.audit;
    assert.equal(audit.state,i,`observer state ${i} did not apply`);
    assert.equal(audit.actorPaths,true,`observer state ${i} placed an actor outside the path carved from its own spawn`);
    assert.equal(audit.duplicateActors,false,`observer state ${i} overlapped actors`);
    assert.ok(audit.initialWood>0&&audit.removedWood>0,`observer state ${i} did not carve wood`);
    assert.equal(audit.positions.length,4,`observer state ${i} did not position all four contestants`);
+   assert.equal(audit.loadouts.length,4,`observer state ${i} did not assign loadouts to all contestants`);
+   assert.ok(audit.visibleBonuses<=audit.bonusCap&&audit.visibleBonuses<=4,`observer state ${i} left too many exposed power-ups`);
+   for(const x of audit.loadouts){const actual=state.actual.find(a=>a.slot===x.slot);assert.ok(actual,`state ${i} missing actor stats for slot ${x.slot}`);assert.ok(actual.bomb>=x.bomb&&actual.fire>=x.fire&&actual.speed>=x.speed,`state ${i} did not apply its staged loadout to slot ${x.slot}`)}
    if(stages.length)assert.ok(audit.removedWood>stages.at(-1).removedWood,`observer state ${i} was not more progressed than state ${i-1}`);
    stages.push(audit);
  }
  assert.ok(stages[0].progress<.2,'early observer state was too open');
  assert.ok(stages[4].progress>.4&&stages[4].progress<.55,'mid observer state was not mid-game');
  assert.ok(stages[9].progress>.88,'late observer state was not substantially open');
+ assert.ok(stages[0].loadouts.every(x=>x.bomb+x.fire+x.speed<=1),'earliest drop-in gave contestants too many upgrades');
+ assert.ok(stages[9].loadouts.every(x=>x.bomb>=2&&x.fire>=2&&x.speed>=2),'late drop-in contestants did not already have a few of each core power-up');
  assert.ok(stages[9].collectedBonuses>=stages[0].collectedBonuses,'late observer state did not reflect more collected pickups');
 
  await p.evaluate(()=>BomberHumanObserver152.debug.primeObservedRound(5));
@@ -57,5 +62,5 @@ try{
  assert.deepEqual(roster,{players:1,bots:3,sims:2,ais:1,shape:true,duplicate:false,playerAtSpawn:true,botOnPlayerSpawn:false},'joined-round sanitizer did not repair the reported duplicate-spawn / extra-AI corruption');
 
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V153_OBSERVER_PROGRESSION_SMOKE PASS',JSON.stringify({states:stages.map(s=>({state:s.state,removed:s.removedWood,progress:s.progress,positions:s.positions,collected:s.collectedBonuses})),roster}));
+ console.log('V153_OBSERVER_PROGRESSION_SMOKE PASS',JSON.stringify({states:stages.map(s=>({state:s.state,removed:s.removedWood,progress:s.progress,visible:s.visibleBonuses,loadouts:s.loadouts,collected:s.collectedBonuses})),roster}));
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
