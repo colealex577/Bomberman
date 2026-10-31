@@ -34,6 +34,12 @@ try{
  const userReplyCapture=await p.evaluate(()=>{const root=document.getElementById('chatMessages'),before=root.children.length;B115.appendChat(B115.localName,'nice one lol',true);const state=BomberDialogue1543.state();return{before,after:root.children.length,lastUser:state.lastUserLine&&state.lastUserLine.text}});
  assert.equal(userReplyCapture.after-userReplyCapture.before,1,'player chat was duplicated by dialogue wrapper');
  assert.equal(userReplyCapture.lastUser,'nice one lol','player chat was not remembered for later contextual response');
+ const roundClock=await p.evaluate(()=>({serial:BomberHumanObserver152.state().roundSerial,started:BomberDialogue1543.roundStartedAt}));
+ await p.evaluate(()=>BomberHumanObserver152.debug.finishObservedRound());
+ await p.waitForFunction(s=>BomberHumanObserver152.state().mode==='observe'&&BomberHumanObserver152.state().roundSerial>s,{timeout:7000},roundClock.serial);await sleep(350);
+ const nextClock=await p.evaluate(()=>({serial:BomberHumanObserver152.state().roundSerial,started:BomberDialogue1543.roundStartedAt}));
+ assert.ok(nextClock.serial>roundClock.serial,'observer round did not advance for dialogue round-clock check');
+ assert.ok(nextClock.started>roundClock.started,'dialogue long-round clock did not reset for the next round');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
- console.log('V1543_DIALOGUE_SMOKE PASS',JSON.stringify({counts,one,staged,early,late,userReplyCapture}));
+ console.log('V1543_DIALOGUE_SMOKE PASS',JSON.stringify({counts,one,staged,early,late,userReplyCapture,roundClock,nextClock}));
 } finally {await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
