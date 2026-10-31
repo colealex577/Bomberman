@@ -8,7 +8,7 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','PublicChatTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberPublicChat1562?.version==='v0.15.6.2'&&window.B115&&window.gGameEngine?.menu&&document.getElementById('chatPanel'),{timeout:30000});
+ await p.waitForFunction(()=>window.BomberPublicChat1562?.version==='v0.15.6.2'&&window.BomberBehavior157?.version==='v0.15.7'&&window.B115&&window.gGameEngine?.menu&&document.getElementById('chatPanel'),{timeout:30000});
  await p.evaluate(()=>{B115.kind='public';B115.started=true;B115.setRole('host');gGameEngine.playing=true;gGameEngine.menu.visible=false;const bar=document.getElementById('onlineMatchBar');if(bar)bar.hidden=false;BomberPublicChat1562.sync()});
  await p.waitForFunction(()=>BomberPublicChat1562.state().latched&&BomberPublicChat1562.state().panelVisible,{timeout:5000});
  const initial=await p.evaluate(()=>({state:BomberPublicChat1562.state(),attr:document.body.getAttribute('data-v01562-public-chat'),hidden:document.getElementById('chatPanel').hidden,display:getComputedStyle(document.getElementById('chatPanel')).display,toggle:getComputedStyle(document.getElementById('chatToggleBtn')).display,toast:getComputedStyle(document.getElementById('chatToast')).display}));
