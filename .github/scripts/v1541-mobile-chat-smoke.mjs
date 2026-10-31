@@ -9,13 +9,15 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','PhoneTest467');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberObserver154?.version==='v0.15.4.1'&&window.BomberObserver153?.handledObserveSerial&&window.gGameEngine?.menu,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberObserver154?.version==='v0.15.4.1'&&window.BomberObserver153?.handledObserveSerial&&window.BomberBehavior157?.version==='v0.15.7'&&window.gGameEngine?.menu,{timeout:30000});
  assert.equal(await p.evaluate(()=>BomberObserver154.state().mobile),true,'390px page did not enter mobile chat mode');
- await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});await p.click('#v152ObserveBtn');
+ await p.evaluate(()=>BomberOnline.openLobby());await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:5000});
+ await p.evaluate(()=>{const old=Math.random;Math.random=()=>.99;document.getElementById('v152ObserveBtn').click();Math.random=old});
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&gGameEngine.bots?.length===4&&B115.role==='roster'&&BomberObserver153.audit(),{timeout:10000});
  const first=await p.evaluate(()=>({names:BomberHumanObserver152.state().profiles.map(x=>x.name),audit:BomberObserver153.audit(),serial:BomberHumanObserver152.state().roundSerial}));
  assert.ok(first.audit.state>=1&&first.audit.state<=10,'first observe entry was not staged');
- await p.evaluate(()=>{B115.appendChat('NeonFox','phone recent one',false);B115.appendChat('PixelPilot','phone recent two',false)});await sleep(120);
+ // Let the v0.15.7 local "spectating" notice land, then isolate the two-message preview assertion.
+ await sleep(360);await p.evaluate(()=>{BomberBehavior157.clearChat();B115.appendChat('NeonFox','phone recent one',false);B115.appendChat('PixelPilot','phone recent two',false)});await sleep(140);
  const compact=await p.evaluate(()=>{const w=document.getElementById('v154MobileChat'),pr=document.getElementById('v154MobileChatPreview'),game=document.getElementById('game'),wr=w?.getBoundingClientRect(),gr=game?.getBoundingClientRect(),panel=document.getElementById('chatPanel');return{visible:!!(w&&!w.hidden&&getComputedStyle(w).display!=='none'),lines:pr?.querySelectorAll('.v154_mobile_chat_line').length||0,text:pr?.textContent||'',below:!!(wr&&gr&&wr.top>=gr.bottom-1),afterGame:!!(w&&w.previousElementSibling===game),desktopHidden:!panel||panel.hidden||getComputedStyle(panel).display==='none'}});
  assert.equal(compact.visible,true,'phone compact chat is not visible');assert.equal(compact.lines,2,'phone compact chat is not limited to two latest messages');assert.ok(compact.text.includes('phone recent one')&&compact.text.includes('phone recent two'),'phone preview is missing latest messages');assert.equal(compact.below,true,'phone chat strip is not below gameplay box');assert.equal(compact.afterGame,true,'phone chat strip is not placed immediately after game box');assert.equal(compact.desktopHidden,true,'desktop chat panel remained visible on phone');
  await p.click('#v154MobileChatBtn');await sleep(80);
