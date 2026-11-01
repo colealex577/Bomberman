@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var VERSION='v0.15.8',NAME_KEY='BombermanPlayerName',installed=false,badgeObserver=null;
+var VERSION=window.BomberBuildVersion||'v0.15.8',NAME_KEY='BombermanPlayerName',installed=false,badgeObserver=null;
 function $(id){return document.getElementById(id)}
 function clean(v){v=String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim();return v.slice(0,14)}
 function savedName(){try{return clean(localStorage.getItem(NAME_KEY)||'')}catch(e){return''}}
