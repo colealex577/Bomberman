@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.12';
-window.BomberVersionUIOwner='runtime-v016212-owner-pass';
+window.BomberBuildVersion='v0.16.2.13';
+window.BomberVersionUIOwner='runtime-v016213-front-launch';
 var VERSION=window.BomberBuildVersion;
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
@@ -24,7 +24,8 @@ early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-cha
 early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v=016210');
 early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
-(function(){var n=0,m=setInterval(function(){if(window.BomberFix16212){if(document.body)document.body.setAttribute('data-v016212-runtime','1');clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
+early('runtime-v016213-front-launch-loader','./files/runtime-v016213-front-launch.js?v=016213');
+(function(){var n=0,m=setInterval(function(){if(window.BomberFix16213){if(document.body)document.body.setAttribute('data-v016213-runtime','1');clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
