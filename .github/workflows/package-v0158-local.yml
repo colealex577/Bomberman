@@ -1,0 +1,18 @@
+name: Package v0.15.8 local build
+on:
+  push:
+    branches: [package-v0158-local]
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create exact game zip
+        run: |
+          cd Bomberman-Ultimate-Universal-Web-v0.10
+          zip -r ../Bomberman-v0.15.8-local.zip . -x '*.DS_Store'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bomberman-v0.15.8-local
+          path: Bomberman-v0.15.8-local.zip
+          if-no-files-found: error
