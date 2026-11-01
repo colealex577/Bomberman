@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+    <title>Bomberman v0.16.2.9</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#21111a">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./icons/icon192.png">
+    <script src="./files/js/easeljs-0.8.1.min.js"></script>
+    <script src="./files/js/preloadjs-0.6.1.min.js"></script>
+    <script src="./files/js/soundjs-0.6.1.min.js"></script>
+    <script src="./files/js/core.js"></script>
+    <script src="./files/js/Utils.js"></script>
+    <script src="./files/js/Entity.js"></script>
+    <script src="./files/js/Player.js"></script>
+    <script src="./files/js/Bot.js?v=0119"></script>
+    <script src="./files/js/Bonus.js"></script>
+    <script src="./files/js/Tile.js"></script>
+    <script src="./files/js/Fire.js"></script>
+    <script src="./files/js/Bomb.js"></script>
+    <script src="./files/js/Menu.js"></script>
+    <script src="./files/js/InputEngine.js"></script>
+    <script src="./files/js/GameEngine.js?v=0119"></script>
+    <script src="./files/packed-runtime-loader.js?v=01629"></script>
+    <script src="./files/preload-v0150.js?v=01629"></script>
+    <script src="./files/online.js?v=0119"></script>
+    <script src="./files/mobile.js?v=0119"></script>
+    <script src="./files/app.js?v=01629"></script>
+    <script src="./files/hotfix-0117.js?v=0119"></script>
+    <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
+
+    <style id="ios-v0111-hotfix">
+    @media (hover: none), (pointer: coarse) {
+      body:not(.desktop-ui) .mobile_controls {
+        position: fixed; z-index: 3000;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        display: flex !important; align-items: flex-end; justify-content: space-between;
+        pointer-events: none; touch-action: none;
+      }
+      body:not(.desktop-ui) .mobile_joystick,
+      body:not(.desktop-ui) .mobile_action_cluster,
+      body:not(.desktop-ui) .touch_btn,
+      body:not(.desktop-ui) .touch_small { pointer-events: auto; }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game_toolbar">
+            <button id="ultimateModeBtn" class="ultimate_mode_btn" type="button" aria-pressed="false">ULTIMATE MODE: OFF</button>
+            <span id="ultimateModeHint" class="ultimate_mode_hint">100% block drops • power-ups 5× stronger</span>
+            <div id="onlineMatchBar" class="online_match_bar" hidden>
+                <span id="onlineMatchStatus">ONLINE</span>
+                <button id="onlineDisconnectBtn" type="button">Disconnect</button>
+            </div>
+        </div>
+
+        <div id="localStage">
+            <div id="game">
+                <canvas id="canvas" width="545" height="416"></canvas>
+                <div id="spectatorBanner" class="spectator_banner" hidden>
+                    <strong id="spectatorTitle">GAME OVER</strong>
+                    <span id="spectatorSubtitle">SPECTATING AI MATCH</span>
+                </div>
+            </div>
+            <div class="control_panel">
+                <div class="wrapper">
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="player1"></p></div>
+                        <div class="control_element_movement">
+                            <div class="control_element_ico"><img src="./files/img/i-control-01.svg" class="i_control01"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="movement1"></p></div>
+                        </div>
+                        <div class="control_element_bomb">
+                            <div class="control_element_ico"><img src="./files/img/i-control-001.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb1"></p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="player2"></p></div>
+                        <div class="control_element_movement">
+                            <div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control01"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="movement2"></p></div>
+                        </div>
+                        <div class="control_element_bomb">
+                            <div class="control_element_ico"><img src="./files/img/i-control-002.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb2"></p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="common">Common</p></div>
+                        <div class="control_element_mute">
+                            <div class="control_element_ico"><img src="./files/img/i-key-m.svg" class="i_key_m"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="mute"></p></div>
+                        </div>
+                        <div class="control_element_menu">
+                            <div class="control_element_ico"><img src="./files/img/i-key-esc.svg" class="i_key_esc"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="menu"></p></div>
+                        </div>
+                        <div class="control_element_restart">
+                            <div class="control_element_ico"><img src="./files/img/i-key-enter.svg" class="i_key_enter"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="restart"></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="remoteStage" hidden>
+            <video id="remoteVideo" autoplay playsinline muted></video>
+            <div class="remote_caption">LIVE FROM HOST • PLAYER 2</div>
+            <div id="remoteSpectatorBanner" class="spectator_banner" hidden>
+                <strong id="remoteSpectatorTitle">GAME OVER</strong>
+                <span id="remoteSpectatorSubtitle">SPECTATING MATCH</span>
+            </div>
+        </div>
+        <audio id="gameMusic" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
+
+        <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
+            <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application">
+                <div class="joystick_ring"></div>
+                <div id="mobileJoystickKnob" class="joystick_knob"></div>
+            </div>
+            <div class="mobile_action_cluster">
+                <button class="touch_btn bomb_btn" data-action="bomb" aria-label="Plant bomb">💣</button>
+                <div class="mobile_small_actions">
+                    <button id="mobileMuteBtn" class="touch_small" type="button">Sound</button>
+                    <button id="mobileMenuBtn" class="touch_small" type="button">Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="multiplayerLobby" class="multiplayer_lobby" hidden>
+        <div class="lobby_card">
+            <div class="lobby_heading">
+                <div>
+                    <h2>Multiplayer</h2>
+                    <p>Play locally or connect to a friend over the internet.</p>
+                </div>
+                <button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button>
+            </div>
+
+            <div class="lobby_name_row">
+                <label for="playerNameInput">Your name</label>
+                <input id="playerNameInput" type="text" maxlength="14" autocomplete="nickname" spellcheck="false" placeholder="Player name">
+                <small>Shown above your character in online matches.</small>
+            </div>
+
+            <div class="lobby_mode_row">
+                <span>Game mode</span>
+                <button id="ultimateLobbyBtn" class="ultimate_mode_btn compact" type="button">ULTIMATE MODE: OFF</button>
+            </div>
+
+            <div id="lobbyChoice" class="lobby_choice">
+                <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for your friend to join • another opponent after a short wait</small></button>
+                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Find the waiting host automatically • another opponent if none is immediately available</small></button>
+                <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
+            </div>
+
+            <div id="onlineHostControls" class="lobby_section" hidden>
+                <div class="lobby_state_icon">⌁</div>
+                <h3>Hosting game</h3>
+                <p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. If nobody connects, another player will join automatically.</p>
+
+                <div class="host_customization" id="hostCustomization">
+                    <div class="host_customization_header">
+                        <div>
+                            <strong>Item drop rate</strong>
+                            <small>Chance that a destroyed wood block contains a power-up</small>
+                        </div>
+                        <span id="dropRateValue" class="drop_rate_value">16% · DEFAULT</span>
+                    </div>
+                    <input id="dropRateSlider" class="drop_rate_slider" type="range" min="16" max="100" step="1" value="16" aria-label="Item drop rate">
+                    <div class="drop_rate_scale"><span>Default · 16%</span><span>100%</span></div>
+                    <div id="dropRateNote" class="drop_rate_note">Normal power-up strength. ULTIMATE MODE overrides drops to 100%.</div>
+                </div>
+
+                <div id="onlineStatus" class="online_status working">Opening host slot…</div>
+                <button id="hostCancelBtn" class="lobby_secondary" type="button">Stop Hosting</button>
+            </div>
+
+            <div id="onlineJoinControls" class="lobby_section" hidden>
+                <div class="lobby_state_icon">⌁</div>
+                <h3>Finding host…</h3>
+                <p>Searching for a waiting Bomberman host. If none is available, another opponent will be found automatically.</p>
+                <div id="joinStatus" class="online_status working">Searching…</div>
+                <button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+(function () {
+  if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
+  function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); }
+  heartbeat();
+  setInterval(heartbeat, 5000);
+})();
+</script>
+
+</body>
+</html>
