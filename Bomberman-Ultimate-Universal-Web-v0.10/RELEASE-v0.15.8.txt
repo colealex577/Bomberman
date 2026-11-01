@@ -1,0 +1,10 @@
+Bomberman v0.15.8
+
+- Public/joined rounds now finish as soon as one or zero contestants remain, independent of legacy playing-state flags.
+- Results show the winner and a retained snapshot of every participant's survival time, hearts, speed, bomb capacity, fire strength, and rating when available.
+- Public results use dedicated Request rematch, New public match, and Home screen actions and no longer auto-restart after spectating.
+- Simulated-human chatter is stage-aware and tension-aware: most ambient chatter is early, progressively sparser later, and suppressed during bomb-heavy/high-pressure play except direct player replies and urgent reactions.
+- Added contextual transition commentary when lanes open, the board clears, the field reaches the final two, or a simulated human pushes into the local player's zone.
+- Existing response/dialogue pools remain available.
+
+Validation: v0.15.8 release gate passed all 12 regression jobs, including authoritative multiplayer, netcode, observer/mobile chat, dialogue/social population, public-chat stability, gameplay, branding, v0.15.7 compatibility, and the new v0.15.8 round/social smoke test.
