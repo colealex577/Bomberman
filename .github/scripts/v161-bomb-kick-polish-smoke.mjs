@@ -8,8 +8,8 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','KickPolish');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberKick160&&window.BomberKick161?.version==='v0.16.0-hotfix.1'&&window.gGameEngine?.menu&&document.getElementById('v160TutorialBtn'),{timeout:30000});
- await sleep(600);
+ await p.waitForFunction(()=>window.BomberKick160&&window.BomberKick161?.version==='v0.16.0-hotfix.1'&&window.BomberKick161Compat?.version==='v0.16.1'&&window.BomberSpeed161?.version==='v0.16.1'&&window.BomberV125&&window.gGameEngine?.menu&&document.getElementById('v160TutorialBtn'),{timeout:30000});
+ await sleep(700);
 
  const menu=await p.evaluate(()=>{const game=document.getElementById('game').getBoundingClientRect(),b=document.getElementById('v160TutorialBtn'),r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{hidden:b.hidden,gameBottom:game.bottom,buttonBottom:r.bottom,clearance:game.bottom-r.bottom,hit:hit===b||b.contains(hit)}});
  assert.equal(menu.hidden,false);assert.ok(menu.clearance>55,'Tutorial button is still trapped in the bottom menu area: '+JSON.stringify(menu));assert.equal(menu.hit,true,'Tutorial button is covered by another UI layer');
@@ -36,9 +36,24 @@ try{
  assert.ok(drops.total>0);assert.equal(drops.kicks,drops.desired);assert.ok(drops.kicks>=1&&drops.kicks<=8);assert.equal(drops.max,8);assert.equal(drops.internal,true,'Bomb Kick pickup did not use the internal fallback icon');assert.equal(drops.rendered,true);
  console.log('RARE_KICK_DROPS_AND_INTERNAL_ICON PASS',JSON.stringify(drops));
 
- const stats=await p.evaluate(()=>{const g=gGameEngine,all=(g.players||[]).concat(g.bots||[]);all.forEach((e,i)=>{e.bombKickCharges=i+1});BomberKick161.updateKickStats();return[...document.querySelectorAll('.qol_stat_box:not([hidden])')].map(box=>{const items=[...box.querySelectorAll('.qol_stat_item')],kick=box.querySelector('[data-qol-stat="kick"]'),c=kick&&kick.querySelector('canvas'),ctx=c&&c.getContext('2d'),data=ctx?ctx.getImageData(0,0,c.width,c.height).data:[],alpha=0;for(let i=3;i<data.length;i+=4)alpha+=data[i];return{slot:box.dataset.slot,itemCount:items.length,kickCount:kick?.querySelector('.qol_stat_count')?.textContent||'',alpha}})});
- assert.ok(stats.length>=1);for(const s of stats){assert.equal(s.itemCount,5,'player stat box does not contain Bomb Kick');assert.match(s.kickCount,/^×\d+$/);assert.ok(s.alpha>0,'Bomb Kick stat icon is blank')}
+ const stats=await p.evaluate(()=>{const g=gGameEngine,all=(g.players||[]).concat(g.bots||[]);all.forEach((e,i)=>{e.bombKickCharges=i+1});BomberKick161.updateKickStats();return[...document.querySelectorAll('.qol_stat_box:not([hidden])')].map(box=>{const items=[...box.querySelectorAll('.qol_stat_item')],kickItems=[...box.querySelectorAll('[data-qol-stat="kick"]')],kick=kickItems[0],c=kick&&kick.querySelector('canvas'),ctx=c&&c.getContext('2d'),data=ctx?ctx.getImageData(0,0,c.width,c.height).data:[];let alpha=0;for(let i=3;i<data.length;i+=4)alpha+=data[i];return{slot:box.dataset.slot,itemCount:items.length,kickItems:kickItems.length,kickCount:kick?.querySelector('.qol_stat_count')?.textContent||'',alpha}})});
+ assert.ok(stats.length>=1);for(const s of stats){assert.ok(s.itemCount>=5,'player stat box lost existing stats');assert.equal(s.kickItems,1,'Bomb Kick stat should appear exactly once');assert.match(s.kickCount,/^×\d+$/);assert.ok(s.alpha>0,'Bomb Kick stat icon is blank')}
  console.log('BOMB_KICK_PLAYER_STATS PASS',JSON.stringify(stats));
+
+ const speeds=await p.evaluate(()=>{
+  const g=gGameEngine,b=g.bots[0];if(!b)throw Error('no AI available for speed test');
+  const out={};
+  for(const d of ['easy','normal','hard','expert']){BomberV125.setDifficulty(d);BomberSpeed161.normalize(b);out[d]={velocity:b.velocity,start:b.startTimerMax}}
+  BomberV125.setDifficulty('normal');b.bonusCounts=b.bonusCounts||{};b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;b.__v161SpeedInitialized=true;BomberSpeed161.normalize(b);
+  const oldRemain=b.remainingWoodCount;b.remainingWoodCount=()=>0;b.hyperAggressive=false;b.hyperAggroSpeedApplied=false;b.updateEndgameAggression();const endgame=b.velocity;b.remainingWoodCount=oldRemain;
+  b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;BomberSpeed161.normalize(b);b.applyBonus({type:'speed'});const afterPickup=b.velocity,pickups=b.bonusCounts.speed;
+  const sim=g.bots[1]||b;sim.simulatedHuman=true;sim.humanSkill=1;sim.velocity=4.2;sim.__v161SpeedInitialized=false;sim.bonusCounts=sim.bonusCounts||{};sim.bonusCounts.speed=0;BomberSpeed161.normalize(sim);const eliteSim=sim.velocity;
+  return{out,endgame,afterPickup,pickups,eliteSim}
+ });
+ for(const d of ['easy','normal','hard','expert'])assert.equal(speeds.out[d].velocity,2,'difficulty changed AI foot speed on '+d);
+ assert.ok(speeds.out.easy.start>speeds.out.hard.start&&speeds.out.hard.start>=speeds.out.expert.start,'difficulty no longer changes reaction/opening delay');
+ assert.equal(speeds.endgame,2,'endgame aggression changed AI foot speed');assert.equal(speeds.eliteSim,2,'rating/skill changed simulated-human foot speed');assert.equal(speeds.afterPickup,2.8,'speed pickup did not change AI foot speed normally');assert.ok(speeds.pickups>=1);
+ console.log('STANDARD_AI_SPEED_POWERUPS_ONLY PASS',JSON.stringify(speeds));
 
  const impacts=await p.evaluate(()=>{
   const g=gGameEngine;
