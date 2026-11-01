@@ -15,12 +15,8 @@ function initialize(e){
  if(!isAI(e)||e.__v161SpeedInitialized)return;
  e.__v161SpeedInitialized=true;e.bonusCounts=e.bonusCounts||{};
  var count=speedCount(e),mult=G()&&G().ultimateMode?5:1,bonus=count*STEP*mult;
- // Drop-in observer rounds may represent a speed pickup that happened before
- // the viewer arrived. Preserve only an exact pickup-sized excess over the old
- // hidden skill/difficulty baseline; all other hidden speed is discarded.
  if(!count&&G()&&G().__v152RosterMode){var excess=num(e.velocity,BASE)-hiddenBaseline(e);if(excess>=STEP-.08){count=Math.max(1,Math.round(excess/STEP));e.bonusCounts.speed=count;bonus=count*STEP}}
- e.__v161LegitSpeedBonus=Math.max(0,bonus);
- e.hyperAggroSpeedApplied=true;
+ e.__v161LegitSpeedBonus=Math.max(0,bonus);e.hyperAggroSpeedApplied=true
 }
 function desired(e){initialize(e);return BASE+Math.max(0,num(e&&e.__v161LegitSpeedBonus,0))}
 function normalize(e){if(!isAI(e))return false;initialize(e);var v=desired(e);if(Math.abs(num(e.velocity,v)-v)>.0001)e.velocity=v;e.hyperAggroSpeedApplied=true;return true}
@@ -51,13 +47,8 @@ function patchAggro(){
  function wrapped(){normalize(this);var r=cur.apply(this,arguments);normalize(this);return r}
  wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;Bot.prototype.updateEndgameAggression=wrapped;return true
 }
-function patchSpawn(){
- if(!window.GameEngine||!GameEngine.prototype.spawnBots)return false;var cur=GameEngine.prototype.spawnBots;if(cur.__v161SpeedRule)return true;
- function wrapped(){var r=cur.apply(this,arguments);(this.bots||[]).forEach(normalize);if(this.simulatedOpponent)normalize(this.simulatedOpponent);return r}
- wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;GameEngine.prototype.spawnBots=wrapped;return true
-}
 function difficultyCopy(){var el=document.querySelector('#v125DifficultySetting .v125_diff_note');if(!el||!window.BomberV125||!BomberV125.getDifficulty)return;var d=BomberV125.getDifficulty(),t={easy:'Slower reactions and less aggressive bombing.',normal:'Balanced reactions and decision-making.',hard:'Quicker decisions and earlier late-game pressure.',expert:'Fastest reactions, aggressive bombing, and early pressure.'}[d];if(t&&el.textContent!==t)el.textContent=t}
-function install(){patchApplyBonus();patchBotInit();patchBotUpdate();patchAggro();patchSpawn();normalizeAll();difficultyCopy();return !!(window.Bot&&window.Player)}
+function install(){patchApplyBonus();patchBotInit();patchBotUpdate();patchAggro();normalizeAll();difficultyCopy();return !!(window.Bot&&window.Player)}
 window.BomberSpeed161={version:VERSION,base:BASE,step:STEP,desiredSpeed:desired,normalize:normalize,normalizeAll:normalizeAll};
-var tries=0,t=setInterval(function(){install();if(++tries>1200)clearInterval(t)},25);setInterval(function(){install()},90);
+var tries=0,t=setInterval(function(){install();if(++tries>1200)clearInterval(t)},25);setInterval(install,90);
 })();
