@@ -25,9 +25,9 @@ function patchApplyBonus(){
  if(!window.Player||!Player.prototype.applyBonus)return false;var cur=Player.prototype.applyBonus;if(cur.__v161SpeedRule)return true;
  function wrapped(bonus){
   if(!isAI(this))return cur.apply(this,arguments);
-  initialize(this);var speed=bonus&&bonus.type==='speed',beforeCount=speedCount(this),before=num(this.velocity,desired(this)),nested=num(this.__v161SpeedApplyDepth,0);this.__v161SpeedApplyDepth=nested+1;
+  initialize(this);var speed=bonus&&bonus.type==='speed',beforeCount=speedCount(this),nested=num(this.__v161SpeedApplyDepth,0);this.__v161SpeedApplyDepth=nested+1;
   var r;try{r=cur.apply(this,arguments)}finally{this.__v161SpeedApplyDepth=nested}
-  if(speed&&!nested){var delta=num(this.velocity,before)-before,expected=STEP*(G()&&G().ultimateMode?5:1);if(delta<.01||delta>expected+.05)delta=expected;this.__v161LegitSpeedBonus=Math.max(0,num(this.__v161LegitSpeedBonus,0)+delta);this.bonusCounts=this.bonusCounts||{};this.bonusCounts.speed=Math.max(speedCount(this),beforeCount+1)}
+  if(speed&&!nested){var expected=STEP*(G()&&G().ultimateMode?5:1);this.__v161LegitSpeedBonus=Math.max(0,num(this.__v161LegitSpeedBonus,0)+expected);this.bonusCounts=this.bonusCounts||{};this.bonusCounts.speed=Math.max(speedCount(this),beforeCount+1)}
   normalize(this);return r
  }
  wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;Player.prototype.applyBonus=wrapped;return true
