@@ -18,8 +18,8 @@ try{
  await p.click('#v152JoinNextBtn');await p.evaluate(()=>BomberHumanObserver152.debug.finishObservedRound());
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='joined'&&gGameEngine.players?.length===1&&gGameEngine.bots?.length===3,{timeout:8000});await sleep(350);
 
- // Capture the full roster, then force a one-survivor state without relying on a death callback.
- const setup=await p.evaluate(()=>{BomberRoundSocial158.debug.captureAll();const g=gGameEngine,sim=g.bots.find(b=>b.simulatedHuman)||g.bots[0];g.players.forEach(x=>x.alive=false);g.bots.forEach(x=>x.alive=(x===sim));return{winner:sim.displayName||'AI SURVIVOR',before:BomberRoundSocial158.state().stats.length}});
+ // Capture the full roster, then force a one-survivor state without relying on a death callback. Invoke the same watchdog used by the interval so the synthetic state cannot be overwritten by a frame before the assertion.
+ const setup=await p.evaluate(()=>{BomberRoundSocial158.debug.captureAll();const g=gGameEngine,sim=g.bots.find(b=>b.simulatedHuman)||g.bots[0];g.players.forEach(x=>x.alive=false);g.bots.forEach(x=>x.alive=(x===sim));const before=BomberRoundSocial158.state().stats.length;BomberRoundSocial158.debug.roundEndTick();return{winner:sim.displayName||'AI SURVIVOR',before}});
  await p.waitForFunction(()=>window.BomberQOL?.postMatchOpen&&gGameEngine.matchFinished&&document.getElementById('qolPostMatch')?.hidden===false,{timeout:5000});await sleep(180);
  const ended=await p.evaluate(()=>({title:document.querySelector('#qolPostMatch .qol_title')?.textContent||'',copy:document.querySelector('#qolPostMatch .qol_copy')?.textContent||'',rows:document.querySelectorAll('#v158PostStats .v158_stat_row').length,deathHidden:document.getElementById('v157Death')?.hidden!==false,spectateHidden:document.getElementById('v157SpectatingBar')?.hidden!==false,buttons:[...document.querySelectorAll('#qolPostMatch .qol_actions button')].map(b=>b.textContent),state:BomberRoundSocial158.state()}));
  assert.match(ended.title,new RegExp(setup.winner.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+' WINS','i'),'winner name was not shown');
