@@ -9,7 +9,7 @@ await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
  await p.waitForFunction(()=>window.BomberRoundSocial158?.version==='v0.15.8'&&window.BomberBehavior157&&window.BomberHumanObserver152&&window.BomberSocial155&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>document.getElementById('releaseBadge1561')?.querySelector('strong')?.textContent),'v0.15.8');
+ assert.equal(await p.evaluate(()=>document.getElementById('releaseBadge1561')?.querySelector('strong')?.textContent),'v0.16.0');
  console.log('V158_BRANDING PASS');
 
  await p.evaluate(()=>{BomberBehavior157.clock.set('manual','19:10');BomberOnline.openLobby();const old=Math.random;Math.random=()=>.99;document.getElementById('v152ObserveBtn').click();Math.random=old});
