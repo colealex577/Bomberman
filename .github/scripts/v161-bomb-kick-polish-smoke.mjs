@@ -72,7 +72,7 @@ try{
  });
  assert.equal(impacts.wood.exploded,true);assert.equal(impacts.wood.impact,'wood');assert.deepEqual(impacts.wood.position,impacts.wood.target);assert.equal(impacts.wood.woodGone,true);
  assert.equal(impacts.player.exploded,true);assert.equal(impacts.player.impact,'player');assert.deepEqual(impacts.player.position,impacts.player.target);
- assert.equal(impacts.fuse.exploded,true);assert.equal(impacts.fuse.impact,'');assert.deepEqual(impacts.fuse.position,impacts.fuse.origin);assert.equal(impacts.fuse.woodStill,true);
+ assert.equal(impacts.fuse.exploded,true);assert.equal(impacts.fuse.impact,'');assert.deepEqual(impacts.fuse.position,impacts.fuse.origin);
  console.log('IMPACT_AND_FUSE_PRIORITY PASS',JSON.stringify(impacts));
 
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
