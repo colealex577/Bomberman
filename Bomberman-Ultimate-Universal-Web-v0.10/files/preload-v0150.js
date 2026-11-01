@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.10';
-window.BomberVersionUIOwner='runtime-v01624-ui-stability';
+window.BomberBuildVersion='v0.16.2.11';
+window.BomberVersionUIOwner='runtime-v016211-travel-chat-drops';
 var VERSION=window.BomberBuildVersion;
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
@@ -22,6 +22,7 @@ early('runtime-v0161-bomb-kick-compat-loader','./files/runtime-v0161-bomb-kick-c
 early('runtime-v0161-speed-standard-loader','./files/runtime-v0161-speed-standard.js?v=0161s');
 early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-chat-cleanup.js?v=0161l');
 early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v=016210');
+early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
