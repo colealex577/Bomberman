@@ -8,10 +8,10 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','KickTest');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberKick160?.version==='v0.16.0'&&window.gGameEngine?.menu&&document.getElementById('v160TutorialBtn'),{timeout:30000});
+ await p.waitForFunction(()=>window.BomberKick160?.version==='v0.16.0'&&window.BomberPreload150?.version==='v0.16.1'&&window.gGameEngine?.menu&&document.getElementById('v160TutorialBtn'),{timeout:30000});
  await sleep(450);
  const boot=await p.evaluate(()=>({version:BomberKick160.version,title:document.title,preload:window.BomberPreload150?.version,drop20:BomberKick160.planKickCount(20),drop118:BomberKick160.planKickCount(118),tutorialHidden:document.getElementById('v160TutorialBtn').hidden}));
- assert.equal(boot.version,'v0.16.0');assert.equal(boot.title,'Bomberman v0.16.0');assert.equal(boot.preload,'v0.16.0');assert.equal(boot.drop20,4);assert.equal(boot.drop118,8);assert.equal(boot.tutorialHidden,false);
+ assert.equal(boot.version,'v0.16.0');assert.equal(boot.title,'Bomberman v0.16.0');assert.equal(boot.preload,'v0.16.1');assert.equal(boot.drop20,4);assert.equal(boot.drop118,8);assert.equal(boot.tutorialHidden,false);
  console.log('VERSION_RARE_DROP_AND_MENU PASS',JSON.stringify(boot));
  await p.evaluate(()=>gGameEngine.menu.setMode('single'));
  await p.waitForFunction(()=>gGameEngine.players?.length===1&&!gGameEngine.menu.visible,{timeout:5000});await sleep(180);
