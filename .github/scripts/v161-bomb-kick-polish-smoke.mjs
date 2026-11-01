@@ -46,13 +46,15 @@ try{
   for(const d of ['easy','normal','hard','expert']){BomberV125.setDifficulty(d);BomberSpeed161.normalize(b);out[d]={velocity:b.velocity,start:b.startTimerMax}}
   BomberV125.setDifficulty('normal');b.bonusCounts=b.bonusCounts||{};b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;b.__v161SpeedInitialized=true;BomberSpeed161.normalize(b);
   const oldRemain=b.remainingWoodCount;b.remainingWoodCount=()=>0;b.hyperAggressive=false;b.hyperAggroSpeedApplied=false;b.updateEndgameAggression();const endgame=b.velocity;b.remainingWoodCount=oldRemain;
-  b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;BomberSpeed161.normalize(b);b.applyBonus({type:'speed'});const afterPickup=b.velocity,pickups=b.bonusCounts.speed;
+  const oldUltimate=!!g.ultimateMode;g.ultimateMode=false;b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;b.__v161SpeedInitialized=true;BomberSpeed161.normalize(b);b.applyBonus({type:'speed'});const afterPickup=b.velocity,pickups=b.bonusCounts.speed;
+  g.ultimateMode=true;b.bonusCounts.speed=0;b.__v161LegitSpeedBonus=0;b.__v161SpeedInitialized=true;BomberSpeed161.normalize(b);b.applyBonus({type:'speed'});const ultimatePickup=b.velocity;
+  g.ultimateMode=oldUltimate;
   const sim=g.bots[1]||b;sim.simulatedHuman=true;sim.humanSkill=1;sim.velocity=4.2;sim.__v161SpeedInitialized=false;sim.bonusCounts=sim.bonusCounts||{};sim.bonusCounts.speed=0;BomberSpeed161.normalize(sim);const eliteSim=sim.velocity;
-  return{out,endgame,afterPickup,pickups,eliteSim}
+  return{out,endgame,afterPickup,pickups,ultimatePickup,eliteSim}
  });
  for(const d of ['easy','normal','hard','expert'])assert.equal(speeds.out[d].velocity,2,'difficulty changed AI foot speed on '+d);
  assert.ok(speeds.out.easy.start>speeds.out.hard.start&&speeds.out.hard.start>=speeds.out.expert.start,'difficulty no longer changes reaction/opening delay');
- assert.equal(speeds.endgame,2,'endgame aggression changed AI foot speed');assert.equal(speeds.eliteSim,2,'rating/skill changed simulated-human foot speed');assert.equal(speeds.afterPickup,2.8,'speed pickup did not change AI foot speed normally');assert.ok(speeds.pickups>=1);
+ assert.equal(speeds.endgame,2,'endgame aggression changed AI foot speed');assert.equal(speeds.eliteSim,2,'rating/skill changed simulated-human foot speed');assert.equal(speeds.afterPickup,2.8,'normal Speed pickup did not increase AI foot speed by 0.8');assert.equal(speeds.ultimatePickup,6,'Ultimate Speed pickup did not apply its 5x pickup strength');assert.ok(speeds.pickups>=1);
  console.log('STANDARD_AI_SPEED_POWERUPS_ONLY PASS',JSON.stringify(speeds));
 
  const impacts=await p.evaluate(()=>{
