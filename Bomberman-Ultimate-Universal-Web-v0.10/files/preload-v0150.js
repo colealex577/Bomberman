@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.9';
+window.BomberBuildVersion='v0.16.2.10';
 window.BomberVersionUIOwner='runtime-v01624-ui-stability';
 var VERSION=window.BomberBuildVersion;
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
@@ -21,6 +21,7 @@ early('runtime-v0161-bomb-kick-polish-loader','./files/runtime-v0161-bomb-kick-p
 early('runtime-v0161-bomb-kick-compat-loader','./files/runtime-v0161-bomb-kick-compat.js?v=0161d');
 early('runtime-v0161-speed-standard-loader','./files/runtime-v0161-speed-standard.js?v=0161s');
 early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-chat-cleanup.js?v=0161l');
+early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v=016210');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
