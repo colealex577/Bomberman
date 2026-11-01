@@ -1,0 +1,26 @@
+(function(){
+'use strict';
+var CFG={easy:{label:'Easy',delay:520,jitter:220,scan:520,safe:0.78,pressure:0.48,look:4,patience:0.44},normal:{label:'Normal',delay:330,jitter:150,scan:360,safe:0.88,pressure:0.67,look:6,patience:0.64},hard:{label:'Hard',delay:190,jitter:90,scan:230,safe:0.95,pressure:0.84,look:8,patience:0.80},expert:{label:'Expert',delay:95,jitter:45,scan:125,safe:0.985,pressure:0.95,look:11,patience:0.92}};
+var setting='normal',oldUpdate=null,installed=false;
+function game(){return window.gGameEngine||null}
+function getCfg(){return CFG[setting]||CFG.normal}
+function mode(v){return CFG[v]?v:'normal'}
+function set(v){setting=mode(v);try{localStorage.setItem('BombermanAIDifficultyV126',setting)}catch(e){};return setting}
+function load(){try{var v=localStorage.getItem('BombermanAIDifficultyV126');if(CFG[v])setting=v}catch(e){}}
+function manhattan(a,b){return Math.abs(Number(a.x)-Number(b.x))+Math.abs(Number(a.y)-Number(b.y))}
+function actors(){var g=game(),out=[];if(!g)return out;(g.players||[]).forEach(function(x){if(x&&x.alive!==false)out.push(x)});(g.bots||[]).forEach(function(x){if(x&&x.alive!==false)out.push(x)});return out}
+function nearestEnemy(bot){var best=null,bd=1e9;actors().forEach(function(a){if(!a||a===bot||!a.position)return;var d=manhattan(bot.position,a.position);if(d<bd){bd=d;best=a}});return best}
+function bombs(){var g=game(),out=[];if(!g||!g.bombs)return out;for(var k in g.bombs){var b=g.bombs[k];if(b&&b.position)out.push(b)}return out}
+function blastThreat(p,b){if(!p||!b||!b.position)return false;var radius=Math.max(1,Number(b.strength||b.firePower||2));if(Number(p.x)===Number(b.position.x)&&Math.abs(Number(p.y)-Number(b.position.y))<=radius)return true;if(Number(p.y)===Number(b.position.y)&&Math.abs(Number(p.x)-Number(b.position.x))<=radius)return true;return false}
+function unsafe(bot,p){var bad=false;bombs().forEach(function(b){if(blastThreat(p,b))bad=true});return bad}
+function open(p){var g=game();if(!g||!p)return false;try{if(g.getTileMaterial&&g.getTileMaterial(p)!=='grass')return false;if(g.getBomb&&g.getBomb(p))return false}catch(e){}return Number(p.x)>=0&&Number(p.y)>=0}
+var DIRS=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+function next(p,d){return{x:Number(p.x)+d.x,y:Number(p.y)+d.y}}
+function choose(bot,target,cfg){if(!bot||!bot.position)return null;var choices=[];DIRS.forEach(function(d){var p=next(bot.position,d);if(!open(p))return;var risk=unsafe(bot,p)?100:0,score=risk;if(target&&target.position)score+=manhattan(p,target.position)*(1.15-cfg.pressure*.45);score+=Math.random()*2.5;choices.push({d:d,p:p,score:score,risk:risk})});choices.sort(function(a,b){return a.score-b.score});if(!choices.length)return null;if(choices[0].risk&&Math.random()>cfg.safe)return choices[(Math.random()*choices.length)|0];return choices[0]}
+function setMove(bot,d){if(!bot||!d)return false;try{bot.movingDir={x:d.x,y:d.y};bot.direction={x:d.x,y:d.y};bot.nextPosition=next(bot.position,d);bot.moving=true;return true}catch(e){return false}}
+function canBomb(bot,target,cfg){if(!bot||!target||!target.position||!bot.position)return false;if(manhattan(bot.position,target.position)>Math.max(2,cfg.look))return false;if(unsafe(bot,bot.position))return false;return Math.random()<cfg.pressure}
+function plant(bot){try{if(typeof bot.plantBomb==='function')return bot.plantBomb();if(typeof bot.putBomb==='function')return bot.putBomb();if(typeof bot.placeBomb==='function')return bot.placeBomb()}catch(e){}return false}
+function think(bot){var now=Date.now(),cfg=getCfg();bot.__ai126=bot.__ai126||{next:0,nextBomb:0,stuck:0,last:''};var s=bot.__ai126;if(now<s.next)return;s.next=now+cfg.delay+Math.floor(Math.random()*cfg.jitter);var key=Number(bot.position&&bot.position.x)+','+Number(bot.position&&bot.position.y);if(key===s.last)s.stuck++;else s.stuck=0;s.last=key;var enemy=nearestEnemy(bot),move=choose(bot,enemy,cfg);if(move)setMove(bot,move.d);if(enemy&&now>=s.nextBomb&&canBomb(bot,enemy,cfg)){if(plant(bot)!==false)s.nextBomb=now+Math.max(650,cfg.delay*4)}if(s.stuck>5&&move){setMove(bot,DIRS[(Math.random()*DIRS.length)|0]);s.stuck=0}}
+function install(){if(installed||!window.Bot||!Bot.prototype)return false;installed=true;oldUpdate=Bot.prototype.update;Bot.prototype.update=function(){try{think(this)}catch(e){}return oldUpdate?oldUpdate.apply(this,arguments):undefined};return true}
+load();var t=setInterval(function(){if(install())clearInterval(t)},30);window.BomberAI126={version:'v0.16.2.9',get:function(){return setting},set:set,config:function(){return getCfg()},nearestEnemy:nearestEnemy,unsafe:unsafe};
+})();
