@@ -12,7 +12,7 @@ early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-c
 early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0155');
 early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-polish.js?v=0156');
 early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
-early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=0158');
+early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=016211b');
 early('runtime-v01562-public-chat-stability-loader','./files/runtime-v01562-public-chat-stability.js?v=01562');
 early('runtime-v0157-public-behavior-loader','./files/runtime-v0157-public-behavior.js?v=0157');
 early('runtime-v0158-round-social-loader','./files/runtime-v0158-round-social.js?v=0158');
