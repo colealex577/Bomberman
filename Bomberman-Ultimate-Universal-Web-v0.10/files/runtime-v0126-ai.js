@@ -5,6 +5,7 @@ var S=window.B115;
 function G(){return window.gGameEngine||null}
 function dataGuest(){return !!(window.BomberDataSync&&BomberDataSync.active&&BomberDataSync.role==='guest'&&S&&S.role==='guest')}
 function showVersion(){
+ if(window.BomberVersionUIOwner)return;
  ['buildVersion','buildVersion119','buildVersion120','buildVersion121','buildVersion122','buildVersion123','buildVersion124','buildVersion125'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none'});
  var v=document.getElementById('buildVersion126');if(!v){v=document.createElement('div');v.id='buildVersion126';v.setAttribute('aria-label','Game version');v.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.62);color:rgba(255,255,255,.94);font:700 9px/1.25 Arial,sans-serif;pointer-events:none';(document.body||document.documentElement).appendChild(v)}v.textContent=VERSION
 }
@@ -31,7 +32,7 @@ function patchBombLogic(){
   var spare=this.bombsMax-(this.activeBombCount()+1),escape=this.findEscapePath(this.position,this.bombStrength,spare>0);
   return !!(escape&&escape.length>1)
  };
- Bot.prototype.plantBomb=function(){if(!useful(this,this.position))return false;return oldPlant.apply(this,arguments)}
+ Bot.prototype.plantBomb=function(){var armedKick=false;try{armedKick=!!(window.BomberAI162&&BomberAI162.hasArmedKick&&BomberAI162.hasArmedKick(this,'travel'))}catch(e){}if(!armedKick&&!useful(this,this.position))return false;return oldPlant.apply(this,arguments)}
 }
 function markerShape(){
  var c=new createjs.Container(),s=new createjs.Shape();

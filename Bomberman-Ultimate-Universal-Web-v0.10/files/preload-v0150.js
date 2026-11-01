@@ -1,9 +1,11 @@
 (function(){
 'use strict';
-var VERSION='v0.16.1';
+window.BomberBuildVersion='v0.16.2.9';
+window.BomberVersionUIOwner='runtime-v01624-ui-stability';
+var VERSION=window.BomberBuildVersion;
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
-early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=0152');
+early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=01629');
 early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0153');
 early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observer-progression.js?v=01541');
 early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-controls.js?v=01541');
@@ -14,9 +16,9 @@ early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboardin
 early('runtime-v01562-public-chat-stability-loader','./files/runtime-v01562-public-chat-stability.js?v=01562');
 early('runtime-v0157-public-behavior-loader','./files/runtime-v0157-public-behavior.js?v=0157');
 early('runtime-v0158-round-social-loader','./files/runtime-v0158-round-social.js?v=0158');
-early('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js?v=0160');
-early('runtime-v0161-bomb-kick-polish-loader','./files/runtime-v0161-bomb-kick-polish.js?v=0161b');
-early('runtime-v0161-bomb-kick-compat-loader','./files/runtime-v0161-bomb-kick-compat.js?v=0161c');
+if(window.BomberPackedLoader)BomberPackedLoader.load('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629');else early('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js?v=01629');
+early('runtime-v0161-bomb-kick-polish-loader','./files/runtime-v0161-bomb-kick-polish.js?v=01622d');
+early('runtime-v0161-bomb-kick-compat-loader','./files/runtime-v0161-bomb-kick-compat.js?v=0161d');
 early('runtime-v0161-speed-standard-loader','./files/runtime-v0161-speed-standard.js?v=0161s');
 early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-chat-cleanup.js?v=0161l');
 if(!window.gGameEngine)return;

@@ -1,0 +1,44 @@
+(function(){
+'use strict';
+var VERSION='v0.16.2.9-fixes',installed=false;
+function G(){return window.gGameEngine||null}function $(id){return document.getElementById(id)}
+function clone(p){return p?{x:Number(p.x)||0,y:Number(p.y)||0}:null}function same(a,b){return!!(a&&b&&Number(a.x)===Number(b.x)&&Number(a.y)===Number(b.y))}
+function authoritative(){try{if(window.BomberDataSync&&BomberDataSync.active&&BomberDataSync.role==='guest')return false;if(window.B115&&B115.role==='guest')return false}catch(e){}return true}
+function travelFuseSeconds(b){var g=G(),speed=Math.max(3,Math.min(8,Number(b&&b.moveSpeed)||5)),fps=Number(g&&g.fps)||50,tile=Number(g&&g.tileSize)||32,h=Math.max(1,(g&&g.tilesX||17)-3),v=Math.max(1,(g&&g.tilesY||13)-3),steps=2*(h+v)+4;return Math.max(6.5,Math.min(9.5,(steps*tile)/(speed*fps)+.85))}
+function markToken(b,n,longFuse){if(!b||b.exploded||!(n>0))return;/* A Kick token belongs only to the bomb that actually consumed it. Moving/pushing another bomb never transfers this marker. */b.__v1621KickTokens=Math.max(1,Math.floor(Number(b.__v1621KickTokens)||0),Math.floor(Number(n)||0));b.__v1621KickTokenOwner=true;b.__v1621KickTokenId=b.__v1621KickTokenId||('kick-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));if(longFuse){b.__v1621TravelThrown=true;b.timerMax=Math.max(Number(b.timerMax)||2,travelFuseSeconds(b));if(b.endTime)b.endTime=Date.now()+b.timerMax*1000}}
+function bonusAt(p){var g=G();if(!g)return false;for(var i=0;i<(g.bonuses||[]).length;i++)if(g.bonuses[i]&&same(g.bonuses[i].position,p))return true;return false}
+function actorAt(p){var g=G(),a=g&&g.getPlayersAndBots?g.getPlayersAndBots():[];for(var i=0;i<a.length;i++)if(a[i]&&a[i].alive!==false&&same(a[i].position,p))return true;return false}
+function material(p){var g=G();return g&&g.getTileMaterial?g.getTileMaterial(p):'wall'}
+function openDrop(origin,index){var g=G();if(!g)return null;var dirs=[{x:0,y:0},{x:1,y:0},{x:0,y:1},{x:-1,y:0},{x:0,y:-1},{x:1,y:1},{x:-1,y:1},{x:1,y:-1},{x:-1,y:-1}];for(var r=0;r<=3;r++)for(var i=0;i<dirs.length;i++){var p={x:origin.x+dirs[i].x*r,y:origin.y+dirs[i].y*r};if(p.x<=0||p.y<=0||p.x>=g.tilesX-1||p.y>=g.tilesY-1)continue;if(material(p)==='grass'&&!bonusAt(p)&&!actorAt(p))return p}return clone(origin)}
+function spawnKick(p){var g=G();if(!g||!p||!authoritative())return null;try{var b=new Bonus(clone(p),4);b.type='kick';b.__v1621Circulated=true;g.bonuses.push(b);if(window.BomberKick161&&BomberKick161.ensureKickDistribution){}return b}catch(e){return null}}
+function returnTokens(origin,count){count=Math.max(0,Math.floor(Number(count)||0));if(!count||!authoritative())return;var g=G();if(!g)return;setTimeout(function(){var gg=G();if(!gg||gg!==g)return;for(var i=0;i<count;i++){var p=openDrop(origin,i);spawnKick(p)}try{if(gg.updateStatHud)gg.updateStatHud()}catch(e){}},520)}
+function patchKickLifecycle(){
+ // Player and Bot need separate *own* install flags. Bot inherits from Player,
+ // so a shared prototype flag can accidentally skip the Bot travel-bomb hook.
+ if(window.Player&&!Object.prototype.hasOwnProperty.call(Player.prototype,'__v1621PlayerKickLifecycle')){Player.prototype.__v1621PlayerKickLifecycle=true;var oldTry=Player.prototype.tryKickBomb,oldPlace=Player.prototype.placeBomb,oldDie=Player.prototype.die;
+  if(oldTry)Player.prototype.tryKickBomb=function(b,d){var before=Math.max(0,Number(this.bombKickCharges)||0),r=oldTry.apply(this,arguments),after=Math.max(0,Number(this.bombKickCharges)||0);if(r&&before>after)markToken(b,1,false);return r};
+  if(oldPlace)Player.prototype.placeBomb=function(){var before=Math.max(0,Number(this.bombKickCharges)||0),armed=!!this.bombKickArmed,b=oldPlace.apply(this,arguments),after=Math.max(0,Number(this.bombKickCharges)||0);if(b&&armed&&before>after&&b.__v160Moving)markToken(b,1,true);return b};
+  if(oldDie)Player.prototype.die=function(){if(!this.__v1621DroppedHeldKicks){var n=Math.max(0,Math.floor(Number(this.bombKickCharges)||0));if(n){this.__v1621DroppedHeldKicks=true;this.bombKickCharges=0;if(this.bonusCounts)this.bonusCounts.kick=0;returnTokens(clone(this.position),n)}}return oldDie.apply(this,arguments)};
+ }
+ if(window.Bot&&!Object.prototype.hasOwnProperty.call(Bot.prototype,'__v1621BotKickLifecycle')){Bot.prototype.__v1621BotKickLifecycle=true;var oldPlant=Bot.prototype.plantBomb,oldDieB=Bot.prototype.die;
+  if(oldPlant)Bot.prototype.plantBomb=function(){var before=Math.max(0,Number(this.bombKickCharges)||0),b=oldPlant.apply(this,arguments),after=Math.max(0,Number(this.bombKickCharges)||0);if(b&&before>after&&b.__v160Moving)markToken(b,1,true);return b};
+  if(oldDieB)Bot.prototype.die=function(){if(!this.__v1621DroppedHeldKicks){var n=Math.max(0,Math.floor(Number(this.bombKickCharges)||0));if(n){this.__v1621DroppedHeldKicks=true;this.bombKickCharges=0;if(this.bonusCounts)this.bonusCounts.kick=0;returnTokens(clone(this.position),n)}}return oldDieB.apply(this,arguments)};
+ }
+ if(window.Bomb&&!Object.prototype.hasOwnProperty.call(Bomb.prototype,'__v1621KickReturn')){Bomb.prototype.__v1621KickReturn=true;var oldExp=Bomb.prototype.explode;Bomb.prototype.explode=function(){if(this.exploded)return oldExp.apply(this,arguments);var owns=!!this.__v1621KickTokenOwner,n=owns?Math.max(0,Math.floor(Number(this.__v1621KickTokens)||0)):0,p=clone(this.position),r=oldExp.apply(this,arguments);if(this.exploded&&n&&!this.__v1621KickReturnScheduled){this.__v1621KickReturnScheduled=true;this.__v1621KickTokenOwner=false;this.__v1621KickTokens=0;returnTokens(p,n)}return r}}
+ return true
+}
+function ensureStyle(){if($('v1621FixStyle'))return;var s=document.createElement('style');s.id='v1621FixStyle';s.textContent=`
+.qol_stat_box{width:148px!important;min-height:36px!important}.qol_stat_values{gap:4px!important}.qol_stat_item{min-width:23px!important}
+#v160KickHud{width:auto!important;max-width:126px!important;white-space:nowrap!important}
+body.qol_toolbar_active .game_toolbar{width:min(96vw,545px)!important;max-width:545px!important;box-sizing:border-box!important;flex-wrap:nowrap!important;overflow:visible!important}
+#onlineMatchBar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;width:100%!important;min-width:0!important;max-width:545px!important;box-sizing:border-box!important}
+#onlineMatchBar[hidden]{display:none!important}#v137MatchStatus,#onlineMatchStatus{min-width:0!important;flex:1 1 auto!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}#onlineDisconnectBtn{flex:0 0 auto!important;white-space:nowrap!important;margin:0!important}
+@media(max-width:640px){.qol_stat_box{width:126px!important}.qol_stat_item{min-width:20px!important}.qol_stat_values{gap:2px!important}}
+`;document.head.appendChild(s)}
+function validRound(g){if(!g||!g.stage)return false;var children=0;try{children=g.stage.getNumChildren()}catch(e){}return (g.tiles&&g.tiles.length>20)&&children>100}
+function repairRound(g,serial){if(!g||serial!==g.__v1621RestartSerial||validRound(g))return true;if(g.__v1621Repairing)return false;g.__v1621Repairing=true;try{if(window.gInputEngine)gInputEngine.removeAllListeners();if(g.resetSpectating)g.resetSpectating();if(g.stage)g.stage.removeAllChildren();g.bombs=[];g.tiles=[];g.bonuses=[];g.__v161KickPlanned=false;g.setup();return validRound(g)}catch(e){try{console.warn('Bomberman rematch repair',e)}catch(x){}return false}finally{g.__v1621Repairing=false}}
+function patchRestart(){if(!window.GameEngine||GameEngine.prototype.__v1621RestartIntegrity)return false;GameEngine.prototype.__v1621RestartIntegrity=true;var old=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){var serial=this.__v1621RestartSerial=(Number(this.__v1621RestartSerial)||0)+1,r,err=null;try{r=old.apply(this,arguments)}catch(e){err=e}repairRound(this,serial);var self=this;setTimeout(function(){repairRound(self,serial)},0);setTimeout(function(){repairRound(self,serial)},80);if(err&&validRound(this)){try{console.warn('Recovered rematch setup after error',err)}catch(x){}}else if(err)throw err;return r};return true}
+function refreshAll(){var g=G();if(!g)return;(g.players||[]).concat(g.bots||[]).forEach(function(e){if(!e)return;e.bonusCounts=e.bonusCounts||{};e.bonusCounts.kick=Math.max(0,Number(e.bombKickCharges)||0)});try{if(g.updateStatHud)g.updateStatHud()}catch(e){}}
+function install(){if(installed)return true;if(!window.Player||!window.Bot||!window.Bomb||!window.Bonus||!window.GameEngine||!window.BomberKick160)return false;installed=true;ensureStyle();patchKickLifecycle();patchRestart();setInterval(function(){ensureStyle();patchKickLifecycle();refreshAll()},120);window.BomberFix1621={version:VERSION,travelFuseSeconds:travelFuseSeconds,spawnKick:spawnKick,returnTokens:returnTokens,validRound:validRound,repairRound:repairRound};return true}
+var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},25);
+})();

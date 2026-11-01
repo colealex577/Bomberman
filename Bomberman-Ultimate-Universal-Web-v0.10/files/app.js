@@ -9,12 +9,13 @@ class StorageError extends Error{constructor(msg){super();this.name='StorageErro
 // Classic Grid, then the player may choose another map or Random Shuffle.
 try{localStorage.setItem('BombermanSingleMapV133','classic');localStorage.setItem('BombermanMultiMapV133','classic')}catch(e){}
 function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
+function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader){console.error('Packed runtime loader missing:',id);return}BomberPackedLoader.load(id,src,function(err){if(!err&&cb)cb()})}
 function dataDiagnosticsDisabled(){try{return new URLSearchParams(location.search).get('nodata')==='1'}catch(e){return false}}
 function loadCompatibility(){
  loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',function(){
   loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',function(){
    if(dataDiagnosticsDisabled())return;
-   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=0129',function(){
+   loadPackedScript('net-v0120-data-loader','./files/multiplayer-v0129.js.gz.b64?v=01629',function(){
     loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
      loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120d',function(){
       loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
@@ -25,7 +26,7 @@ function loadCompatibility(){
            loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=0125',function(){
             (function(){
              loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=0125',function(){
-              loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=0126',function(){
+              loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=01629',function(){
                loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
                  loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=0128',function(){
@@ -48,7 +49,7 @@ function loadCompatibility(){
                                   loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01521',function(){
                                    loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=01543',function(){
                                     var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
-                                    loadScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js?v=01622a',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01622b')});
+                                    loadPackedScript('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629',function(){loadPackedScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js.gz.b64?v=01629',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01629',function(){loadScript('runtime-v01624-ui-stability-loader','./files/runtime-v01624-ui-stability.js?v=01629',function(){loadPackedScript('runtime-v01626-ai-test-room-loader','./files/runtime-v01626-ai-test-room.js.gz.b64?v=01629')})})})});
                                    });
                                   });
                                  });
@@ -85,5 +86,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01626r').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01629').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
