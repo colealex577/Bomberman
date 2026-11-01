@@ -36,8 +36,8 @@ try{
  assert.equal(tank.eligible,true);assert.equal(tank.planned,true,'elite simulated human did not build a tank-hit escape plan');assert.equal(tank.before,2);assert.equal(tank.after,1,'tank hit did not spend exactly one heart');assert.equal(tank.alive,true);assert.equal(tank.inv,true);
  console.log('PLANNED_TANK_HIT PASS');
 
- // Simulated-human survivor labels must use the username, not AI SURVIVOR.
- const winner=await p.evaluate(()=>{const sim=gGameEngine.bots.find(b=>b.simulatedHuman);gGameEngine.players.forEach(x=>x.alive=false);gGameEngine.bots.forEach(x=>x.alive=(x===sim));return{name:sim.displayName,label:BomberBehavior157.winnerLabel()}});
+ // Simulated-human survivor labels must use the username, not AI SURVIVOR. Restore state before timers run so this unit check does not end the live round.
+ const winner=await p.evaluate(()=>{const sim=gGameEngine.bots.find(b=>b.simulatedHuman),actors=gGameEngine.players.concat(gGameEngine.bots),states=actors.map(x=>x.alive);gGameEngine.players.forEach(x=>x.alive=false);gGameEngine.bots.forEach(x=>x.alive=(x===sim));const out={name:sim.displayName,label:BomberBehavior157.winnerLabel()};actors.forEach((x,i)=>x.alive=states[i]);return out});
  assert.equal(winner.label,winner.name+' WINS');assert.ok(!/AI SURVIVOR/i.test(winner.label));
  console.log('USERNAME_WINNER_LABEL PASS');
 
