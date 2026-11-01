@@ -1,10 +1,11 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.20';
-window.BomberVersionUIOwner='runtime-v016220-round-end-delay-rematch';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.20',OWNER='runtime-v016220-round-end-delay-rematch';
+window.BomberBuildVersion='v0.16.2.21';
+window.BomberVersionUIOwner='runtime-v016221-return-controls';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.21',OWNER='runtime-v016221-return-controls';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
+early('runtime-v016221-return-controls-loader','./files/runtime-v016221-return-controls.js?v=016221');
 early('runtime-v016220-round-end-delay-rematch-loader','./files/runtime-v016220-round-end-delay-rematch.js?v=016220');
 early('runtime-v016219-travel-capacity-ai-loader','./files/runtime-v016219-travel-capacity-ai.js?v=016219');
 early('runtime-v016218-round-integrity-rematch-loader','./files/runtime-v016218-round-integrity-rematch.js?v=016218');
@@ -31,7 +32,7 @@ early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v
 early('runtime-v016217-ai-mining-spacing-loader','./files/runtime-v016217-ai-mining-spacing.js?v=016217');
 early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
-(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
+(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
