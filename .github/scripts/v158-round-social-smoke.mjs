@@ -32,7 +32,7 @@ try{
  assert.equal(cadence.tense,true);assert.equal(cadence.ambient,false,'ambient chatter was allowed during high tension');assert.equal(cadence.reply,true,'a direct reply to the player was suppressed');
  console.log('TENSION_AWARE_CHAT_GATE PASS');
 
- const event=await p.evaluate(async()=>{BomberRoundSocial158.debug.setLastAiAt(0);const before=document.querySelectorAll('#chatMessages .chat_line').length,ok=BomberRoundSocial158.debug.queueEvent('mid',''),flushed=BomberRoundSocial158.debug.flushEvent();await new Promise(r=>setTimeout(r,1500));const after=document.querySelectorAll('#chatMessages .chat_line').length,text=document.getElementById('chatMessages')?.textContent||'';return{before,after,ok,flushed,text}});
+ const event=await p.evaluate(async()=>{BomberRoundSocial158.debug.resetRound();BomberRoundSocial158.debug.setLastAiAt(0);const before=document.querySelectorAll('#chatMessages .chat_line').length,ok=BomberRoundSocial158.debug.queueEvent('mid',''),flushed=BomberRoundSocial158.debug.flushEvent();await new Promise(r=>setTimeout(r,1500));const after=document.querySelectorAll('#chatMessages .chat_line').length,text=document.getElementById('chatMessages')?.textContent||'';return{before,after,ok,flushed,text}});
  assert.equal(event.ok,true);assert.equal(event.flushed,true);assert.ok(event.after>event.before,'context event did not produce chat');assert.match(event.text,/board|routes|middle|safe part/i);
  console.log('CONTEXT_TRANSITION_CHAT PASS');
 
