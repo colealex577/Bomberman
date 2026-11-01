@@ -2,7 +2,8 @@
 'use strict';
 window.BomberBuildVersion='v0.16.2.18';
 window.BomberVersionUIOwner='runtime-v016218-round-integrity-rematch';
-var VERSION=window.BomberBuildVersion;
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.18',OWNER='runtime-v016218-round-integrity-rematch';
+(function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016218-round-integrity-rematch-loader','./files/runtime-v016218-round-integrity-rematch.js?v=016218');
 early('runtime-v016215-bomb-travel-loader','./files/runtime-v016215-bomb-travel.js?v=016215');
