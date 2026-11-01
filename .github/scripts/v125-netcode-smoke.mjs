@@ -31,7 +31,7 @@ async function waitFor(fn,timeout=20000,step=100){const end=Date.now()+timeout;w
 async function state(page){return page.evaluate(()=>({
   role:B115.role,started:B115.started,dataRole:BomberDataSync.role,ai:BomberV124.getAIEnabled(),difficulty:BomberV125.getDifficulty(),path:BomberV125.connectionPath,
   players:gGameEngine.players.map(p=>({alive:p.alive,x:p.bmp.x,y:p.bmp.y,gx:p.position.x,gy:p.position.y,v:p.velocity,bm:p.bombsMax,bs:p.bombStrength,escape:p.escapeBomb&&p.escapeBomb.__dataNetId||''})),
-  bots:gGameEngine.bots.map(b=>({sim:!!b.simulatedHuman,v:b.velocity,d:b.v125Difficulty||''})),
+  bots:gGameEngine.bots.map(b=>({sim:!!b.simulatedHuman,v:b.velocity,d:b.v125Difficulty||'',start:b.startTimerMax})),
   bombs:gGameEngine.bombs.filter(b=>b&&!b.exploded).map(b=>({id:b.__dataNetId||'',x:b.position.x,y:b.position.y,owner:b.__v125OwnerSlot})),
   version:document.getElementById('buildVersion125')?.textContent
 }))}
@@ -62,20 +62,16 @@ try{
   if(a.path!=='reverse-host'||b.path!=='reverse-guest')throw new Error('reverse hosting fallback was not used');
   if(a.difficulty!=='hard'||b.difficulty!=='hard')throw new Error('AI difficulty did not synchronize from host');
   if(a.bots.filter(x=>!x.sim).length!==2||b.bots.filter(x=>!x.sim).length!==2)throw new Error('AI bots missing in difficulty test');
-  if(a.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2.4)>.05)||b.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2.4)>.08))throw new Error('hard difficulty speed not applied consistently');
+  if(a.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2)>.05)||b.bots.filter(x=>!x.sim).some(x=>Math.abs(x.v-2)>.08))throw new Error('difficulty changed AI foot speed; base speed must remain 2.0');
   const expected=JSON.stringify([{0:{points:'610',pseudo:'none'},3:{points:'830',pseudo:'none'}},{0:{points:'610',pseudo:'none'},3:{points:'830',pseudo:'none'}}]);
   const labelsReady=await waitFor(async()=>JSON.stringify(await Promise.all([humanPoints(A.page),humanPoints(B.page)]))===expected,5000,70);
   if(!labelsReady)throw new Error('point labels did not populate with the correct player scores');
   const samples=[];for(let i=0;i<12;i++){samples.push(await Promise.all([humanPoints(A.page),humanPoints(B.page)]));await sleep(70)}
   for(const s of samples){if(JSON.stringify(s)!==expected)throw new Error('point labels flicker or map to wrong player: '+JSON.stringify(s))}
-  console.log('REVERSE_DIFFICULTY_SCORE PASS');
+  console.log('REVERSE_DIFFICULTY_SCORE_AND_STANDARD_SPEED PASS');
   if([...A.errors,...B.errors].length)throw new Error('phase 1 browser errors: '+[...A.errors,...B.errors].join(' | '));
   await closeClient(A);await closeClient(B);A=B=null;
 
-  // Movement, press-time bombs, escape, pickups and stale snapshots are now exercised
-  // by authoritative-network-test.mjs under real transport delay. The retired fixture
-  // teleported the guest while disabling position transmission; accepting that teleport
-  // would violate host authority. Keep reverse connectivity/difficulty/profile regressions here.
   console.log('V125_NETCODE_SMOKE PASS');
 }finally{
   await closeClient(A);await closeClient(B);await closeClient(C);await closeClient(D);await browser.close().catch(()=>{});
