@@ -18,6 +18,7 @@ early('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js?v=016
 early('runtime-v0161-bomb-kick-polish-loader','./files/runtime-v0161-bomb-kick-polish.js?v=0161b');
 early('runtime-v0161-bomb-kick-compat-loader','./files/runtime-v0161-bomb-kick-compat.js?v=0161c');
 early('runtime-v0161-speed-standard-loader','./files/runtime-v0161-speed-standard.js?v=0161s');
+early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-chat-cleanup.js?v=0161l');
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
