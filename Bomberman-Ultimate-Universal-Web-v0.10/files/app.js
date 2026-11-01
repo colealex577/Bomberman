@@ -48,7 +48,7 @@ function loadCompatibility(){
                                   loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01521',function(){
                                    loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=01543',function(){
                                     var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
-                                    loadScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js?v=01623',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01622b',function(){loadScript('runtime-v01624-ui-stability-loader','./files/runtime-v01624-ui-stability.js?v=01624')})});
+                                    loadScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js?v=01622a',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01622b')});
                                    });
                                   });
                                  });
@@ -85,5 +85,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01625').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01626r').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
