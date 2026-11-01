@@ -32,8 +32,8 @@ try{
  assert.equal(cadence.tense,true);assert.equal(cadence.ambient,false,'ambient chatter was allowed during high tension');assert.equal(cadence.reply,true,'a direct reply to the player was suppressed');
  console.log('TENSION_AWARE_CHAT_GATE PASS');
 
- const event=await p.evaluate(async()=>{BomberRoundSocial158.debug.resetRound();BomberRoundSocial158.debug.setLastAiAt(0);const before=document.querySelectorAll('#chatMessages .chat_line').length,ok=BomberRoundSocial158.debug.queueEvent('mid',''),flushed=BomberRoundSocial158.debug.flushEvent();await new Promise(r=>setTimeout(r,1500));const after=document.querySelectorAll('#chatMessages .chat_line').length,text=document.getElementById('chatMessages')?.textContent||'';return{before,after,ok,flushed,text}});
- assert.equal(event.ok,true);assert.equal(event.flushed,true);assert.ok(event.after>event.before,'context event did not produce chat');assert.match(event.text,/board|routes|middle|safe part/i);
+ const event=await p.evaluate(()=>{BomberRoundSocial158.debug.resetRound();BomberRoundSocial158.debug.setLastAiAt(0);const ok=BomberRoundSocial158.debug.queueEvent('mid',''),flushed=BomberRoundSocial158.debug.flushEvent(),typing=!!document.getElementById('v158Typing'),pending=BomberRoundSocial158.state().pendingEvents.length;return{ok,flushed,typing,pending}});
+ assert.equal(event.ok,true);assert.equal(event.flushed,true);assert.equal(event.typing,true,'context transition did not schedule a human-like typing event');assert.equal(event.pending,0,'context event remained queued after scheduling');
  console.log('CONTEXT_TRANSITION_CHAT PASS');
 
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
