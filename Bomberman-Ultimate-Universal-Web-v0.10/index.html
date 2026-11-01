@@ -29,12 +29,20 @@
     <script src="./files/mobile.js?v=0119"></script>
     <script src="./files/app.js?v=01624"></script>
     <script src="./files/runtime-v01625-ai-guard.js?v=01625"></script>
-    <script src="./files/runtime-v01626-safe-ui.js?v=01626"></script>
     <script src="./files/hotfix-0117.js?v=0119"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
 
     <style id="ios-v0111-hotfix">
+    [id^="buildVersion"], #releaseBadge1561 { display:none !important; }
+    #currentVersionBadge1626 {
+      display:block !important; position:fixed;
+      top:calc(env(safe-area-inset-top,0px) + 5px);
+      left:calc(env(safe-area-inset-left,0px) + 6px);
+      z-index:2147483647; padding:2px 5px; border-radius:4px;
+      background:rgba(0,0,0,.72); color:#fff;
+      font:700 9px/1.25 Arial,sans-serif; pointer-events:none;
+    }
     @media (hover: none), (pointer: coarse) {
       body:not(.desktop-ui) .mobile_controls {
         position: fixed; z-index: 3000;
@@ -52,6 +60,7 @@
     </style>
 </head>
 <body>
+    <div id="currentVersionBadge1626" aria-label="Game version">v0.16.2.6</div>
     <div class="container">
         <div class="game_toolbar">
             <button id="ultimateModeBtn" class="ultimate_mode_btn" type="button" aria-pressed="false">ULTIMATE MODE: OFF</button>
