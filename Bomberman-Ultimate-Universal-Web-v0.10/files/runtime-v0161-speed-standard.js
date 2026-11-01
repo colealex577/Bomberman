@@ -21,16 +21,27 @@ function initialize(e){
 function desired(e){initialize(e);return BASE+Math.max(0,num(e&&e.__v161LegitSpeedBonus,0))}
 function normalize(e){if(!isAI(e))return false;initialize(e);var v=desired(e);if(Math.abs(num(e.velocity,v)-v)>.0001)e.velocity=v;e.hyperAggroSpeedApplied=true;return true}
 function normalizeAll(){var g=G();if(!g)return;(g.bots||[]).forEach(normalize);if(g.simulatedOpponent)normalize(g.simulatedOpponent)}
+function applyRecordedSpeed(e,beforeCount){var expected=STEP*(G()&&G().ultimateMode?5:1);e.__v161LegitSpeedBonus=Math.max(0,num(e.__v161LegitSpeedBonus,0)+expected);e.bonusCounts=e.bonusCounts||{};e.bonusCounts.speed=Math.max(speedCount(e),beforeCount+1)}
 function patchApplyBonus(){
  if(!window.Player||!Player.prototype.applyBonus)return false;var cur=Player.prototype.applyBonus;if(cur.__v161SpeedRule)return true;
  function wrapped(bonus){
   if(!isAI(this))return cur.apply(this,arguments);
   initialize(this);var speed=bonus&&bonus.type==='speed',beforeCount=speedCount(this),nested=num(this.__v161SpeedApplyDepth,0);this.__v161SpeedApplyDepth=nested+1;
   var r;try{r=cur.apply(this,arguments)}finally{this.__v161SpeedApplyDepth=nested}
-  if(speed&&!nested){var expected=STEP*(G()&&G().ultimateMode?5:1);this.__v161LegitSpeedBonus=Math.max(0,num(this.__v161LegitSpeedBonus,0)+expected);this.bonusCounts=this.bonusCounts||{};this.bonusCounts.speed=Math.max(speedCount(this),beforeCount+1)}
+  if(speed&&!nested)applyRecordedSpeed(this,beforeCount);
   normalize(this);return r
  }
  wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;Player.prototype.applyBonus=wrapped;return true
+}
+function patchBotApplyBonus(){
+ if(!window.Bot||!Bot.prototype.applyBonus)return false;var cur=Bot.prototype.applyBonus;if(cur.__v161SpeedRule)return true;
+ function wrapped(bonus){
+  initialize(this);var speed=bonus&&bonus.type==='speed',beforeCount=speedCount(this),nested=num(this.__v161SpeedApplyDepth,0);this.__v161SpeedApplyDepth=nested+1;
+  var r;try{r=cur.apply(this,arguments)}finally{this.__v161SpeedApplyDepth=nested}
+  if(speed&&!nested)applyRecordedSpeed(this,beforeCount);
+  normalize(this);return r
+ }
+ wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;Bot.prototype.applyBonus=wrapped;return true
 }
 function patchBotUpdate(){
  if(!window.Bot||!Bot.prototype.update)return false;var cur=Bot.prototype.update;if(cur.__v161SpeedRule)return true;
@@ -48,7 +59,7 @@ function patchAggro(){
  wrapped.__v161SpeedRule=true;wrapped.__v161Wrapped=cur;Bot.prototype.updateEndgameAggression=wrapped;return true
 }
 function difficultyCopy(){var el=document.querySelector('#v125DifficultySetting .v125_diff_note');if(!el||!window.BomberV125||!BomberV125.getDifficulty)return;var d=BomberV125.getDifficulty(),t={easy:'Slower reactions and less aggressive bombing.',normal:'Balanced reactions and decision-making.',hard:'Quicker decisions and earlier late-game pressure.',expert:'Fastest reactions, aggressive bombing, and early pressure.'}[d];if(t&&el.textContent!==t)el.textContent=t}
-function install(){patchApplyBonus();patchBotInit();patchBotUpdate();patchAggro();normalizeAll();difficultyCopy();return !!(window.Bot&&window.Player)}
+function install(){patchApplyBonus();patchBotApplyBonus();patchBotInit();patchBotUpdate();patchAggro();normalizeAll();difficultyCopy();return !!(window.Bot&&window.Player)}
 window.BomberSpeed161={version:VERSION,base:BASE,step:STEP,desiredSpeed:desired,normalize:normalize,normalizeAll:normalizeAll};
 var tries=0,t=setInterval(function(){install();if(++tries>1200)clearInterval(t)},25);setInterval(install,90);
 })();
