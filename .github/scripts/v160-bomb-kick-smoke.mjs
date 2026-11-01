@@ -47,11 +47,11 @@ try{
  assert.equal(mobile.shown,true);assert.equal(mobile.hiddenAfter,true);
  console.log('CONTEXT_MOBILE_BUTTON PASS');
  await p.evaluate(()=>{gGameEngine.menu.show();BomberKick160.startTutorial()});
- await p.waitForFunction(()=>BomberKick160.state.tutorial&&BomberKick160.state.tutorialPlayer&&BomberKick160.state.tutorialBot,{timeout:5000});
- const tutorial=await p.evaluate(()=>({panel:!document.getElementById('v160TutorialPanel').hidden,step:BomberKick160.state.tutorialStep,dummy:!!BomberKick160.state.tutorialBot.tutorialDummy,botVisible:BomberKick160.state.tutorialBot.bmp.visible,text:document.getElementById('v160TutorialText').textContent}));
- assert.equal(tutorial.panel,true);assert.equal(tutorial.step,0);assert.equal(tutorial.dummy,true);assert.equal(tutorial.botVisible,false);assert.match(tutorial.text,/Move with/i);
+ await p.waitForFunction(()=>BomberKick160.state.tutorial&&BomberKick160.state.tutorialPlayer,{timeout:5000});await sleep(350);
+ const tutorial=await p.evaluate(()=>({panel:!document.getElementById('v160TutorialPanel').hidden,step:BomberKick160.state.tutorialStep,bots:gGameEngine.bots.length,botOwnedBombs:gGameEngine.bombs.filter(b=>b.owner&&b.owner.isBot).length,text:document.getElementById('v160TutorialText').textContent}));
+ assert.equal(tutorial.panel,true);assert.equal(tutorial.step,0);assert.equal(tutorial.bots,0);assert.equal(tutorial.botOwnedBombs,0);assert.match(tutorial.text,/Move with/i);
  await p.evaluate(()=>BomberKick160.exitTutorial());await sleep(200);assert.equal(await p.evaluate(()=>BomberKick160.state.tutorial),false);
- console.log('PASSIVE_TUTORIAL_FLOW PASS');
+ console.log('ISOLATED_TUTORIAL_FLOW PASS');
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  console.log('V160_BOMB_KICK_SMOKE PASS');
 }finally{await ctx.close().catch(()=>{});await browser.close().catch(()=>{})}
