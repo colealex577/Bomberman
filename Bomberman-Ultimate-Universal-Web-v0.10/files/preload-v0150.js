@@ -4,7 +4,7 @@ window.BomberBuildVersion='v0.16.2.14';
 window.BomberVersionUIOwner='runtime-v016214-launch-speed-version';
 var VERSION=window.BomberBuildVersion;
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
-early('runtime-v016214-launch-speed-version-loader','./files/runtime-v016214-launch-speed-version.js?v=016214');
+early('runtime-v016214-launch-speed-version-loader','./files/runtime-v016214-launch-speed-version.js?v=016214b');
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=01629');
 early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=0153');
