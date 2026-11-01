@@ -4,17 +4,25 @@ var VERSION='v0.16.2.6',installed=false;
 window.BOMBERMAN_BUILD_VERSION=VERSION;
 function $(id){return document.getElementById(id)}
 function setText(el,text){if(el&&el.textContent!==text)el.textContent=text}
+function protectTitle(){
+ try{
+  if(document.__v1626TitleGuard)return;
+  var d=Object.getOwnPropertyDescriptor(Document.prototype,'title');if(!d||!d.get||!d.set)return;
+  Object.defineProperty(document,'title',{configurable:true,enumerable:d.enumerable,get:function(){return d.get.call(this)},set:function(v){var s=String(v||'');if(/^Bomberman\s+v/i.test(s))s='Bomberman '+VERSION;return d.set.call(this,s)}});
+  document.__v1626TitleGuard=true
+ }catch(e){}
+}
 function ensureStyle(){
  var s=$('v1626SafeStyle');if(s)return;s=document.createElement('style');s.id='v1626SafeStyle';s.textContent=`
-[id^="buildVersion"]:not(#buildVersion1626),#releaseBadge1561,#v139SearchShield{display:none!important}
-#buildVersion1626{display:block!important;position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.72);color:#fff;font:700 9px/1.25 Arial,sans-serif;pointer-events:none}
+[id^="buildVersion"],#releaseBadge1561,#v139SearchShield{display:none!important}
+#currentVersionBadge1626{display:block!important;position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.72);color:#fff;font:700 9px/1.25 Arial,sans-serif;pointer-events:none}
 #onlineMatchStatus{display:none!important}#v137MatchStatus{display:inline-block!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;(document.head||document.documentElement).appendChild(s)
 }
 function version(){
- ensureStyle();window.BOMBERMAN_BUILD_VERSION=VERSION;
+ protectTitle();ensureStyle();window.BOMBERMAN_BUILD_VERSION=VERSION;
  if(!document.body)return;
- var b=$('buildVersion1626');if(!b){b=document.createElement('div');b.id='buildVersion1626';b.setAttribute('aria-label','Game version');document.body.appendChild(b)}setText(b,VERSION);
+ var b=$('currentVersionBadge1626');if(!b){b=document.createElement('div');b.id='currentVersionBadge1626';b.setAttribute('aria-label','Game version');document.body.appendChild(b)}setText(b,VERSION);
  if(document.title!=='Bomberman '+VERSION)document.title='Bomberman '+VERSION;
  var old=$('v139SearchShield');if(old&&!old.hidden)old.hidden=true
 }
