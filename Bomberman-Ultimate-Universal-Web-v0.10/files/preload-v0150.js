@@ -10,6 +10,7 @@ function early(id,src){if(document.getElementById(id))return;var s=document.crea
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
 early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016223');
 early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016224');
+early('runtime-v016224-spectator-chat-bridge-loader','./files/runtime-v016224-spectator-chat-bridge.js?v=016224b');
 early('runtime-v016221-return-controls-loader','./files/runtime-v016221-return-controls.js?v=016221');
 early('runtime-v016220-round-end-delay-rematch-loader','./files/runtime-v016220-round-end-delay-rematch.js?v=016220');
 early('runtime-v016219-travel-capacity-ai-loader','./files/runtime-v016219-travel-capacity-ai.js?v=016219');
@@ -37,7 +38,7 @@ early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v
 early('runtime-v016217-ai-mining-spacing-loader','./files/runtime-v016217-ai-mining-spacing.js?v=016217');
 early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
-(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
+(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224&&window.BomberChatBridge16224){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1');document.body.setAttribute('data-v016224-chat-bridge','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
