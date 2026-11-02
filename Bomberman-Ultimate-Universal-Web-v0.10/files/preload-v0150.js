@@ -1,17 +1,30 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.24';
-window.BomberVersionUIOwner='runtime-v016224-observer-sim-chat';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.24',OWNER='runtime-v016224-observer-sim-chat';
+window.BomberBuildVersion='v0.16.2.25';
+window.BomberVersionUIOwner='runtime-v016225-friends-directional';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.25',OWNER='runtime-v016225-friends-directional';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{t.textContent=TITLE;document.title=TITLE}catch(e){}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
-/* Install before the legacy Bomb Kick runtime: E/Q are direct throws, never arm toggles. */
-(function(){if(window.__v16222PreloadKeyCapture)return;window.__v16222PreloadKeyCapture=true;function editable(t){var q=String(t&&t.tagName||'').toLowerCase();return q==='input'||q==='textarea'||q==='select'||!!(t&&t.isContentEditable)}function dispatch(code,down){try{if(window.BomberFix16222&&BomberFix16222.directKey)return BomberFix16222.directKey(code,down)}catch(e){}if(!down)return true;var idx=code==='KeyQ'?1:0,g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(p&&p.throwBombNow){p.throwBombNow();return true}return false}function handle(e,down){if(editable(e.target)||!({KeyE:1,KeyQ:1})[e.code])return;e.preventDefault();e.stopImmediatePropagation();if(down&&e.repeat)return;dispatch(e.code,down)}window.addEventListener('keydown',function(e){handle(e,true)},true);window.addEventListener('keyup',function(e){handle(e,false)},true)})();
+/* E/Q still throw immediately. During the short direct-throw window, a direction key chooses launch direction without changing movement. */
+(function(){
+ if(window.__v16225PreloadChordCapture)return;window.__v16225PreloadChordCapture=true;
+ var states=[{down:false,used:false,timer:null},{down:false,used:false,timer:null}],swallowed={};
+ function editable(t){var q=String(t&&t.tagName||'').toLowerCase();return q==='input'||q==='textarea'||q==='select'||!!(t&&t.isContentEditable)}
+ function defaultThrow(idx){var code=idx===1?'KeyQ':'KeyE';try{if(window.BomberFix16222&&BomberFix16222.directKey)return BomberFix16222.directKey(code,true)}catch(e){}var g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(p&&p.throwBombNow){p.throwBombNow();return true}return false}
+ function explicitThrow(idx,d){try{if(window.BomberFriends16225&&BomberFriends16225.throwDirectionIndex)return BomberFriends16225.throwDirectionIndex(idx,d)}catch(e){}var g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(!p||!p.throwBombNow)return false;var old=p.getBombKickDirection,had=!!p.lastMoveDirection,last=had?{x:p.lastMoveDirection.x,y:p.lastMoveDirection.y}:null;p.getBombKickDirection=function(){return{x:d.x,y:d.y}};p.lastMoveDirection={x:d.x,y:d.y};try{return p.throwBombNow()}finally{if(old)p.getBombKickDirection=old;else try{delete p.getBombKickDirection}catch(x){}if(had)p.lastMoveDirection=last}}
+ function dirFor(idx,code){var m=idx===0?{KeyW:{x:0,y:-1},KeyA:{x:-1,y:0},KeyS:{x:0,y:1},KeyD:{x:1,y:0}}:{ArrowUp:{x:0,y:-1},ArrowLeft:{x:-1,y:0},ArrowDown:{x:0,y:1},ArrowRight:{x:1,y:0}};return m[code]||null}
+ function stop(e){e.preventDefault();e.stopImmediatePropagation()}
+ function modDown(e,idx){stop(e);if(e.repeat)return;var st=states[idx];if(st.timer)clearTimeout(st.timer);st.down=true;st.used=false;st.timer=setTimeout(function(){st.timer=null;if(st.down&&!st.used){st.used=true;defaultThrow(idx)}},85)}
+ function modUp(e,idx){stop(e);var st=states[idx];if(st.timer){clearTimeout(st.timer);st.timer=null}if(st.down&&!st.used)defaultThrow(idx);st.down=false;st.used=false}
+ window.addEventListener('keydown',function(e){if(editable(e.target))return;if(e.code==='KeyE'){modDown(e,0);return}if(e.code==='KeyQ'){modDown(e,1);return}for(var i=0;i<2;i++){var st=states[i],d=dirFor(i,e.code);if(d&&st.down&&!st.used){stop(e);if(e.repeat)return;swallowed[e.code]=i;if(st.timer){clearTimeout(st.timer);st.timer=null}st.used=true;explicitThrow(i,d);return}}},true);
+ window.addEventListener('keyup',function(e){if(editable(e.target))return;if(e.code==='KeyE'){modUp(e,0);return}if(e.code==='KeyQ'){modUp(e,1);return}if(swallowed[e.code]!==undefined){stop(e);delete swallowed[e.code]}},true)
+})();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
 early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016223c');
 early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016224');
 early('runtime-v016224-authoritative-spectator-chat-loader','./files/runtime-v016224-authoritative-spectator-chat.js?v=016224a');
 early('runtime-v016224-spectator-chat-bridge-loader','./files/runtime-v016224-spectator-chat-bridge.js?v=016224b');
+early('runtime-v016225-friends-directional-loader','./files/runtime-v016225-friends-directional.js?v=016225');
 early('runtime-v016221-return-controls-loader','./files/runtime-v016221-return-controls.js?v=016221');
 early('runtime-v016220-round-end-delay-rematch-loader','./files/runtime-v016220-round-end-delay-rematch.js?v=016220');
 early('runtime-v016219-travel-capacity-ai-loader','./files/runtime-v016219-travel-capacity-ai.js?v=016219');
@@ -39,7 +52,7 @@ early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v
 early('runtime-v016217-ai-mining-spacing-loader','./files/runtime-v016217-ai-mining-spacing.js?v=016217');
 early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
-(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224&&window.BomberAuthoritativeSpectatorChat16224&&window.BomberChatBridge16224){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1');document.body.setAttribute('data-v016224-authoritative-chat','1');document.body.setAttribute('data-v016224-chat-bridge','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
+(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224&&window.BomberAuthoritativeSpectatorChat16224&&window.BomberChatBridge16224&&window.BomberFriends16225){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1');document.body.setAttribute('data-v016224-authoritative-chat','1');document.body.setAttribute('data-v016224-chat-bridge','1');document.body.setAttribute('data-v016225-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
