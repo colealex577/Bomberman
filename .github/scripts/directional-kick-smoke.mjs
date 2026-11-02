@@ -3,10 +3,24 @@ import assert from 'node:assert/strict';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const contexts=[],errors=[];
-async function client(name){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(n=>{localStorage.setItem('BombermanPlayerName',n);localStorage.setItem('BombermanRatingV1','500');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberFriends16225?.version==='v0.16.2.25'&&window.BomberFriendsProtocol16225?.version==='v0.16.2.25'&&window.BomberFriendsGameRoute16225?.version==='v0.16.2.25'&&window.BomberFix16222&&window.BomberMultiplayer?.ready,{timeout:45000});return p}
+async function client(name){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(n=>{localStorage.setItem('BombermanPlayerName',n);localStorage.setItem('BombermanRatingV1','500');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberFriends16225?.version==='v0.16.2.25'&&window.BomberFriendsProtocol16225?.version==='v0.16.2.25'&&window.BomberFriendsGameRoute16225?.version==='v0.16.2.25'&&window.BomberDirectionalInputHotfix16225?.version==='v0.16.2.25-hotfix1'&&window.BomberFix16222&&window.BomberMultiplayer?.ready,{timeout:45000});return p}
 async function wait(fn,msg,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await sleep(60)}throw new Error(msg)}
+async function auditHumanChordTiming(page){
+ await page.evaluate(()=>{window.__dirAudit=[];window.__dirOrig={throw:BomberFriends16225.throwDirectionIndex,direct:BomberFix16222.directKey};BomberFriends16225.throwDirectionIndex=(idx,d)=>{window.__dirAudit.push({kind:'explicit',idx,d});return true};BomberFix16222.directKey=(code)=>{window.__dirAudit.push({kind:'default',code});return true}});
+ const take=()=>page.evaluate(()=>{const x=window.__dirAudit.slice();window.__dirAudit=[];return x});
+ await page.keyboard.down('KeyE');await sleep(220);await page.keyboard.down('KeyD');await sleep(20);await page.keyboard.up('KeyD');await page.keyboard.up('KeyE');await sleep(80);
+ let calls=await take();assert.equal(calls.length,1,'slow E→D chord should throw exactly once');assert.equal(calls[0].kind,'explicit','slow E→D chord fell back to default E throw');assert.deepEqual(calls[0].d,{x:1,y:0},'slow E→D chord did not choose right');
+ await page.keyboard.down('KeyD');await sleep(100);await page.keyboard.press('KeyE');await sleep(80);await page.keyboard.up('KeyD');await sleep(40);
+ calls=await take();assert.equal(calls.length,1,'held D→E chord should throw exactly once');assert.equal(calls[0].kind,'explicit','held D→E chord did not use held direction');assert.deepEqual(calls[0].d,{x:1,y:0},'held D→E chord did not choose right');
+ await page.keyboard.press('KeyE');await sleep(80);
+ calls=await take();assert.equal(calls.length,1,'plain E tap should throw exactly once');assert.equal(calls[0].kind,'default','plain E tap should retain normal direct throw behavior');
+ await page.evaluate(()=>{BomberFriends16225.throwDirectionIndex=window.__dirOrig.throw;BomberFix16222.directKey=window.__dirOrig.direct;delete window.__dirOrig;delete window.__dirAudit});
+ console.log('HUMAN_TOLERANT_DIRECTION_CHORDS PASS');
+}
 try{
- const host=await client('DirHost'),guest=await client('DirGuest'),room='bomberman-dir-'+Date.now();
+ const host=await client('DirHost'),guest=await client('DirGuest');
+ await auditHumanChordTiming(guest);
+ const room='bomberman-dir-'+Date.now();
  await host.evaluate(id=>{BomberV124.setAIEnabled(false);B115.privateId=()=>id;B115.els.privateCode.value='8';B115.startPrivateHost()},room);
  await sleep(700);
  await guest.evaluate(id=>{BomberV124.setAIEnabled(false);B115.privateId=()=>id;B115.els.privateCode.value='8';B115.startPrivateJoin()},room);
@@ -15,8 +29,8 @@ try{
  await sleep(450);
  await host.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bombs.slice())try{b.explode()}catch(e){}const p=g.players[1],px=Utils.convertToBitmapPosition({x:9,y:9});p.bmp.x=px.x;p.bmp.y=px.y;p.updatePosition();p.bombsMax=3;p.bombKickCharges=2;p.bonusCounts=p.bonusCounts||{};p.bonusCounts.kick=2;p.lastMoveDirection={x:-1,y:0};gInputEngine.actions.left2=true;gInputEngine.actions.right2=false;BomberMultiplayer.publish()});
  assert.equal(await host.evaluate(()=>!!gInputEngine.actions.left2),true,'authoritative remote player was not in running-left state');
- await guest.keyboard.down('KeyE');await sleep(20);await guest.keyboard.down('KeyD');await sleep(15);await guest.keyboard.up('KeyD');await sleep(10);await guest.keyboard.up('KeyE');
- await wait(()=>host.evaluate(()=>gGameEngine.bombs.some(b=>b.__v160Moving&&b.moveDirection?.x===1&&b.moveDirection?.y===0)),'E+D did not create an authoritative right-moving Bomb Kick',8000);
+ await guest.keyboard.down('KeyE');await sleep(220);await guest.keyboard.down('KeyD');await sleep(15);await guest.keyboard.up('KeyD');await sleep(10);await guest.keyboard.up('KeyE');
+ await wait(()=>host.evaluate(()=>gGameEngine.bombs.some(b=>b.__v160Moving&&b.moveDirection?.x===1&&b.moveDirection?.y===0)),'human-speed E+D did not create an authoritative right-moving Bomb Kick',8000);
  const st=await host.evaluate(()=>({left:!!gInputEngine.actions.left2,right:!!gInputEngine.actions.right2,charges:gGameEngine.players[1].bombKickCharges,last:gGameEngine.players[1].lastMoveDirection,bombs:gGameEngine.bombs.map(b=>({moving:!!b.__v160Moving,dir:b.moveDirection}))}));
  assert.equal(st.left,true,'direction chord interrupted existing left movement');
  assert.equal(st.right,false,'direction chord incorrectly changed movement to the throw direction');
