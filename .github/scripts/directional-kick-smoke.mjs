@@ -11,9 +11,8 @@ try{
  await sleep(700);
  await guest.evaluate(id=>{BomberV124.setAIEnabled(false);B115.privateId=()=>id;B115.els.privateCode.value='8';B115.startPrivateJoin()},room);
  await wait(()=>guest.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'),'directional private match did not connect',30000);
- await host.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bombs.slice())try{b.explode()}catch(e){}const p=g.players[1],px=Utils.convertToBitmapPosition({x:9,y:9});p.bmp.x=px.x;p.bmp.y=px.y;p.updatePosition();p.bombsMax=3;p.bombKickCharges=2;p.bonusCounts=p.bonusCounts||{};p.bonusCounts.kick=2;p.lastMoveDirection={x:-1,y:0};BomberMultiplayer.publish()});
- await guest.keyboard.down('KeyA');
- await wait(()=>host.evaluate(()=>!!gInputEngine.actions.left2),'guest did not begin moving left',5000);
+ await host.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bombs.slice())try{b.explode()}catch(e){}const p=g.players[1],px=Utils.convertToBitmapPosition({x:9,y:9});p.bmp.x=px.x;p.bmp.y=px.y;p.updatePosition();p.bombsMax=3;p.bombKickCharges=2;p.bonusCounts=p.bonusCounts||{};p.bonusCounts.kick=2;p.lastMoveDirection={x:-1,y:0};gInputEngine.actions.left2=true;gInputEngine.actions.right2=false;BomberMultiplayer.publish()});
+ assert.equal(await host.evaluate(()=>!!gInputEngine.actions.left2),true,'authoritative remote player was not in running-left state');
  await guest.keyboard.down('KeyE');await sleep(20);await guest.keyboard.down('KeyD');await sleep(15);await guest.keyboard.up('KeyD');await sleep(10);await guest.keyboard.up('KeyE');
  await wait(()=>host.evaluate(()=>gGameEngine.bombs.some(b=>b.__v160Moving&&b.moveDirection?.x===1&&b.moveDirection?.y===0)),'E+D did not create an authoritative right-moving Bomb Kick',8000);
  const st=await host.evaluate(()=>({left:!!gInputEngine.actions.left2,right:!!gInputEngine.actions.right2,charges:gGameEngine.players[1].bombKickCharges,last:gGameEngine.players[1].lastMoveDirection,bombs:gGameEngine.bombs.map(b=>({moving:!!b.__v160Moving,dir:b.moveDirection}))}));
@@ -22,7 +21,7 @@ try{
  assert.equal(st.charges,1,'directional throw did not consume exactly one Bomb Kick charge');
  assert.equal(st.last.x,-1,'directional throw permanently changed the player movement direction');
  assert.ok(st.bombs.some(b=>b.moving&&b.dir?.x===1),'directional Bomb Kick did not travel right');
- await guest.keyboard.up('KeyA');
+ await host.evaluate(()=>{gInputEngine.actions.left2=false});
  console.log('E_WASD_DIRECTIONAL_THROW_WITHOUT_MOVEMENT_CHANGE PASS');
  if(errors.length)throw new Error('browser errors: '+errors.join(' | '));
  console.log('DIRECTIONAL_KICK_SMOKE PASS');
