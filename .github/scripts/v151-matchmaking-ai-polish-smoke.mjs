@@ -8,25 +8,26 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V151Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.22'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.22');
- assert.equal(await p.title(),'Bomberman v0.16.2.22');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.23'&&window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.23');
+ assert.equal(await p.title(),'Bomberman v0.16.2.23');
  const activity=await p.evaluate(()=>({overnight:BomberMatchmaking151.activityForHour(2),early:BomberMatchmaking151.activityForHour(7),day:BomberMatchmaking151.activityForHour(13),peak:BomberMatchmaking151.activityForHour(20)}));
- assert.equal(activity.overnight.band,'overnight');assert.equal(activity.peak.band,'peak');assert.ok(activity.overnight.activity<activity.early.activity&&activity.early.activity<activity.day.activity&&activity.day.activity<activity.peak.activity,'time-of-day activity model did not rise from overnight toward peak');assert.ok(activity.overnight.minSeconds>activity.peak.maxSeconds,'overnight empty-queue fallback was not clearly slower than peak hours');
+ assert.equal(activity.overnight.band,'overnight');assert.equal(activity.peak.band,'peak');assert.ok(activity.overnight.activity<activity.early.activity&&activity.early.activity<activity.day.activity&&activity.day.activity<activity.peak.activity,'time-of-day activity model did not rise from overnight toward peak');assert.ok(activity.overnight.minSeconds>activity.peak.maxSeconds,'overnight activity helper was not clearly slower than peak hours');
 
  await p.evaluate(()=>BomberOnline.openLobby());
- await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&BomberMatchmaking151.debug?.captured(),{timeout:5000});
+ await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&BomberMatchmaking151.debug?.captured()&&BomberPublicPresence16223?.startJoin,{timeout:5000});
  console.log('V151_OWNER',await p.evaluate(()=>BomberMatchmaking151.debug.ownerSource()));
  const firstClick=await p.evaluate(async()=>{
    document.getElementById('publicMatchBtn').click();
-   await new Promise(r=>setTimeout(r,350));
-   const out={kind:B115.kind,role:B115.role,live:BomberMatchmaking151.isLive(),activity:B115.__v0154Activity,fallbackSeconds:B115.__v0154FallbackSeconds};
+   await new Promise(r=>setTimeout(r,450));
+   const out={kind:B115.kind,role:B115.role,live:BomberMatchmaking151.isLive(),presence:BomberPublicPresence16223.state()};
    B115.destroyNetwork();B115.kind='';B115.setRole('offline');
    return out;
  });
  assert.equal(firstClick.kind,'public','first click did not start public matchmaking');
- assert.ok(firstClick.role==='host'||firstClick.role==='guest','first click never entered a matchmaking role');
- assert.equal(firstClick.live,true,'matchmaking repair did not become live');assert.ok(firstClick.activity&&firstClick.activity.band,'public matchmaking did not capture a time-of-day activity band');assert.ok(firstClick.fallbackSeconds>=firstClick.activity.minSeconds&&firstClick.fallbackSeconds<=firstClick.activity.maxSeconds,'fallback timing was outside the selected time band');
+ assert.ok(firstClick.role==='host'||firstClick.role==='guest'||firstClick.role==='simulated','first click never entered a public matchmaking role');
+ assert.equal(firstClick.live,true,'public matchmaking did not become live');
+ assert.equal(firstClick.presence.intent,'join','public click did not route through the real-human-first public presence owner');
 
  const farm=await p.evaluate(()=>({
    near:BomberPolish151.debug.betterFarm({base:5.2,rank:3,yield:3},{base:5,rank:1,yield:1}),

@@ -7,10 +7,12 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V150Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.22'&&window.BomberOpening144?.version==='v0.14.4'&&window.gGameEngine?.menu,{timeout:30000});
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.23'&&window.BomberOpening144?.version==='v0.14.4'&&window.BomberFix16223?.version==='v0.16.2.23'&&window.gGameEngine?.menu,{timeout:30000});
  await p.waitForFunction(()=>gGameEngine.playerBoyImg&&gGameEngine.playerBoyImg.complete&&gGameEngine.tilesImgs?.grass,{timeout:15000});
- assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.22');
- assert.equal(await p.title(),'Bomberman v0.16.2.22');
+ assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.23');
+ assert.equal(await p.title(),'Bomberman v0.16.2.23');
+ assert.match(await p.$eval('#bomb1',e=>e.textContent),/Space = normal bomb.*E = Bomb Kick/);
+ assert.match(await p.$eval('#bomb2',e=>e.textContent),/Shift = normal bomb.*Q = Bomb Kick/);
  await p.evaluate(()=>{B115.setRole('offline');gGameEngine.menu.setMode('single')});
  await p.waitForFunction(()=>gGameEngine.bots?.length>=2&&!gGameEngine.menu.visible,{timeout:8000});
  const result=await p.evaluate(()=>{
