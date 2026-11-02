@@ -9,7 +9,35 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check
+        id: syntax
+        shell: bash
+        run: |
+          set +e
+          : > syntax.log
+          status=0
+          while IFS= read -r file; do
+            if ! node --check "$file" >>syntax.log 2>&1; then
+              echo "FAILED: $file" >>syntax.log
+              status=1
+            fi
+          done < <(find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts \( -name '*.js' -o -name '*.mjs' \) -type f)
+          cat syntax.log
+          exit "$status"
+      - name: Upload syntax diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syntax-diagnostics
+          path: syntax.log
+          retention-days: 1
   regression:
+    needs: syntax
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
@@ -19,8 +47,6 @@ jobs:
         test: [multiplayer-kick-reconnect-smoke, authoritative-network-test, ai-controller-browser, ai-controller-regression, data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, v130-social-smoke, v131-polish-smoke, v132-whole-smoke, v133-maps-smoke, v134-gameplay-smoke, v135-polish-smoke, v136-challenge-smoke, v137-stability-chat-smoke, v138-ai-social-smoke, v139-stability-social-smoke, v141-ai-chat-smoke, v143-intelligence-smoke, v144-opening-smoke, v150-ai-overhaul-smoke, v151-matchmaking-ai-polish-smoke]
     steps:
       - uses: actions/checkout@v4
-      - name: Syntax check
-        run: find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts -name '*.js' -o -name '*.mjs' | xargs -n 1 node --check
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Run browser regression
