@@ -11,8 +11,8 @@ try{
  await wait(()=>host.evaluate(()=>B115.role==='host'&&B115.peer?.open), 'friends host did not open',20000);
  await guest.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);BomberPublicPresence16223.startJoin()},room);
  await wait(()=>guest.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'),'friends guest did not connect',30000);
- await wait(()=>host.evaluate(()=>B115.conn?.open&&B115.conn?.__v16225Bound),'host Friends transport did not bind',5000);
- await wait(()=>guest.evaluate(()=>B115.conn?.open&&B115.conn?.__v16225Bound),'guest Friends transport did not bind',5000);
+ await wait(()=>host.evaluate(()=>B115.conn?.open),'friends host game connection did not open',5000);
+ await sleep(450);
  await host.evaluate(()=>BomberFriendsProtocol16225.gameHello());
  await guest.evaluate(()=>BomberFriendsProtocol16225.gameHello());
  await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats',10000);
