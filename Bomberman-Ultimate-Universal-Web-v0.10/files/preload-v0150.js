@@ -1,14 +1,15 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.23';
-window.BomberVersionUIOwner='runtime-v016223-public-presence-controls';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.23',OWNER='runtime-v016223-public-presence-controls';
+window.BomberBuildVersion='v0.16.2.24';
+window.BomberVersionUIOwner='runtime-v016224-observer-sim-chat';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.24',OWNER='runtime-v016224-observer-sim-chat';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 /* Install before the legacy Bomb Kick runtime: E/Q are direct throws, never arm toggles. */
 (function(){if(window.__v16222PreloadKeyCapture)return;window.__v16222PreloadKeyCapture=true;function editable(t){var q=String(t&&t.tagName||'').toLowerCase();return q==='input'||q==='textarea'||q==='select'||!!(t&&t.isContentEditable)}function dispatch(code,down){try{if(window.BomberFix16222&&BomberFix16222.directKey)return BomberFix16222.directKey(code,down)}catch(e){}if(!down)return true;var idx=code==='KeyQ'?1:0,g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(p&&p.throwBombNow){p.throwBombNow();return true}return false}function handle(e,down){if(editable(e.target)||!({KeyE:1,KeyQ:1})[e.code])return;e.preventDefault();e.stopImmediatePropagation();if(down&&e.repeat)return;dispatch(e.code,down)}window.addEventListener('keydown',function(e){handle(e,true)},true);window.addEventListener('keyup',function(e){handle(e,false)},true)})();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
 early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016223');
+early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016224');
 early('runtime-v016221-return-controls-loader','./files/runtime-v016221-return-controls.js?v=016221');
 early('runtime-v016220-round-end-delay-rematch-loader','./files/runtime-v016220-round-end-delay-rematch.js?v=016220');
 early('runtime-v016219-travel-capacity-ai-loader','./files/runtime-v016219-travel-capacity-ai.js?v=016219');
@@ -36,7 +37,7 @@ early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v
 early('runtime-v016217-ai-mining-spacing-loader','./files/runtime-v016217-ai-mining-spacing.js?v=016217');
 early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
-(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
+(function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
