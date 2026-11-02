@@ -13,8 +13,17 @@ try{
  await wait(()=>guest.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'),'friends guest did not connect',30000);
  await wait(()=>host.evaluate(()=>B115.conn?.open),'friends host game connection did not open',5000);
  await sleep(450);
+ await host.evaluate(()=>{window.__friendPackets=[];B115.conn.on('data',d=>{if(d&&/^friend/.test(String(d.type||'')))window.__friendPackets.push(d)});BomberFriendsGameRoute16225.attach(B115.conn)});
+ await guest.evaluate(()=>{window.__friendPackets=[];B115.conn.on('data',d=>{if(d&&/^friend/.test(String(d.type||'')))window.__friendPackets.push(d)});BomberFriendsGameRoute16225.attach(B115.conn)});
+ console.log('FRIEND_HOST_CONN',JSON.stringify(await host.evaluate(()=>({open:!!B115.conn?.open,peer:B115.conn?.peer,bound:!!B115.conn?.__v16225GameRoute,metadata:B115.conn?.metadata||{},self:BomberFriends16225.selfProfile()}))));
+ console.log('FRIEND_GUEST_CONN',JSON.stringify(await guest.evaluate(()=>({open:!!B115.conn?.open,peer:B115.conn?.peer,bound:!!B115.conn?.__v16225GameRoute,metadata:B115.conn?.metadata||{},self:BomberFriends16225.selfProfile()}))));
  await host.evaluate(()=>BomberFriendsProtocol16225.gameHello());
  await guest.evaluate(()=>BomberFriendsProtocol16225.gameHello());
+ await sleep(2600);
+ console.log('FRIEND_HOST_PACKETS',JSON.stringify(await host.evaluate(()=>window.__friendPackets)));
+ console.log('FRIEND_GUEST_PACKETS',JSON.stringify(await guest.evaluate(()=>window.__friendPackets)));
+ console.log('FRIEND_HOST_DIRECTORY',JSON.stringify(await host.evaluate(()=>BomberFriends16225.directory())));
+ console.log('FRIEND_GUEST_DIRECTORY',JSON.stringify(await guest.evaluate(()=>BomberFriends16225.directory())));
  await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats',10000);
  await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730&&x.wins===14&&x.losses===6)),'guest did not persist host friend stats',10000);
  console.log('FRIEND_HISTORY_GOSSIP PASS');
