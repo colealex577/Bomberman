@@ -127,11 +127,11 @@ function input(dt,action){
 }
 function canPlace(p,x,y){const g=G();return !!(p&&p.alive&&!g.menu.visible&&!g.matchFinished&&Number.isInteger(x)&&Number.isInteger(y)&&x===p.position.x&&y===p.position.y&&g.getTileMaterial({x,y})==='grass'&&!g.bombs.some(b=>!b.exploded&&b.position.x===x&&b.position.y===y)&&p.bombs.filter(b=>!b.exploded).length<p.bombsMax)}
 function plant(p,x,y){
- const g=G();if(!canPlace(p,x,y))return false;p.bombKickArmed=false;
+ const g=G();x=p.position.x;y=p.position.y;if(!canPlace(p,x,y))return false;p.bombKickArmed=false;
  const b=new Bomb({x,y},p.bombStrength);b.owner=p;b.__v125OwnerSlot=1;ensureBomb(b);g.stage.addChild(b.bmp);p.bombs.push(b);g.bombs.push(b);p.escapeBomb=b;b.setExplodeListener(()=>Utils.removeFromArray(p.bombs,b));return b;
 }
 function kickPlant(p,x,y){
- if(!canPlace(p,x,y)||!(Number(p.bombKickCharges)>0))return false;
+ x=p.position.x;y=p.position.y;if(!canPlace(p,x,y)||!(Number(p.bombKickCharges)>0))return false;
  p.bombKickArmed=false;let b=false;
  if(typeof p.throwBombNow==='function')b=p.throwBombNow();
  else if(typeof p.placeBomb==='function'){p.bombKickArmed=true;try{b=p.placeBomb()}finally{p.bombKickArmed=false}}
