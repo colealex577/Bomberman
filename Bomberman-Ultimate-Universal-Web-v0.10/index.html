@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>Bomberman v0.16.2.23</title>
+    <title>Bomberman v0.16.2.25</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,10 +25,10 @@
     <script src="./files/js/InputEngine.js"></script>
     <script src="./files/js/GameEngine.js?v=0119"></script>
     <script src="./files/packed-runtime-loader.js?v=01629"></script>
-    <script src="./files/preload-v0150.js?v=016223"></script>
+    <script src="./files/preload-v0150.js?v=016225"></script>
     <script src="./files/online.js?v=016223"></script>
     <script src="./files/mobile.js?v=0119"></script>
-    <script src="./files/app.js?v=01631"></script>
+    <script src="./files/app.js?v=016225"></script>
     <script src="./files/hotfix-0117.js?v=0119"></script>
     <link rel="stylesheet" type="text/css" href="./files/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="./files/css/style.css?v=0119" />
@@ -160,7 +160,7 @@
 
             <div id="lobbyChoice" class="lobby_choice">
                 <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for your friend to join • another opponent after a short wait</small></button>
-                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Real players first • observe an active round and queue for the next one</small></button>
+                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Players first • active matches open in spectator mode with next-round queue</small></button>
                 <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
             </div>
 
@@ -189,7 +189,7 @@
             <div id="onlineJoinControls" class="lobby_section" hidden>
                 <div class="lobby_state_icon">⌁</div>
                 <h3>Finding player…</h3>
-                <p>Checking every public slot for a real player first. Active matches open in spectator mode and queue you for the next round.</p>
+                <p>Checking every public slot. Active matches open in spectator mode and queue you for the next round.</p>
                 <div id="joinStatus" class="online_status working">Searching…</div>
                 <button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
             </div>
