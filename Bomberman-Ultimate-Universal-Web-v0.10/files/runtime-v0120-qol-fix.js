@@ -103,9 +103,11 @@ function stageElimination(label){
     if(modal){var mt=modal.querySelector('.qol_title'),mc=modal.querySelector('.qol_copy');if(mt)mt.textContent=label||'You’re out';if(mc)mc.textContent='Keep watching the round or return to the menu.';show(modal)}
   },2000)
 }
+function chooseSpectate(){clearEliminationTimer();Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen();document.body.classList.remove('qol_round_live')}
 function fixSpectateButton(){
-  var b=$('qolSpectateBtn');if(!b||b.__cleanSpectate)return;b.__cleanSpectate=true;
-  b.onclick=function(){clearEliminationTimer();Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen();document.body.classList.remove('qol_round_live')}
+  var b=$('qolSpectateBtn');if(!b)return;
+  b.onclick=chooseSpectate;
+  if(!b.__cleanSpectateCapture){b.__cleanSpectateCapture=true;b.addEventListener('click',function(){chooseSpectate();setTimeout(chooseSpectate,0)},true)}
 }
 setInterval(function(){fixSpectateButton();updateGraphicHud()},250);
 
