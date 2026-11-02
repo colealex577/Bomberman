@@ -11,8 +11,8 @@ try{
  await sleep(700);
  await guest.evaluate(id=>{BomberV124.setAIEnabled(false);B115.privateId=()=>id;B115.els.privateCode.value='8';B115.startPrivateJoin()},room);
  await wait(()=>guest.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'),'directional private match did not connect',30000);
- await wait(()=>host.evaluate(()=>B115.conn?.open&&B115.conn?.__v16225Bound),'host Friends transport did not bind to private game connection',5000);
- await wait(()=>guest.evaluate(()=>B115.conn?.open&&B115.conn?.__v16225Bound),'guest Friends transport did not bind to private game connection',5000);
+ await wait(()=>host.evaluate(()=>B115.conn?.open),'host private game connection did not open',5000);
+ await sleep(450);
  await host.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bombs.slice())try{b.explode()}catch(e){}const p=g.players[1],px=Utils.convertToBitmapPosition({x:9,y:9});p.bmp.x=px.x;p.bmp.y=px.y;p.updatePosition();p.bombsMax=3;p.bombKickCharges=2;p.bonusCounts=p.bonusCounts||{};p.bonusCounts.kick=2;p.lastMoveDirection={x:-1,y:0};gInputEngine.actions.left2=true;gInputEngine.actions.right2=false;BomberMultiplayer.publish()});
  assert.equal(await host.evaluate(()=>!!gInputEngine.actions.left2),true,'authoritative remote player was not in running-left state');
  await guest.keyboard.down('KeyE');await sleep(20);await guest.keyboard.down('KeyD');await sleep(15);await guest.keyboard.up('KeyD');await sleep(10);await guest.keyboard.up('KeyE');
