@@ -6,7 +6,7 @@ function clean(v,n){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ')
 function remove(c){var i=registry.indexOf(c);if(i>=0)registry.splice(i,1)}
 function unpack(text){text=String(text||'');if(text.indexOf(MARK)!==0)return null;var rest=text.slice(MARK.length),i=rest.indexOf(MARK);if(i<0)return null;return{name:clean(rest.slice(0,i),14),text:clean(rest.slice(i+MARK.length),160)}}
 function marked(text){return String(text||'').indexOf(MARK)===0}
-function receive(d){var s=S(),p;if(!s||s.role!=='spectator'||!d||d.type!=='chat'||!(p=unpack(d.text)))return;var key=p.name+'\n'+p.text,now=Date.now();if(key===lastSeenKey&&now-lastSeenAt<300)return;lastSeenKey=key;lastSeenAt=now;if(s.appendChat)s.appendChat(p.name,p.text,false)}
+function receive(d){var s=S(),p;if(!s||s.role!=='spectator'||!d||d.type!=='chat'||!(p=unpack(d.text)))return;var key=p.name+'\n'+p.text,now=Date.now();if(key===lastSeenKey&&now-lastSeenAt<300)return;if(s.appendChat)s.appendChat(p.name,p.text,false)}
 function wire(c){if(!c||c.__v16224BridgeWired)return;c.__v16224BridgeWired=true;try{c.on('data',receive)}catch(e){};try{c.on('close',function(){remove(c)})}catch(e){};try{c.on('error',function(){remove(c)})}catch(e){}}
 function add(c){var s=S(),md=c&&c.metadata||{};if(!c||!md.presence)return;wire(c);if(c.open&&c!==s?.conn&&registry.indexOf(c)<0)registry.push(c)}
 function hookPeerConnect(){var C=window.Peer&&Peer.prototype;if(!C||!C.connect||C.connect.__v16224Bridge)return false;var old=C.connect;var wrapped=function(){var c=old.apply(this,arguments),opts=arguments[1]||{},md=opts.metadata||{};if(md.presence){wire(c);try{c.on('open',function(){add(c)})}catch(e){};if(c.open)add(c)}return c};wrapped.__v16224Bridge=true;C.connect=wrapped;return true}
