@@ -60,8 +60,11 @@ try{
  assert.ok(await g.evaluate(()=>!document.getElementById('qolPostMatch').hidden||!document.getElementById('qolEliminated').hidden));
  await g.evaluate(()=>BomberV127.requestRematch());await wait(()=>h.evaluate(()=>!document.getElementById('qolRematchPrompt').hidden),'rematch prompt missing');await h.click('#qolRematchAccept');
  await wait(async()=>(await state(g)).roundId!==stale.roundId,'round ID did not change');await equalWorld(h,g);
- const fresh=await state(g);await g.evaluate(s=>B115.guestData({type:'auth129',kind:'snapshot',session:s.roundId.split(':')[0],roundId:s.roundId,worldRevision:999999,world:s.world}),stale);assert.deepEqual(await state(g),fresh);
- await g.evaluate(s=>B115.guestData({type:'auth129',kind:'actors',session:s.roundId.split(':')[0],roundId:s.roundId,q:999999,ack:999999,actors:[{x:0,y:0},{x:0,y:0}]}),stale);assert.deepEqual(await state(g),fresh);
+ const fresh=await state(g),rejected0=await g.evaluate(()=>BomberMultiplayer.metrics.rejectedPackets);
+ await g.evaluate(s=>B115.guestData({type:'auth129',kind:'snapshot',session:s.roundId.split(':')[0],roundId:s.roundId,worldRevision:999999,world:s.world}),stale);
+ await sleep(100);let current=await state(g),rejected1=await g.evaluate(()=>BomberMultiplayer.metrics.rejectedPackets);assert.equal(current.roundId,fresh.roundId);assert.ok(rejected1>rejected0,'old-round snapshot was not rejected');
+ await g.evaluate(s=>B115.guestData({type:'auth129',kind:'actors',session:s.roundId.split(':')[0],roundId:s.roundId,q:999999,ack:999999,actors:[{x:0,y:0},{x:0,y:0}]}),stale);
+ await sleep(100);current=await state(g);const rejected2=await g.evaluate(()=>BomberMultiplayer.metrics.rejectedPackets);assert.equal(current.roundId,fresh.roundId);assert.ok(rejected2>rejected1,'old-round actor packet was not rejected');
  console.log('DEATH_SCORING_REMATCH_OLD_ROUND PASS');
  // A fresh AI-on match verifies that guests never invoke Bot.update, including lightning.
  await h.evaluate(()=>{B115.destroyNetwork();B115.started=false});await g.evaluate(()=>{B115.destroyNetwork();B115.started=false});
