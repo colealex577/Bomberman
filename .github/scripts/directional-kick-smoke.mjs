@@ -10,7 +10,7 @@ async function auditDirectKeys(page){
  const expected=[['KeyW',{x:0,y:-1}],['KeyA',{x:-1,y:0}],['KeyS',{x:0,y:1}],['KeyD',{x:1,y:0}]];
  for(const [code,dir] of expected){await page.keyboard.press(code);await sleep(35);const call=await page.evaluate(()=>window.__dirAudit.shift());assert.ok(call,code+' did not directly trigger a directional Bomb Kick');assert.equal(call.idx,0,code+' targeted the wrong local player');assert.deepEqual(call.d,dir,code+' chose the wrong throw direction')}
  await page.keyboard.press('KeyE');await sleep(50);assert.equal(await page.evaluate(()=>window.__dirAudit.length),0,'E incorrectly participated in the WASD directional shortcut');
- assert.match(await page.evaluate(()=>document.getElementById('bomb1')?.textContent||''),/E = facing Bomb Kick.*W\/A\/S\/D = directional Bomb Kick/,'control copy did not describe the direct WASD + facing E scheme');
+ assert.match(await page.evaluate(()=>document.getElementById('bomb1')?.textContent||''),/E = Bomb Kick \(last facing\).*W\/A\/S\/D = directional Bomb Kick/,'control copy did not describe the direct WASD + last-facing E scheme');
  await page.evaluate(()=>{BomberFriends16225.throwDirectionIndex=window.__dirOrig;gGameEngine.playing=window.__dirState.playing;gGameEngine.menu.visible=window.__dirState.visible;gGameEngine.playersCount=window.__dirState.playersCount;gGameEngine.simulatedOpponentMode=window.__dirState.sim;delete window.__dirOrig;delete window.__dirState;delete window.__dirAudit});
  console.log('DIRECT_WASD_DIRECTION_KEYS PASS');
 }
