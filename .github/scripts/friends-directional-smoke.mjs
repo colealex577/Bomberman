@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const contexts=[],errors=[];
-async function client(name,rating,wins,losses){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(v=>{localStorage.setItem('BombermanPlayerName',v.name);localStorage.setItem('BombermanRatingV1',String(v.rating));localStorage.setItem('BombermanPlayerWinsV1',String(v.wins));localStorage.setItem('BombermanPlayerLossesV1',String(v.losses));localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})}, {name,rating,wins,losses});await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberFriends16225?.version==='v0.16.2.25'&&window.BomberPublicPresence16223&&window.BomberMultiplayer?.ready,{timeout:45000});return p}
+async function client(name,rating,wins,losses){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(v=>{localStorage.setItem('BombermanPlayerName',v.name);localStorage.setItem('BombermanRatingV1',String(v.rating));localStorage.setItem('BombermanPlayerWinsV1',String(v.wins));localStorage.setItem('BombermanPlayerLossesV1',String(v.losses));localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})}, {name,rating,wins,losses});await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberFriends16225?.version==='v0.16.2.25'&&window.BomberFriendsProtocol16225?.version==='v0.16.2.25'&&window.BomberPublicPresence16223&&window.BomberMultiplayer?.ready,{timeout:45000});return p}
 async function wait(fn,msg,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await sleep(80)}throw new Error(msg)}
 try{
  const host=await client('FriendHost',730,14,6),guest=await client('FriendGuest',610,8,7);const room='bomberman-friends-'+Date.now();
@@ -20,8 +20,10 @@ try{
  console.log('FRIEND_VIEWER_DIRECTORY',JSON.stringify(await viewer.evaluate(()=>BomberFriends16225.directory())));
  console.log('FRIEND_VIEWER_ONLINE',JSON.stringify(await viewer.evaluate(()=>BomberFriends16225.online())));
  await wait(()=>viewer.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost')&&Object.values(BomberFriends16225.online()).some(x=>x.profile?.name==='FriendHost')),'viewer did not discover online host friend',12000);
+ assert.equal(await viewer.evaluate(()=>BomberFriends16225.directory().filter(x=>x.name==='FriendHost').length),1,'Friends API returned duplicate FriendHost sightings');
  await viewer.evaluate(()=>BomberFriends16225.showFriends());
  await wait(()=>viewer.evaluate(()=>{const t=document.getElementById('v16225FriendList')?.innerText||'';return /FriendHost/.test(t)&&/Online now/.test(t)&&/Challenge/.test(t)&&/Observe match/.test(t)}),'Friends tab did not render online actions',8000);
+ assert.equal(await viewer.evaluate(()=>[...document.querySelectorAll('.v16225_friend_row .v16225_friend_name')].filter(x=>x.textContent==='FriendHost').length),1,'Friends tab rendered duplicate FriendHost rows');
  assert.equal(await viewer.evaluate(()=>document.querySelector('#v16225Tabs [data-tab="friends"]')?.classList.contains('active')),true);
  console.log('FRIENDS_TAB_ONLINE_ACTIONS PASS');
  await viewer.evaluate(()=>{const b=[...document.querySelectorAll('[data-friend-action="observe"]')].find(x=>x.closest('.v16225_friend_row')?.innerText.includes('FriendHost'));if(!b)throw Error('observe button missing');b.click()});
