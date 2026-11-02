@@ -32,11 +32,14 @@ try{
  assert.equal(await watcher.evaluate(()=>BomberPublicPresence16223.queueNext()),true);
  await wait(()=>watcher.evaluate(()=>BomberPublicPresence16223.state().queued),'observer did not enter next-round queue',5000);
  console.log('REAL_MATCH_OBSERVE_AND_QUEUE PASS');
+ await closePages(watcher);
+ await wait(()=>host.evaluate(()=>BomberPublicPresence16223.state().spectators===0),'host did not release departed observer',8000);
 
- await watcher.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startJoin()},room);
- await wait(()=>watcher.evaluate(()=>BomberPublicPresence16223.state().mode==='spectator'&&BomberPublicPresence16223.state().queued),'Join Public did not spectate+queue when a real match was already active',20000);
+ const queued=await client('QueuedJoiner');
+ await queued.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startJoin()},room);
+ await wait(()=>queued.evaluate(()=>BomberPublicPresence16223.state().mode==='spectator'&&BomberPublicPresence16223.state().queued),'Join Public did not spectate+queue when a real match was already active',20000);
  console.log('JOIN_ACTIVE_REAL_MATCH_SPECTATE_QUEUE PASS');
- await closePages(host,joiner,watcher);
+ await closePages(host,joiner,queued);
 
  const simHost=await client('SimHost');
  const simRoom='bomberman-sim-presence-'+Date.now();
