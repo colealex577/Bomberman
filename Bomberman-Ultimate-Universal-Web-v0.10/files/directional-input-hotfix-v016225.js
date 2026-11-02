@@ -21,7 +21,9 @@ window.addEventListener('keydown',function(e){if(editable(e.target))return;var d
 window.addEventListener('keyup',function(e){if(swallowed[e.code]){stop(e);delete swallowed[e.code]}},true);
 var CONTROL='Space = normal bomb • E = facing Bomb Kick • W/A/S/D = directional Bomb Kick';
 function normalizeCopy(){var a=document.getElementById('bomb1');if(a&&a.textContent!==CONTROL)a.textContent=CONTROL;var t=document.getElementById('v160TutorialText');if(!t)return;var s=String(t.textContent||''),r=s;if(/^Tutorial complete\./i.test(r))r='Tutorial complete. Core controls: move • Space = normal bomb • E = Bomb Kick in your last facing direction • W/A/S/D = instant directional Bomb Kick • walk into a bomb = kick it. On mobile, the yellow Bomb Kick button launches it immediately.';else if(/Traveling bomb:/i.test(r)&&!/W\/A\/S\/D/i.test(r))r=r.replace(/Traveling bomb:.*$/i,'Traveling bomb: press E to launch in your last facing direction, or W/A/S/D to launch up/left/down/right instantly. One Bomb Kick charge is consumed. Space always places a normal stationary bomb.');if(r!==s)t.textContent=r}
-function installCopyGuard(){normalizeCopy();if(!document.body)return;var mo=new MutationObserver(function(){normalizeCopy()});mo.observe(document.body,{subtree:true,childList:true,characterData:true});setInterval(normalizeCopy,500)}
+function guardElement(el){if(!el||el.__v16225CopyGuard)return;el.__v16225CopyGuard=true;new MutationObserver(function(){normalizeCopy()}).observe(el,{subtree:true,childList:true,characterData:true})}
+function bindCopyGuards(){normalizeCopy();guardElement(document.getElementById('bomb1'));guardElement(document.getElementById('v160TutorialText'))}
+function installCopyGuard(){bindCopyGuards();setInterval(bindCopyGuards,500)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installCopyGuard,{once:true});else installCopyGuard();
 window.BomberDirectionalInputHotfix16225={version:VERSION,controls:'WASD-direct',hydrateSavedName:hydrateSavedName,stableSelfProfile:stableSelfProfile,patchPeerMetadata:patchPeerMetadata,directionalShortcutActive:directionalShortcutActive};
 })();
