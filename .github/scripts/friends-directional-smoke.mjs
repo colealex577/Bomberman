@@ -12,11 +12,12 @@ try{
  await guest.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);BomberPublicPresence16223.startJoin()},room);
  await wait(()=>guest.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'),'friends guest did not connect',30000);
  await wait(()=>host.evaluate(()=>B115.conn?.open),'friends host game connection did not open',5000);
- await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats from public connection metadata',10000);
- await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730)),'guest did not persist host friend profile from established multiplayer profile sync',10000);
- await guest.evaluate(id=>{B115.PUBLIC=[id];BomberFriends16225.refreshOnline()},room);
- await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730&&x.wins===14&&x.losses===6)),'guest Friends refresh did not enrich host stats',12000);
- await sleep(3000);
+ await wait(()=>host.evaluate(()=>B115.started)&&guest.evaluate(()=>B115.started),'friends match did not enter started state on both clients',12000);
+ await sleep(1600);
+ console.log('FRIEND_HOST_STATE',JSON.stringify(await host.evaluate(()=>({started:B115.started,role:B115.role,kind:B115.kind,open:!!B115.conn?.open,statsCount:B115.conn?.__v16225StatsCount||0,statsAt:B115.conn?.__v16225StatsAt||0,self:BomberFriends16225.selfProfile(),friends:BomberFriends16225.directory()}))));
+ console.log('FRIEND_GUEST_STATE',JSON.stringify(await guest.evaluate(()=>({started:B115.started,role:B115.role,kind:B115.kind,open:!!B115.conn?.open,statsCount:B115.conn?.__v16225StatsCount||0,statsAt:B115.conn?.__v16225StatsAt||0,self:BomberFriends16225.selfProfile(),friends:BomberFriends16225.directory()}))));
+ await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats after match start',10000);
+ await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730&&x.wins===14&&x.losses===6)),'guest did not persist host friend stats after match start',10000);
  console.log('FRIEND_HISTORY_PROFILE_SYNC PASS');
  const viewer=await client('FriendViewer',300,1,1);
  await viewer.evaluate(id=>{B115.PUBLIC=[id];BomberFriends16225.refreshOnline()},room);
