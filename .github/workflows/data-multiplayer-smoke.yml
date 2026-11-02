@@ -19,6 +19,7 @@ jobs:
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-core.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-match.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/multiplayer-v0129.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016218-round-integrity-rematch.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/sw.js
           node --check .github/scripts/multiplayer-kick-reconnect-smoke.mjs
