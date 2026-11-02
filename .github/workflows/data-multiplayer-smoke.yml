@@ -25,6 +25,7 @@ jobs:
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016223-public-presence-controls.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016224-observer-sim-chat.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016225-friends-directional.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016225-friends-protocol-isolation.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/preload-v0150.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
           node --check Bomberman-Ultimate-Universal-Web-v0.10/sw.js
