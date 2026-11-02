@@ -48,7 +48,7 @@ try{
  await wait(()=>simHost.evaluate(()=>BomberPublicPresence16223.state().spectators>=1),'simulated public host did not keep discoverable spectator presence',10000);
  console.log('HUMAN_V_SIMULATED_DISCOVERABLE PASS');
 
- await wait(()=>simJoin.evaluate(()=>B115.els?.chatToggle?.hidden===false&&B115.els?.chatPanel?.hidden===false),'chat UI was not visible to the human observer',8000);
+ await wait(()=>simJoin.evaluate(()=>{const p=B115.els?.chatPanel;if(!p||p.hidden)return false;const s=getComputedStyle(p);return s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)!==0}),'chat panel was not visibly rendered for the human observer',8000);
  await simHost.evaluate(()=>B115.appendChat(B115.remoteName,'observer relay probe',false));
  await wait(()=>simJoin.evaluate(()=>/observer relay probe/.test(B115.els?.chatMessages?.innerText||'')),'observer did not receive public chat while spectating',8000);
  await simHost.evaluate(()=>{var f=window.BomberChatFix1544&&BomberChatFix1544.debug&&BomberChatFix1544.debug.directAppend;if(f)f(B115.remoteName,'simulated relay probe',false)});
