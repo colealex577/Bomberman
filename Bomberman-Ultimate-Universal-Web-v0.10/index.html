@@ -79,44 +79,132 @@
                             <div class="control_element_desc"><p class="control_element_title" id="movement1"></p></div>
                         </div>
                         <div class="control_element_bomb">
-                            <div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control02"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="bomb1"></p></div>
+                            <div class="control_element_ico"><img src="./files/img/i-control-001.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb1">Space = normal bomb • E = Bomb Kick</p></div>
                         </div>
                     </div>
                     <div class="panel">
                         <div class="panel_header"><p class="panel_header_title" id="player2"></p></div>
                         <div class="control_element_movement">
-                            <div class="control_element_ico"><img src="./files/img/i-control-03.svg" class="i_control03"></div>
+                            <div class="control_element_ico"><img src="./files/img/i-control-02.svg" class="i_control01"></div>
                             <div class="control_element_desc"><p class="control_element_title" id="movement2"></p></div>
                         </div>
                         <div class="control_element_bomb">
-                            <div class="control_element_ico"><img src="./files/img/i-control-04.svg" class="i_control04"></div>
-                            <div class="control_element_desc"><p class="control_element_title" id="bomb2"></p></div>
+                            <div class="control_element_ico"><img src="./files/img/i-control-002.svg" class="i_control001"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="bomb2">Shift = normal bomb • Q = Bomb Kick</p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel_header"><p class="panel_header_title" id="common">Common</p></div>
+                        <div class="control_element_mute">
+                            <div class="control_element_ico"><img src="./files/img/i-key-m.svg" class="i_key_m"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="mute"></p></div>
+                        </div>
+                        <div class="control_element_menu">
+                            <div class="control_element_ico"><img src="./files/img/i-key-esc.svg" class="i_key_esc"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="menu"></p></div>
+                        </div>
+                        <div class="control_element_restart">
+                            <div class="control_element_ico"><img src="./files/img/i-key-enter.svg" class="i_key_enter"></div>
+                            <div class="control_element_desc"><p class="control_element_title" id="restart"></p></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="remoteStage" class="remote_stage" hidden>
-            <video id="remoteVideo" playsinline autoplay muted></video>
-            <div class="remote_stage_note">REMOTE MATCH VIEW</div>
+        <div id="remoteStage" hidden>
+            <video id="remoteVideo" autoplay playsinline muted></video>
+            <div class="remote_caption">LIVE FROM HOST • PLAYER 2</div>
+            <div id="remoteSpectatorBanner" class="spectator_banner" hidden>
+                <strong id="remoteSpectatorTitle">GAME OVER</strong>
+                <span id="remoteSpectatorSubtitle">SPECTATING MATCH</span>
+            </div>
+        </div>
+        <audio id="gameMusic" src="./files/sound/game.mp3" preload="auto" loop playsinline></audio>
+
+        <div id="mobileControls" class="mobile_controls" aria-label="Touch controls">
+            <div id="mobileJoystick" class="mobile_joystick" aria-label="Movement joystick" role="application">
+                <div class="joystick_ring"></div>
+                <div id="mobileJoystickKnob" class="joystick_knob"></div>
+            </div>
+            <div class="mobile_action_cluster">
+                <button class="touch_btn bomb_btn" data-action="bomb" aria-label="Place normal bomb">💣</button>
+                <div class="mobile_small_actions">
+                    <button id="mobileMuteBtn" class="touch_small" type="button">Sound</button>
+                    <button id="mobileMenuBtn" class="touch_small" type="button">Menu</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="mobile_controls" aria-label="Touch controls">
-        <div class="mobile_joystick">
-            <button class="touch_btn touch_up" data-action="up" aria-label="Move up">▲</button>
-            <div class="mobile_middle_row">
-                <button class="touch_btn touch_left" data-action="left" aria-label="Move left">◀</button>
-                <button class="touch_btn touch_down" data-action="down" aria-label="Move down">▼</button>
-                <button class="touch_btn touch_right" data-action="right" aria-label="Move right">▶</button>
+    <div id="multiplayerLobby" class="multiplayer_lobby" hidden>
+        <div class="lobby_card">
+            <div class="lobby_heading">
+                <div>
+                    <h2>Multiplayer</h2>
+                    <p>Play locally or connect to a friend over the internet.</p>
+                </div>
+                <button id="lobbyCloseBtn" class="lobby_close" type="button" aria-label="Back">×</button>
+            </div>
+
+            <div class="lobby_name_row">
+                <label for="playerNameInput">Your name</label>
+                <input id="playerNameInput" type="text" maxlength="14" autocomplete="nickname" spellcheck="false" placeholder="Player name">
+                <small>Shown above your character in online matches.</small>
+            </div>
+
+            <div class="lobby_mode_row">
+                <span>Game mode</span>
+                <button id="ultimateLobbyBtn" class="ultimate_mode_btn compact" type="button">ULTIMATE MODE: OFF</button>
+            </div>
+
+            <div id="lobbyChoice" class="lobby_choice">
+                <button id="onlineHostBtn" class="lobby_primary" type="button">Host Online Game<small>Wait for your friend to join • another opponent after a short wait</small></button>
+                <button id="onlineShowJoinBtn" class="lobby_primary" type="button">Join Online Game<small>Players first • active matches open in spectator mode with next-round queue</small></button>
+                <button id="localMultiBtn" class="lobby_secondary" type="button">Play Local Multiplayer</button>
+            </div>
+
+            <div id="onlineHostControls" class="lobby_section" hidden>
+                <div class="lobby_state_icon">⌁</div>
+                <h3>Hosting game</h3>
+                <p>Waiting for Player 2. Your friend only needs to choose Multiplayer → Join Online Game. If nobody connects, another player will join automatically.</p>
+
+                <div class="host_customization" id="hostCustomization">
+                    <div class="host_customization_header">
+                        <div>
+                            <strong>Item drop rate</strong>
+                            <small>Chance that a destroyed wood block contains a power-up</small>
+                        </div>
+                        <span id="dropRateValue" class="drop_rate_value">16% · DEFAULT</span>
+                    </div>
+                    <input id="dropRateSlider" class="drop_rate_slider" type="range" min="16" max="100" step="1" value="16" aria-label="Item drop rate">
+                    <div class="drop_rate_scale"><span>Default · 16%</span><span>100%</span></div>
+                    <div id="dropRateNote" class="drop_rate_note">Normal power-up strength. ULTIMATE MODE overrides drops to 100%.</div>
+                </div>
+
+                <div id="onlineStatus" class="online_status working">Opening host slot…</div>
+                <button id="hostCancelBtn" class="lobby_secondary" type="button">Stop Hosting</button>
+            </div>
+
+            <div id="onlineJoinControls" class="lobby_section" hidden>
+                <div class="lobby_state_icon">⌁</div>
+                <h3>Finding player…</h3>
+                <p>Checking every public slot. Active matches open in spectator mode and queue you for the next round.</p>
+                <div id="joinStatus" class="online_status working">Searching…</div>
+                <button id="joinBackBtn" class="lobby_secondary" type="button">Cancel Search</button>
             </div>
         </div>
-        <div class="mobile_action_cluster">
-            <button class="touch_small" data-action="mute" aria-label="Mute">M</button>
-            <button class="touch_btn touch_bomb" data-action="bomb" aria-label="Bomb">●</button>
-        </div>
     </div>
+
+<script>
+(function () {
+  if (location.hostname !== '127.0.0.1' && location.hostname !== 'localhost') return;
+  function heartbeat() { fetch('/__bomberman_heartbeat', {cache:'no-store'}).catch(function () {}); }
+  heartbeat();
+  setInterval(heartbeat, 5000);
+})();
+</script>
+
 </body>
 </html>
