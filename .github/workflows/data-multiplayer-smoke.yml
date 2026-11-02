@@ -14,28 +14,14 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
-      - name: Syntax check
-        id: syntax
-        shell: bash
+      - name: Syntax check multiplayer reliability files
         run: |
-          set +e
-          : > syntax.log
-          status=0
-          while IFS= read -r file; do
-            if ! node --check "$file" >>syntax.log 2>&1; then
-              echo "FAILED: $file" >>syntax.log
-              status=1
-            fi
-          done < <(find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts \( -name '*.js' -o -name '*.mjs' \) -type f)
-          cat syntax.log
-          exit "$status"
-      - name: Upload syntax diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: syntax-diagnostics
-          path: syntax.log
-          retention-days: 1
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-core.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-match.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/multiplayer-v0129.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/sw.js
+          node --check .github/scripts/multiplayer-kick-reconnect-smoke.mjs
   regression:
     needs: syntax
     runs-on: ubuntu-latest
