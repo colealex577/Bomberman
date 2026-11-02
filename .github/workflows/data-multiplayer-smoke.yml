@@ -1,4 +1,5 @@
 name: Data multiplayer branch smoke
+# v0.16.2.24 observer promotion/chat regression gate
 on:
   push:
     branches: [fix/observer-sim-chat-v016224, fix/public-human-priority-v016223, fix/multiplayer-reliability-kick, v0151-matchmaking-ai-polish, ai-overhaul-v0150, sim-opening-breakout-v0144, ai-intelligence-social-v0143, ai-controller-route-commitment, authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133, gameplay-ai-chat-v0134, ai-polish-v0135, ai-challenge-v0136, stability-chat-v0137, ai-movement-social-v0138, ai-matchmaking-social-v0139, ai-social-stability-v0140, ai-chat-openhunt-v0141]
