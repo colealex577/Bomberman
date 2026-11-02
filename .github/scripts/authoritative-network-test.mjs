@@ -34,7 +34,7 @@ try{
  await h.evaluate(()=>{const g=gGameEngine;for(const t of g.tiles.slice())if(t.material==='wood'){g.stage.removeChild(t.bmp);g.tiles.splice(g.tiles.indexOf(t),1)}for(const b of g.bonuses.slice())b.destroy();const p=g.players[1];p.bmp.x=13*32;p.bmp.y=11*32;p.updatePosition();p.bombStrength=2;const t=new Tile('wood',{x:12,y:11});g.tiles.push(t);g.stage.addChild(t.bmp);BomberMultiplayer.publish()});await sleep(400);await equalWorld(h,g);
  const press=await g.evaluate(()=>({...gGameEngine.players[1].position}));
  await g.evaluate(()=>{const send=B115.send;B115.send=function(d){const r=send.call(B115,d);if(d?.type==='auth129'&&d.kind==='input'&&d.cmd?.bomb)send.call(B115,d);return r}});
- await g.keyboard.down('Shift');await sleep(20);await g.keyboard.up('Shift');
+ await g.keyboard.down('Space');await sleep(20);await g.keyboard.up('Space');
  await wait(async()=>{const x=await state(g);return x.world.bombs.length===1},'authoritative bomb missing');
  await equalWorld(h,g);const bomb=(await state(h)).world.bombs[0];assert.equal(bomb.x,press.x);assert.equal(bomb.y,press.y);assert.ok(bomb.id);
  assert.equal(await g.evaluate(()=>gGameEngine.bombs[0] instanceof Bomb),false,'guest created gameplay Bomb');
