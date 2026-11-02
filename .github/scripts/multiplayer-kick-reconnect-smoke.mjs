@@ -55,6 +55,8 @@ try{
   await equalWorld(host,guest);
   assert.equal(await host.evaluate(()=>BomberDataSync.role),'host');
   assert.equal(await guest.evaluate(()=>BomberDataSync.role),'guest');
+  assert.ok(await host.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'host did not render both private-match players');
+  assert.ok(await guest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest did not render both private-match players');
   console.log('PRIVATE_CONNECT_VISIBLE_STATE PASS');
 
   await host.evaluate(()=>{
@@ -96,6 +98,29 @@ try{
   assert.ok(await host.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'host lost a player sprite after reconnect');
   assert.ok(await guest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest lost a player sprite after reconnect');
   console.log('RECONNECT_RESYNC_VISIBILITY PASS');
+
+  await host.evaluate(()=>B115.destroyNetwork());
+  await guest.evaluate(()=>B115.destroyNetwork());
+  await sleep(350);
+  const publicRoom='bomberman-public-smoke-'+Date.now();
+  await host.evaluate(id=>{
+    B115.PUBLIC=[id];
+    BomberV124.setAIEnabled(false);
+    B115.startPublicHost();
+  },publicRoom);
+  await sleep(700);
+  await guest.evaluate(id=>{
+    B115.PUBLIC=[id];
+    BomberV124.setAIEnabled(false);
+    B115.startPublicJoin();
+  },publicRoom);
+  await wait(()=>guest.evaluate(()=>BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId&&B115.conn?.open),'public connection did not establish',30000);
+  await equalWorld(host,guest,10000);
+  assert.equal(await host.evaluate(()=>BomberDataSync.role),'host');
+  assert.equal(await guest.evaluate(()=>BomberDataSync.role),'guest');
+  assert.ok(await host.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'host did not render both public-match players');
+  assert.ok(await guest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest did not render both public-match players');
+  console.log('PUBLIC_CONNECT_VISIBLE_STATE PASS');
 
   assert.deepEqual(errors,[]);
   console.log('MULTIPLAYER_KICK_RECONNECT_SMOKE PASS');
