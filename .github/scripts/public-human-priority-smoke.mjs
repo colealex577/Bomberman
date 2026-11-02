@@ -6,6 +6,7 @@ const contexts=[],errors=[];
 async function client(name){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(n=>{localStorage.setItem('BombermanPlayerName',n);localStorage.setItem('BombermanRatingV1','100');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.BomberFix16224?.version==='v0.16.2.24'&&window.BomberMultiplayer?.ready&&window.BomberFix16222,{timeout:45000});return p}
 async function wait(fn,msg,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await sleep(80)}throw new Error(msg)}
 async function closePages(...pages){await Promise.all(pages.filter(Boolean).map(p=>p.browserContext().close().catch(()=>{})))}
+async function openRealMatch(tag){const host=await client(tag+'Host'),joiner=await client(tag+'Joiner'),room='bomberman-'+tag.toLowerCase()+'-'+Date.now();await host.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);B115.startPublicHost()},room);await wait(()=>host.evaluate(()=>B115.role==='host'&&B115.peer?.open&&BomberPublicPresence16223.state().hostSlot),tag+' host did not open',20000);await joiner.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);BomberPublicPresence16223.startJoin()},room);await wait(()=>joiner.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId),tag+' joiner did not connect',30000);return{host,joiner,room}}
 try{
  const ui=await client('UI');
  assert.equal(await ui.evaluate(()=>BomberBuildVersion),'v0.16.2.24');
@@ -16,30 +17,24 @@ try{
  console.log('V016224_UI_CONTROLS PASS');
  await closePages(ui);
 
- const host=await client('RealHost'),joiner=await client('RealJoiner');
- const room='bomberman-human-priority-'+Date.now();
- await host.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);B115.startPublicHost()},room);
- await wait(()=>host.evaluate(()=>B115.role==='host'&&B115.peer?.open&&BomberPublicPresence16223.state().hostSlot),'explicit public host did not open',20000);
- await joiner.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);BomberPublicPresence16223.startJoin()},room);
- await wait(()=>joiner.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId),'Join Public did not choose the real waiting human',30000);
- assert.equal(await host.evaluate(()=>B115.started),true);
+ const real=await openRealMatch('Real');
+ assert.equal(await real.host.evaluate(()=>B115.started),true);
  console.log('REAL_WAITING_HUMAN_PRIORITY PASS');
-
  const watcher=await client('Watcher');
- await watcher.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startObserve()},room);
+ await watcher.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startObserve()},real.room);
  await wait(()=>watcher.evaluate(()=>BomberPublicPresence16223.state().mode==='spectator'&&!BomberPublicPresence16223.state().queued),'Observe did not spectate the active real-human match',20000);
- await wait(()=>host.evaluate(()=>BomberPublicPresence16223.state().spectators>=1),'host did not register observer',10000);
+ await wait(()=>real.host.evaluate(()=>BomberPublicPresence16223.state().spectators>=1),'host did not register observer',10000);
  assert.equal(await watcher.evaluate(()=>BomberPublicPresence16223.queueNext()),true);
  await wait(()=>watcher.evaluate(()=>BomberPublicPresence16223.state().queued),'observer did not enter next-round queue',5000);
  console.log('REAL_MATCH_OBSERVE_AND_QUEUE PASS');
- await closePages(watcher);
- await wait(()=>host.evaluate(()=>BomberPublicPresence16223.state().spectators===0),'host did not release departed observer',8000);
+ await closePages(real.host,real.joiner,watcher);
 
+ const active=await openRealMatch('Active');
  const queued=await client('QueuedJoiner');
- await queued.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startJoin()},room);
+ await queued.evaluate(id=>{B115.PUBLIC=[id];BomberPublicPresence16223.startJoin()},active.room);
  await wait(()=>queued.evaluate(()=>BomberPublicPresence16223.state().mode==='spectator'&&BomberPublicPresence16223.state().queued),'Join Public did not spectate+queue when a real match was already active',20000);
  console.log('JOIN_ACTIVE_REAL_MATCH_SPECTATE_QUEUE PASS');
- await closePages(host,joiner,queued);
+ await closePages(active.host,active.joiner,queued);
 
  const simHost=await client('SimHost');
  const simRoom='bomberman-sim-presence-'+Date.now();
