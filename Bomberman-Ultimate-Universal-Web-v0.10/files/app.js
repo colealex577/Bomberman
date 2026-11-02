@@ -5,8 +5,6 @@ function GUILocalization(){
 }
 let Storage={setValue:(key,value)=>{localStorage[key]=JSON.stringify(value)},getValue:(key)=>{let result;try{if(localStorage[key])result=JSON.parse(localStorage[key])}catch(e){throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`)}return result}};
 class StorageError extends Error{constructor(msg){super();this.name='StorageError';this.message=msg||'Storage Error';this.stack=(new Error()).stack}}
-// Map choices are session choices. Every fresh page load starts from the original
-// Classic Grid, then the player may choose another map or Random Shuffle.
 try{localStorage.setItem('BombermanSingleMapV133','classic');localStorage.setItem('BombermanMultiMapV133','classic')}catch(e){}
 function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
 function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader){console.error('Packed runtime loader missing:',id);return}BomberPackedLoader.load(id,src,function(err){if(!err&&cb)cb()})}
@@ -15,7 +13,7 @@ function loadCompatibility(){
  loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',function(){
   loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',function(){
    if(dataDiagnosticsDisabled())return;
-   loadPackedScript('net-v0120-data-loader','./files/multiplayer-v0129.js.gz.b64?v=01629',function(){
+   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=01630',function(){
     loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
      loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120d',function(){
       loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
@@ -86,5 +84,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01629').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01630').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
