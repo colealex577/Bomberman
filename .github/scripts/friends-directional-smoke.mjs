@@ -14,6 +14,11 @@ try{
  await wait(()=>host.evaluate(()=>B115.conn?.open),'friends host game connection did not open',5000);
  await wait(()=>host.evaluate(()=>B115.started)&&guest.evaluate(()=>B115.started),'friends match did not enter started state on both clients',12000);
  await sleep(1600);
+ const handoff=await Promise.all([
+  host.evaluate(()=>({metadata:B115.conn?.metadata||null,dir:BomberFriends16225.directory(),hotfix:window.BomberDirectionalInputHotfix16225?.version||null,connectFlags:{early:!!Peer?.prototype?.connect?.__v16225EarlyFriendProfile,friends:!!Peer?.prototype?.connect?.__v16225Friends},emitFlags:{early:!!Peer?.prototype?.emit?.__v16225EarlyFriendProfileEmit,isolation:!!Peer?.prototype?.emit?.__v16225IsolationEmit}})),
+  guest.evaluate(()=>({metadata:B115.conn?.metadata||null,self:BomberFriends16225.selfProfile(),hotfix:window.BomberDirectionalInputHotfix16225?.version||null,connectFlags:{early:!!Peer?.prototype?.connect?.__v16225EarlyFriendProfile,friends:!!Peer?.prototype?.connect?.__v16225Friends}}))
+ ]);
+ console.log('FRIEND_HANDOFF_DIAG '+JSON.stringify({host:handoff[0],guest:handoff[1]}));
  await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats after match start',10000);
  await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730&&x.wins===14&&x.losses===6)),'guest did not persist host friend stats after match start',10000);
  console.log('FRIEND_HISTORY_PROFILE_SYNC PASS');
