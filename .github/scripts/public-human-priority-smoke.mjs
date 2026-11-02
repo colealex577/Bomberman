@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const contexts=[],errors=[];
-async function client(name){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(n=>{localStorage.setItem('BombermanPlayerName',n);localStorage.setItem('BombermanRatingV1','100');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.BomberFix16224?.version==='v0.16.2.24'&&window.BomberMultiplayer?.ready&&window.BomberFix16222,{timeout:45000});return p}
+async function client(name){const ctx=await browser.createBrowserContext(),p=await ctx.newPage();contexts.push(ctx);p.on('pageerror',e=>errors.push(name+': '+String(e.stack||e)));await p.evaluateOnNewDocument(n=>{localStorage.setItem('BombermanPlayerName',n);localStorage.setItem('BombermanRatingV1','100');localStorage.setItem('BombermanScoreV1Initialized','1');navigator.serviceWorker.register=()=>Promise.resolve({})},name);await p.goto(process.env.TEST_URL,{waitUntil:'domcontentloaded',timeout:30000});await p.waitForFunction(()=>window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.BomberFix16224?.version==='v0.16.2.24'&&window.BomberChatBridge16224?.version==='v0.16.2.24'&&window.BomberMultiplayer?.ready&&window.BomberFix16222,{timeout:45000});return p}
 async function wait(fn,msg,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await sleep(80)}throw new Error(msg)}
 async function closePages(...pages){await Promise.all(pages.filter(Boolean).map(p=>p.browserContext().close().catch(()=>{})))}
 async function openRealMatch(tag){const host=await client(tag+'Host'),joiner=await client(tag+'Joiner'),room='bomberman-'+tag.toLowerCase()+'-'+Date.now();await host.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);B115.startPublicHost()},room);await wait(()=>host.evaluate(()=>B115.role==='host'&&B115.peer?.open&&BomberPublicPresence16223.state().hostSlot),tag+' host did not open',20000);await joiner.evaluate(id=>{B115.PUBLIC=[id];BomberV124.setAIEnabled(false);BomberPublicPresence16223.startJoin()},room);await wait(()=>joiner.evaluate(()=>B115.role==='guest'&&B115.conn?.open&&BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId),tag+' joiner did not connect',30000);return{host,joiner,room}}
@@ -47,6 +47,12 @@ try{
  console.log('HUMAN_V_SIMULATED_DISCOVERABLE PASS');
 
  await wait(()=>simJoin.evaluate(()=>{const p=B115.els?.chatPanel;if(!p||p.hidden)return false;const s=getComputedStyle(p);return s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)!==0}),'chat panel was not visibly rendered for the human observer',8000);
+ await wait(()=>simHost.evaluate(()=>BomberChatBridge16224.connections()>=1),'chat bridge did not register the observing public connection',8000);
+ const bridgeState=await simHost.evaluate(()=>({bridge:BomberChatBridge16224.version,count:BomberChatBridge16224.connections(),legacy:BomberFix16224.spectatorConnections(),role:B115.role,kind:B115.kind,peer:B115.peer?.id||''}));
+ console.log('CHAT_BRIDGE_STATE',JSON.stringify(bridgeState));
+ const directSent=await simHost.evaluate(()=>BomberChatBridge16224.relay(B115.remoteName,'direct bridge probe'));
+ assert.equal(directSent,true,'direct chat bridge send did not report success');
+ await wait(()=>simJoin.evaluate(()=>/direct bridge probe/.test(B115.els?.chatMessages?.innerText||'')),'observer did not receive a direct bridge chat probe',8000);
  await simHost.evaluate(()=>B115.appendChat(B115.remoteName,'observer relay probe',false));
  await wait(()=>simJoin.evaluate(()=>/observer relay probe/.test(B115.els?.chatMessages?.innerText||'')),'observer did not receive public chat while spectating',8000);
  await simHost.evaluate(()=>{var f=window.BomberChatFix1544&&BomberChatFix1544.debug&&BomberChatFix1544.debug.directAppend;if(f)f(B115.remoteName,'simulated relay probe',false)});
