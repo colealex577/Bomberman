@@ -8,9 +8,9 @@ p.on('pageerror',e=>errors.push(String(e.stack||e)));p.on('console',m=>{if(m.typ
 await p.evaluateOnNewDocument(()=>{localStorage.setItem('BombermanPlayerName','V151Test');if(navigator.serviceWorker)navigator.serviceWorker.register=()=>Promise.resolve({})});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded',timeout:20000});
- await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.23'&&window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.gGameEngine?.menu,{timeout:30000});
- assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.23');
- assert.equal(await p.title(),'Bomberman v0.16.2.23');
+ await p.waitForFunction(()=>window.BomberRelease150?.version==='v0.15.5'&&window.BomberMatchmaking151?.version==='v0.15.4.4'&&window.BomberPolish151?.version==='v0.15.1'&&window.BomberAI150?.version==='v0.15.0'&&window.BomberPreload150?.version==='v0.16.2.24'&&window.BomberPublicPresence16223?.version==='v0.16.2.23'&&window.BomberFix16224?.version==='v0.16.2.24'&&window.gGameEngine?.menu,{timeout:30000});
+ assert.equal(await p.evaluate(()=>window.BomberBuildVersion),'v0.16.2.24');
+ assert.equal(await p.title(),'Bomberman v0.16.2.24');
  const activity=await p.evaluate(()=>({overnight:BomberMatchmaking151.activityForHour(2),early:BomberMatchmaking151.activityForHour(7),day:BomberMatchmaking151.activityForHour(13),peak:BomberMatchmaking151.activityForHour(20)}));
  assert.equal(activity.overnight.band,'overnight');assert.equal(activity.peak.band,'peak');assert.ok(activity.overnight.activity<activity.early.activity&&activity.early.activity<activity.day.activity&&activity.day.activity<activity.peak.activity,'time-of-day activity model did not rise from overnight toward peak');assert.ok(activity.overnight.minSeconds>activity.peak.maxSeconds,'overnight activity helper was not clearly slower than peak hours');
 
