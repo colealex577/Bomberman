@@ -5,7 +5,6 @@ window.__v16225DirectionalInputHotfix=true;
 /* Keep the old preload E+direction chord disabled. E is owned by the normal v0.16.2.22 direct-throw control. */
 window.__v16225PreloadChordCapture=true;
 var VERSION='v0.16.2.25-hotfix2',swallowed={},pendingProfiles=[],friendEmitPatched=false;
-function cleanName(v){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,n||80)}
 function cleanName(v){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,14)}
 function num(k){try{return Math.max(0,Math.round(Number(localStorage.getItem(k))||0))}catch(e){return 0}}
 function hydrateSavedName(){var s=window.B115,n='';try{n=cleanName(localStorage.getItem('BombermanPlayerName'))}catch(e){}if(!s||!n)return false;var cur=cleanName(s.localName);if(!cur||/^Player(?:\s*1)?$/i.test(cur)){s.localName=n;if(s.els&&s.els.name&&(!s.els.name.value||/^Player(?:\s*1)?$/i.test(s.els.name.value)))s.els.name.value=n;return true}return false}
