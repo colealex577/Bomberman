@@ -7,13 +7,15 @@ window.__v16225PreloadChordCapture=true;
 var CHORD_MS=350,seq=0;
 var states=[{down:false,used:false,timer:null},{down:false,used:false,timer:null}];
 var held=[{},{}],swallowed={};
+function cleanName(v){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,14)}
+function hydrateSavedName(){var s=window.B115,n='';try{n=cleanName(localStorage.getItem('BombermanPlayerName'))}catch(e){}if(!s||!n)return false;var cur=cleanName(s.localName);if(!cur||/^Player(?:\s*1)?$/i.test(cur)){s.localName=n;if(s.els&&s.els.name&&(!s.els.name.value||/^Player(?:\s*1)?$/i.test(s.els.name.value)))s.els.name.value=n;return true}return false}
+hydrateSavedName();var nameHydrator=setInterval(function(){if(hydrateSavedName()&&window.BomberFriends16225)clearInterval(nameHydrator)},20);setTimeout(function(){clearInterval(nameHydrator)},15000);
 function editable(t){var q=String(t&&t.tagName||'').toLowerCase();return q==='input'||q==='textarea'||q==='select'||!!(t&&t.isContentEditable)}
 function defaultThrow(idx){var code=idx===1?'KeyQ':'KeyE';try{if(window.BomberFix16222&&BomberFix16222.directKey)return BomberFix16222.directKey(code,true)}catch(e){}var g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(p&&p.throwBombNow){p.throwBombNow();return true}return false}
 function explicitThrow(idx,d){try{if(window.BomberFriends16225&&BomberFriends16225.throwDirectionIndex)return BomberFriends16225.throwDirectionIndex(idx,d)}catch(e){}var g=window.gGameEngine,p=g&&g.players&&g.players[idx];if(!p||!p.throwBombNow)return false;var old=p.getBombKickDirection,had=!!p.lastMoveDirection,last=had?{x:p.lastMoveDirection.x,y:p.lastMoveDirection.y}:null;p.getBombKickDirection=function(){return{x:d.x,y:d.y}};p.lastMoveDirection={x:d.x,y:d.y};try{return p.throwBombNow()}finally{if(old)p.getBombKickDirection=old;else try{delete p.getBombKickDirection}catch(x){}if(had)p.lastMoveDirection=last;else try{delete p.lastMoveDirection}catch(x){}}}
 function dirFor(idx,code){var m=idx===0?{KeyW:{x:0,y:-1},KeyA:{x:-1,y:0},KeyS:{x:0,y:1},KeyD:{x:1,y:0}}:{ArrowUp:{x:0,y:-1},ArrowLeft:{x:-1,y:0},ArrowDown:{x:0,y:1},ArrowRight:{x:1,y:0}};return m[code]||null}
 function stop(e){e.preventDefault();e.stopImmediatePropagation()}
 function latestHeld(idx){var best=null,bestSeq=-1,o=held[idx];Object.keys(o).forEach(function(code){var h=o[code];if(h&&h.seq>bestSeq){bestSeq=h.seq;best=h.dir}});return best}
-function finishDefault(idx){var st=states[idx];if(st.timer){clearTimeout(st.timer);st.timer=null}if(st.down&&!st.used){st.used=true;defaultThrow(idx)}}
 function modDown(e,idx){stop(e);if(e.repeat)return;var st=states[idx];if(st.timer){clearTimeout(st.timer);st.timer=null}st.down=true;st.used=false;var d=latestHeld(idx);if(d){st.used=true;explicitThrow(idx,d);return}st.timer=setTimeout(function(){st.timer=null;if(st.down&&!st.used){st.used=true;defaultThrow(idx)}},CHORD_MS)}
 function modUp(e,idx){stop(e);var st=states[idx];if(st.timer){clearTimeout(st.timer);st.timer=null}if(st.down&&!st.used)defaultThrow(idx);st.down=false;st.used=false}
 window.addEventListener('keydown',function(e){
@@ -33,5 +35,5 @@ window.addEventListener('keyup',function(e){
  if(swallowed[e.code]!==undefined){stop(e);delete swallowed[e.code];return}
  for(var i=0;i<2;i++)if(dirFor(i,e.code))delete held[i][e.code];
 },true);
-window.BomberDirectionalInputHotfix16225={version:'v0.16.2.25-hotfix1',chordMs:CHORD_MS};
+window.BomberDirectionalInputHotfix16225={version:'v0.16.2.25-hotfix1',chordMs:CHORD_MS,hydrateSavedName:hydrateSavedName};
 })();
