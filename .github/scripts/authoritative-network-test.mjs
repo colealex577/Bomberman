@@ -86,7 +86,8 @@ try{
  await g.evaluate(()=>{localStorage.setItem('BombermanRatingV1','995');B115.kind='public';B115.setRole('host');BomberPolish131.debug.forceTarget(1000);B115.startSimulated()});await sleep(600);
  assert.ok(await g.evaluate(()=>gGameEngine.simulatedOpponent.leaderboardRank<=50),'top 50 opponent was not eligible for full-range matchmaking');
  const rankedBefore=await g.evaluate(()=>BomberLeaderboard127.profile(B115.remoteName));
- await g.evaluate(()=>gGameEngine.simulatedOpponent.die());await sleep(350);
+ await g.evaluate(()=>gGameEngine.simulatedOpponent.die());
+ await wait(()=>g.evaluate(before=>{const p=BomberLeaderboard127.profile(B115.remoteName);return p.losses===before.losses+1&&p.score===Math.max(0,before.score-10)},rankedBefore),'simulated opponent result did not settle',4000);
  const rankedAfter=await g.evaluate(()=>({p:BomberLeaderboard127.profile(B115.remoteName),score:gGameEngine.simulatedOpponent.rating}));
  assert.equal(rankedAfter.p.score,Math.max(0,rankedBefore.score-10));assert.equal(rankedAfter.score,rankedAfter.p.score);assert.equal(rankedAfter.p.losses,rankedBefore.losses+1);
  const floor=await g.evaluate(()=>{const p=BomberLeaderboard127.population().find(p=>p.score===0);BomberLeaderboard127.recordResult(p.name,-10);return BomberLeaderboard127.recordResult(p.name,10).score});assert.equal(floor,10,'zero score accumulated hidden loss debt');
