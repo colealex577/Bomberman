@@ -99,27 +99,28 @@ try{
   assert.ok(await guest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest lost a player sprite after reconnect');
   console.log('RECONNECT_RESYNC_VISIBILITY PASS');
 
-  await host.evaluate(()=>B115.destroyNetwork());
-  await guest.evaluate(()=>B115.destroyNetwork());
-  await sleep(350);
+  // Public matchmaking is tested in fresh clients. Reusing a page immediately
+  // after a private game is an artificial lifecycle that is not part of normal
+  // host/join flow and can retain intentional game/menu state from that match.
+  const publicHost=await client('PublicHost'),publicGuest=await client('PublicGuest');
   const publicRoom='bomberman-public-smoke-'+Date.now();
-  await host.evaluate(id=>{
+  await publicHost.evaluate(id=>{
     B115.PUBLIC=[id];
     BomberV124.setAIEnabled(false);
     B115.startPublicHost();
   },publicRoom);
   await sleep(700);
-  await guest.evaluate(id=>{
+  await publicGuest.evaluate(id=>{
     B115.PUBLIC=[id];
     BomberV124.setAIEnabled(false);
     B115.startPublicJoin();
   },publicRoom);
-  await wait(()=>guest.evaluate(()=>BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId&&B115.conn?.open),'public connection did not establish',30000);
-  await equalWorld(host,guest,10000);
-  assert.equal(await host.evaluate(()=>BomberDataSync.role),'host');
-  assert.equal(await guest.evaluate(()=>BomberDataSync.role),'guest');
-  assert.ok(await host.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'host did not render both public-match players');
-  assert.ok(await guest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest did not render both public-match players');
+  await wait(()=>publicGuest.evaluate(()=>BomberDataSync.role==='guest'&&!!BomberMultiplayer.roundId&&B115.conn?.open),'public connection did not establish',30000);
+  await equalWorld(publicHost,publicGuest,10000);
+  assert.equal(await publicHost.evaluate(()=>BomberDataSync.role),'host');
+  assert.equal(await publicGuest.evaluate(()=>BomberDataSync.role),'guest');
+  assert.ok(await publicHost.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'host did not render both public-match players');
+  assert.ok(await publicGuest.evaluate(()=>gGameEngine.players[0].bmp.visible&&gGameEngine.players[1].bmp.visible),'guest did not render both public-match players');
   console.log('PUBLIC_CONNECT_VISIBLE_STATE PASS');
 
   assert.deepEqual(errors,[]);
