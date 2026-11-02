@@ -33,7 +33,13 @@ try{
   if(layout.p2.x!==15||layout.p2.y!==11||layout.p2.slot!==3)throw new Error('Player 2 is not bottom-right');
   if(layout.bots.length!==2||layout.bots.some(b=>![1,2].includes(b.slot)))throw new Error('normal AI did not occupy the two remaining corners');
   if(layout.boxes.length<4)throw new Error('expected four visible stat boxes');
-  for(const box of layout.boxes){if(box.items.length!==4)throw new Error('stat box '+box.slot+' does not have four graphical items');if(box.items.some(i=>i.alpha<=0))throw new Error('stat box '+box.slot+' contains a blank pickup icon')}
+  const expectedStats=['heart','speed','bomb','fire','kick'];
+  for(const box of layout.boxes){
+    if(box.items.length!==5)throw new Error('stat box '+box.slot+' does not have five graphical items including Bomb Kick');
+    const types=box.items.map(i=>i.type).sort();
+    if(JSON.stringify(types)!==JSON.stringify(expectedStats.slice().sort()))throw new Error('stat box '+box.slot+' has unexpected pickup stats: '+types.join(','));
+    if(box.items.some(i=>i.alpha<=0))throw new Error('stat box '+box.slot+' contains a blank pickup icon');
+  }
 
   await page.evaluate(()=>gGameEngine.beginMultiplayerSpectating(0));
   await sleep(120);
@@ -55,4 +61,3 @@ try{
   await context.close().catch(()=>{});
   await browser.close().catch(()=>{});
 }
-
