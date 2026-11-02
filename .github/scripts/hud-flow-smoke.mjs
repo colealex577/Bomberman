@@ -50,8 +50,9 @@ try{
   const options=await page.evaluate(()=>({banner:!document.getElementById('spectatorBanner').hidden,modal:!document.getElementById('qolEliminated').hidden}));
   console.log('ELIM_OPTIONS',JSON.stringify(options));
   if(options.banner||!options.modal)throw new Error('spectate/menu choices did not replace the banner after two seconds');
+  await sleep(300);
   await page.click('#qolSpectateBtn');
-  await sleep(100);
+  await sleep(150);
   const spectating=await page.evaluate(()=>({banner:!document.getElementById('spectatorBanner').hidden,modal:!document.getElementById('qolEliminated').hidden}));
   console.log('SPECTATING_CLEAR',JSON.stringify(spectating));
   if(spectating.banner||spectating.modal)throw new Error('spectating should leave a clear game view');
