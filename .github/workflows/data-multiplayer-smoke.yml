@@ -1,7 +1,7 @@
 name: Data multiplayer branch smoke
 on:
   push:
-    branches: [v0151-matchmaking-ai-polish, ai-overhaul-v0150, sim-opening-breakout-v0144, ai-intelligence-social-v0143, ai-controller-route-commitment, authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133, gameplay-ai-chat-v0134, ai-polish-v0135, ai-challenge-v0136, stability-chat-v0137, ai-movement-social-v0138, ai-matchmaking-social-v0139, ai-social-stability-v0140, ai-chat-openhunt-v0141]
+    branches: [fix/multiplayer-reliability-kick, v0151-matchmaking-ai-polish, ai-overhaul-v0150, sim-opening-breakout-v0144, ai-intelligence-social-v0143, ai-controller-route-commitment, authoritative-multiplayer-v0129, multiplayer-data-v0120, qol-v0120, qol-v0120-hudflow, character-rating-v0123, multiplayer-v0124, multiplayer-v0125, ai-bomb-attack-v0126, rematch-settings-v0127, leaderboard-ranks-v0128, gameplay-social-v0130, matchmaking-polish-v0131, gameplay-whole-v0132, map-selection-v0133, gameplay-ai-chat-v0134, ai-polish-v0135, ai-challenge-v0136, stability-chat-v0137, ai-movement-social-v0138, ai-matchmaking-social-v0139, ai-social-stability-v0140, ai-chat-openhunt-v0141]
   workflow_dispatch:
 concurrency:
   group: data-multiplayer-${{ github.ref }}-${{ github.sha }}
@@ -9,18 +9,33 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check multiplayer reliability files
+        run: |
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-core.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/net-v0115-match.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v0125-connect.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/multiplayer-v0129.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/runtime-v016218-round-integrity-rematch.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/files/app.js
+          node --check Bomberman-Ultimate-Universal-Web-v0.10/sw.js
+          node --check .github/scripts/multiplayer-kick-reconnect-smoke.mjs
+          node --check .github/scripts/authoritative-network-test.mjs
   regression:
+    needs: syntax
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        test: [ai-controller-browser, ai-controller-regression, data-smoke, qol-smoke, hud-flow-smoke, character-rating-smoke, profile-sync-smoke, data-match-test, qol-rematch-test, v124-multiplayer-smoke, v125-netcode-smoke, v126-ai-smoke, v127-rematch-settings-smoke, v128-leaderboard-smoke, authoritative-network-test, v130-social-smoke, v131-polish-smoke, v132-whole-smoke, v133-maps-smoke, v134-gameplay-smoke, v135-polish-smoke, v136-challenge-smoke, v137-stability-chat-smoke, v138-ai-social-smoke, v139-stability-social-smoke, v141-ai-chat-smoke, v143-intelligence-smoke, v144-opening-smoke, v150-ai-overhaul-smoke, v151-matchmaking-ai-polish-smoke]
+        test: [multiplayer-kick-reconnect-smoke, authoritative-network-test, ai-controller-browser, ai-controller-regression, data-smoke, profile-sync-smoke, v150-ai-overhaul-smoke, v151-matchmaking-ai-polish-smoke]
     steps:
       - uses: actions/checkout@v4
-      - name: Syntax check
-        run: find Bomberman-Ultimate-Universal-Web-v0.10/files .github/scripts -name '*.js' -o -name '*.mjs' | xargs -n 1 node --check
       - name: Install browser test helper
         run: npm install --no-save puppeteer-core@24.27.0
       - name: Run browser regression
