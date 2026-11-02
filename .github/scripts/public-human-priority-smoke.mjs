@@ -47,8 +47,12 @@ try{
  console.log('HUMAN_V_SIMULATED_DISCOVERABLE PASS');
 
  await wait(()=>simJoin.evaluate(()=>{const p=B115.els?.chatPanel;if(!p||p.hidden)return false;const s=getComputedStyle(p);return s.display!=='none'&&s.visibility!=='hidden'&&Number(s.opacity)!==0}),'chat panel was not visibly rendered for the human observer',8000);
+ await simJoin.evaluate(()=>{window.__rawSpectatorPackets=[];const m=B115.peer?.connections||{};Object.keys(m).forEach(k=>(m[k]||[]).forEach(c=>{try{c.on('data',d=>window.__rawSpectatorPackets.push(d))}catch(e){}}))});
  const directSent=await simHost.evaluate(()=>BomberPublicPresence16223.broadcastChat(B115.remoteName,'direct presence chat probe'));
  assert.equal(directSent,true,'authoritative presence chat send did not report success');
+ await sleep(600);
+ console.log('RAW_SPECTATOR_PACKETS',JSON.stringify(await simJoin.evaluate(()=>window.__rawSpectatorPackets||[])));
+ console.log('OBSERVER_CHAT_DOM',JSON.stringify(await simJoin.evaluate(()=>B115.els?.chatMessages?.innerText||'')));
  await wait(()=>simJoin.evaluate(()=>/direct presence chat probe/.test(B115.els?.chatMessages?.innerText||'')),'observer did not receive authoritative spectator chat',8000);
  await simHost.evaluate(()=>B115.appendChat(B115.remoteName,'observer relay probe',false));
  await wait(()=>simJoin.evaluate(()=>/observer relay probe/.test(B115.els?.chatMessages?.innerText||'')),'observer did not receive public chat while spectating',8000);
