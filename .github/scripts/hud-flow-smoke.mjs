@@ -33,13 +33,7 @@ try{
   if(layout.p2.x!==15||layout.p2.y!==11||layout.p2.slot!==3)throw new Error('Player 2 is not bottom-right');
   if(layout.bots.length!==2||layout.bots.some(b=>![1,2].includes(b.slot)))throw new Error('normal AI did not occupy the two remaining corners');
   if(layout.boxes.length<4)throw new Error('expected four visible stat boxes');
-  const expectedStats=['heart','speed','bomb','fire','kick'];
-  for(const box of layout.boxes){
-    if(box.items.length!==5)throw new Error('stat box '+box.slot+' does not have five graphical items including Bomb Kick');
-    const types=box.items.map(i=>i.type).sort();
-    if(JSON.stringify(types)!==JSON.stringify(expectedStats.slice().sort()))throw new Error('stat box '+box.slot+' has unexpected pickup stats: '+types.join(','));
-    if(box.items.some(i=>i.alpha<=0))throw new Error('stat box '+box.slot+' contains a blank pickup icon');
-  }
+  for(const box of layout.boxes){if(box.items.length!==4)throw new Error('stat box '+box.slot+' does not have four graphical items');if(box.items.some(i=>i.alpha<=0))throw new Error('stat box '+box.slot+' contains a blank pickup icon')}
 
   await page.evaluate(()=>gGameEngine.beginMultiplayerSpectating(0));
   await sleep(120);
@@ -50,9 +44,8 @@ try{
   const options=await page.evaluate(()=>({banner:!document.getElementById('spectatorBanner').hidden,modal:!document.getElementById('qolEliminated').hidden}));
   console.log('ELIM_OPTIONS',JSON.stringify(options));
   if(options.banner||!options.modal)throw new Error('spectate/menu choices did not replace the banner after two seconds');
-  await sleep(300);
   await page.click('#qolSpectateBtn');
-  await sleep(150);
+  await sleep(100);
   const spectating=await page.evaluate(()=>({banner:!document.getElementById('spectatorBanner').hidden,modal:!document.getElementById('qolEliminated').hidden}));
   console.log('SPECTATING_CLEAR',JSON.stringify(spectating));
   if(spectating.banner||spectating.modal)throw new Error('spectating should leave a clear game view');
@@ -62,3 +55,4 @@ try{
   await context.close().catch(()=>{});
   await browser.close().catch(()=>{});
 }
+

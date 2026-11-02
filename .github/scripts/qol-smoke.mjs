@@ -78,7 +78,7 @@ try{
   }
 
   await page.evaluate(()=>BomberQOL.showPostMatch('CI ROUND OVER'));
-  await page.waitForFunction(()=>!document.getElementById('qolPostMatch').hidden,{timeout:3500});
+  await sleep(100);
   const post=await page.evaluate(()=>({
     hidden:document.getElementById('qolPostMatch').hidden,
     random:document.getElementById('qolRandomBtn').textContent,

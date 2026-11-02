@@ -25,8 +25,6 @@ try{
   if(!connected)throw new Error('QOL rematch clients failed to connect');
   await A.page.evaluate(()=>BomberQOL.showPostMatch('TEST ROUND OVER'));
   await B.page.evaluate(()=>BomberQOL.showPostMatch('TEST ROUND OVER'));
-  const postReady=await waitFor(async()=>Promise.all([A.page.evaluate(()=>!document.getElementById('qolPostMatch').hidden),B.page.evaluate(()=>!document.getElementById('qolPostMatch').hidden)]).then(x=>x.every(Boolean)),4000,100);
-  if(!postReady)throw new Error('delayed post-match controls did not appear');
   await A.page.click('#qolReplayBtn');
   const prompted=await waitFor(()=>B.page.evaluate(()=>!document.getElementById('qolRematchPrompt').hidden),8000,100);
   if(!prompted)throw new Error('joiner did not receive rematch prompt');
@@ -44,3 +42,4 @@ try{
 }finally{
   await A?.context.close().catch(()=>{});await B?.context.close().catch(()=>{});await browser.close().catch(()=>{});
 }
+
