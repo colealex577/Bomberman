@@ -85,4 +85,4 @@ function loadCompatibility(){
  });
 }
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=01631').catch(()=>{}))}
-document.addEventListener('DOMContentLoaded',()=>{loadCompatibility();GUILocalization();gGameEngine.load()});
+document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadCompatibility();GUILocalization();gGameEngine.load()});
