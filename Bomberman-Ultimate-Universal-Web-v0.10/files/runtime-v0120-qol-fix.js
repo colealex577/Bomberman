@@ -89,28 +89,25 @@ function installBottomRightSpawn(){
 }
 
 /* ---------- two-second elimination card, then decision; spectating itself is clean ---------- */
-var eliminationTimer=null,spectateChosenUntil=0;
+var eliminationTimer=null;
 function clearEliminationTimer(){if(eliminationTimer){clearTimeout(eliminationTimer);eliminationTimer=null}}
 function cleanSpectateScreen(){hide($('spectatorBanner'));hide($('remoteSpectatorBanner'))}
 function stageElimination(label){
-  if(Date.now()<spectateChosenUntil){Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen();return}
   clearEliminationTimer();Q.eliminatedOpen=true;
   var modal=$('qolEliminated'),banner=$('spectatorBanner'),title=$('spectatorTitle'),sub=$('spectatorSubtitle');
   hide(modal);if(title)title.textContent='GAME OVER';if(sub)sub.textContent='YOU’RE OUT';show(banner);document.body.classList.remove('qol_round_live');
   eliminationTimer=setTimeout(function(){
     eliminationTimer=null;var g=G(),post=$('qolPostMatch');
     cleanSpectateScreen();
-    if(Date.now()<spectateChosenUntil||(g&&g.matchFinished)||(post&&!post.hidden))return;
+    if((g&&g.matchFinished)||(post&&!post.hidden))return;
     if(modal){var mt=modal.querySelector('.qol_title'),mc=modal.querySelector('.qol_copy');if(mt)mt.textContent=label||'You’re out';if(mc)mc.textContent='Keep watching the round or return to the menu.';show(modal)}
   },2000)
 }
-function chooseSpectate(){spectateChosenUntil=Date.now()+5000;clearEliminationTimer();Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen();document.body.classList.remove('qol_round_live')}
 function fixSpectateButton(){
-  var b=$('qolSpectateBtn');if(!b)return;
-  b.onclick=chooseSpectate;
-  if(!b.__cleanSpectateCapture){b.__cleanSpectateCapture=true;b.addEventListener('click',function(e){e.preventDefault();e.stopImmediatePropagation();chooseSpectate();setTimeout(chooseSpectate,0)},true)}
+  var b=$('qolSpectateBtn');if(!b||b.__cleanSpectate)return;b.__cleanSpectate=true;
+  b.onclick=function(){clearEliminationTimer();Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen();document.body.classList.remove('qol_round_live')}
 }
-setInterval(function(){fixSpectateButton();if(Date.now()<spectateChosenUntil){Q.eliminatedOpen=false;hide($('qolEliminated'));cleanSpectateScreen()}updateGraphicHud()},250);
+setInterval(function(){fixSpectateButton();updateGraphicHud()},250);
 
 function installStagedElimination(){
   if(Q.__stagedEliminationInstalled)return;Q.__stagedEliminationInstalled=true;
@@ -119,13 +116,13 @@ function installStagedElimination(){
   var currentSpec=GameEngine.prototype.beginSpectating;
   if(currentSpec)GameEngine.prototype.beginSpectating=function(){var r=currentSpec.apply(this,arguments);if(S.role==='simulated')stageElimination('You’re out');return r};
   var currentFinish=GameEngine.prototype.finishCompetitiveMatch;
-  if(currentFinish)GameEngine.prototype.finishCompetitiveMatch=function(){clearEliminationTimer();spectateChosenUntil=0;cleanSpectateScreen();return currentFinish.apply(this,arguments)};
+  if(currentFinish)GameEngine.prototype.finishCompetitiveMatch=function(){clearEliminationTimer();cleanSpectateScreen();return currentFinish.apply(this,arguments)};
   var currentFinishSpec=GameEngine.prototype.finishSpectating;
-  if(currentFinishSpec)GameEngine.prototype.finishSpectating=function(){clearEliminationTimer();spectateChosenUntil=0;cleanSpectateScreen();return currentFinishSpec.apply(this,arguments)};
+  if(currentFinishSpec)GameEngine.prototype.finishSpectating=function(){clearEliminationTimer();cleanSpectateScreen();return currentFinishSpec.apply(this,arguments)};
   var currentGameOver=GameEngine.prototype.gameOver;
-  if(currentGameOver)GameEngine.prototype.gameOver=function(){clearEliminationTimer();spectateChosenUntil=0;cleanSpectateScreen();return currentGameOver.apply(this,arguments)};
+  if(currentGameOver)GameEngine.prototype.gameOver=function(){clearEliminationTimer();cleanSpectateScreen();return currentGameOver.apply(this,arguments)};
   var currentGuestData=S.guestData;
-  if(currentGuestData)S.guestData=function(d){var r=currentGuestData.apply(S,arguments);if(d&&d.type==='spectate'&&window.BomberDataSync&&BomberDataSync.active&&BomberDataSync.role==='guest')stageElimination(d.title||'You’re out');if(d&&d.type==='matchEnd'){clearEliminationTimer();spectateChosenUntil=0;cleanSpectateScreen()}return r};
+  if(currentGuestData)S.guestData=function(d){var r=currentGuestData.apply(S,arguments);if(d&&d.type==='spectate'&&window.BomberDataSync&&BomberDataSync.active&&BomberDataSync.role==='guest')stageElimination(d.title||'You’re out');if(d&&d.type==='matchEnd'){clearEliminationTimer();cleanSpectateScreen()}return r};
   fixSpectateButton();Q.stagedElimination=true
 }
 
