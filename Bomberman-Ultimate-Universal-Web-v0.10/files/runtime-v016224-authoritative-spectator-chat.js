@@ -1,0 +1,14 @@
+(function(){
+'use strict';
+var VERSION='v0.16.2.24',observer=null,boundBox=null,boundForm=null,lastKey='',lastAt=0,seen=typeof WeakSet!=='undefined'?new WeakSet():null;
+function S(){return window.B115||null}
+function P(){return window.BomberPublicPresence16223||null}
+function clean(v,n){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,n||160)}
+function relay(name,text){var s=S(),p=P();name=clean(name||s&&s.localName||'Player',14);text=clean(text,160);if(!s||!p||!p.broadcastChat||s.kind!=='public'||(s.role!=='host'&&s.role!=='simulated')||!text)return false;var key=name+'\n'+text,now=Date.now();if(key===lastKey&&now-lastAt<300)return false;lastKey=key;lastAt=now;return !!p.broadcastChat(name,text)}
+function wasSeen(node){if(!node)return true;if(seen){if(seen.has(node))return true;seen.add(node);return false}if(node.__v16224SpectatorRelayed)return true;node.__v16224SpectatorRelayed=true;return false}
+function relayRow(node){var s=S();if(!s||!node||node.nodeType!==1||wasSeen(node))return false;var who=node.querySelector&&node.querySelector('strong'),body=node.querySelector&&node.querySelector('span'),name=clean(who&&who.textContent||s.localName||'Player',14),text=clean(body&&body.textContent||'',160);return relay(name,text)}
+function bindForm(){var s=S(),form=s&&s.els&&s.els.chatForm||document.getElementById('chatForm');if(!form||form===boundForm)return!!form;boundForm=form;form.addEventListener('submit',function(){var ss=S(),input=ss&&ss.els&&ss.els.chatInput||document.getElementById('chatInput'),text=clean(input&&input.value||'',160);if(ss&&ss.kind==='public'&&(ss.role==='host'||ss.role==='simulated')&&text)relay(ss.localName||'Player',text)},true);return true}
+function scan(relayRows){var s=S(),box=s&&s.els&&s.els.chatMessages||document.getElementById('chatMessages');bindForm();if(!box)return false;if(box!==boundBox){if(observer)try{observer.disconnect()}catch(e){}boundBox=box;seen=typeof WeakSet!=='undefined'?new WeakSet():null;Array.prototype.forEach.call(box.children||[],function(n){wasSeen(n)});observer=new MutationObserver(function(records){records.forEach(function(r){Array.prototype.forEach.call(r.addedNodes||[],function(n){if(n&&n.nodeType===1&&n.classList&&n.classList.contains('chat_line'))relayRow(n)})})});observer.observe(box,{childList:true})}if(relayRows)Array.prototype.forEach.call(box.children||[],function(n){if(n&&n.classList&&n.classList.contains('chat_line'))relayRow(n)});return true}
+function install(){scan(true);window.BomberAuthoritativeSpectatorChat16224={version:VERSION,scan:function(){return scan(true)},relay:relay,relayRow:relayRow};if(document.body)document.body.setAttribute('data-v016224-authoritative-chat','1')}
+setInterval(install,80);install();
+})();
