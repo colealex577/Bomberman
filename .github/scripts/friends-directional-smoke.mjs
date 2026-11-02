@@ -14,8 +14,12 @@ try{
  await wait(()=>host.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendGuest'&&x.rating===610&&x.wins===8&&x.losses===7)),'host did not persist guest friend stats',10000);
  await wait(()=>guest.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost'&&x.rating===730&&x.wins===14&&x.losses===6)),'guest did not persist host friend stats',10000);
  console.log('FRIEND_HISTORY_GOSSIP PASS');
- const viewer=await client('FriendViewer',300,1,1);await viewer.evaluate(id=>{B115.PUBLIC=[id];B115.loadPeer(()=>{BomberFriends16225.refreshOnline()})},room);
- await wait(()=>viewer.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost')&&Object.values(BomberFriends16225.online()).some(x=>x.profile?.name==='FriendHost')),'viewer did not discover online host friend',15000);
+ const viewer=await client('FriendViewer',300,1,1);
+ await viewer.evaluate(id=>{B115.PUBLIC=[id];BomberFriends16225.refreshOnline()},room);
+ await sleep(4500);
+ console.log('FRIEND_VIEWER_DIRECTORY',JSON.stringify(await viewer.evaluate(()=>BomberFriends16225.directory())));
+ console.log('FRIEND_VIEWER_ONLINE',JSON.stringify(await viewer.evaluate(()=>BomberFriends16225.online())));
+ await wait(()=>viewer.evaluate(()=>BomberFriends16225.directory().some(x=>x.name==='FriendHost')&&Object.values(BomberFriends16225.online()).some(x=>x.profile?.name==='FriendHost')),'viewer did not discover online host friend',12000);
  await viewer.evaluate(()=>BomberFriends16225.showFriends());
  await wait(()=>viewer.evaluate(()=>{const t=document.getElementById('v16225FriendList')?.innerText||'';return /FriendHost/.test(t)&&/Online now/.test(t)&&/Challenge/.test(t)&&/Observe match/.test(t)}),'Friends tab did not render online actions',8000);
  assert.equal(await viewer.evaluate(()=>document.querySelector('#v16225Tabs [data-tab="friends"]')?.classList.contains('active')),true);
