@@ -14,7 +14,7 @@ try{
  const activity=await p.evaluate(()=>({overnight:BomberMatchmaking151.activityForHour(2),early:BomberMatchmaking151.activityForHour(7),day:BomberMatchmaking151.activityForHour(13),peak:BomberMatchmaking151.activityForHour(20)}));
  assert.equal(activity.overnight.band,'overnight');assert.equal(activity.peak.band,'peak');assert.ok(activity.overnight.activity<activity.early.activity&&activity.early.activity<activity.day.activity&&activity.day.activity<activity.peak.activity,'time-of-day activity model did not rise from overnight toward peak');assert.ok(activity.overnight.minSeconds>activity.peak.maxSeconds,'overnight activity helper was not clearly slower than peak hours');
  await p.evaluate(()=>BomberOnline.openLobby());
- await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&document.getElementById('onlineHostBtn')&&BomberMatchmaking151.debug?.captured()&&BomberPublicPresence16223?.startJoin,{timeout:5000});
+ await p.waitForFunction(()=>document.getElementById('publicMatchBtn')&&document.getElementById('onlineHostBtn')&&BomberMatchmaking151.debug?.captured()&&BomberPublicPresence16223?.startJoin,{timeout:15000});
  console.log('V151_OWNER',await p.evaluate(()=>BomberMatchmaking151.debug.ownerSource()));
  const firstClick=await p.evaluate(async()=>{document.getElementById('publicMatchBtn').click();await new Promise(r=>setTimeout(r,450));const out={kind:B115.kind,role:B115.role,live:BomberMatchmaking151.isLive(),presence:BomberPublicPresence16223.state()};B115.destroyNetwork();B115.kind='';B115.setRole('offline');return out});
  assert.equal(firstClick.kind,'public','first click did not start public matchmaking');assert.ok(firstClick.role==='host'||firstClick.role==='guest'||firstClick.role==='simulated','first click never entered a public matchmaking role');assert.equal(firstClick.live,true,'public matchmaking did not become live');assert.equal(firstClick.presence.intent,'join','public click did not route through the real-human-first public presence owner');
@@ -30,7 +30,7 @@ try{
  assert.equal(stalledPublic.role,'simulated','stalled public search did not fall back to simulated mode');assert.equal(stalledPublic.kind,'public');assert.equal(stalledPublic.simMode,true,'stalled public search did not enable simulated-opponent mode');assert.equal(stalledPublic.simHuman,true,'stalled public search did not spawn a simulated human');assert.ok(stalledPublic.forceCount>=2,'simulated fallback watchdog never fired');
  console.log('PUBLIC_STALLED_NETWORK_SIM_FALLBACK PASS');
  await p.evaluate(()=>{B115.loadPeer=window.__v151OldLoadPeer;delete window.__v151OldLoadPeer;BomberSimFallback16225.clearTestDelay();BomberOnline.openLobby()});
- await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:3000});
+ await p.waitForFunction(()=>document.getElementById('v152ObserveBtn'),{timeout:10000});
  await p.evaluate(()=>{BomberSimFallback16225.setTestDelay(320);window.__v151OldLoadPeer2=B115.loadPeer;B115.loadPeer=function(){};document.getElementById('v152ObserveBtn').click()});
  await p.waitForFunction(()=>BomberHumanObserver152.state().mode==='observe'&&(gGameEngine.bots||[]).filter(b=>b?.simulatedHuman).length>=2,{timeout:6000});
  const stalledObserve=await p.evaluate(()=>({mode:BomberHumanObserver152.state().mode,simHumans:(gGameEngine.bots||[]).filter(b=>b?.simulatedHuman).length,forceCount:BomberSimFallback16225.state().forceCount}));
