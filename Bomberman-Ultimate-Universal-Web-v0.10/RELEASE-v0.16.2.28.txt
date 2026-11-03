@@ -1,0 +1,16 @@
+Bomberman v0.16.2.28 — Private Match / Death Reliability
+
+Fixes in this build:
+- Simulated-human elimination is terminal for the current round. A confirmed death can no longer be converted back to alive by the AI tank/extra-heart death hook.
+- Extra hearts are consumed before death, including with traveling-bomb owner protection, and planned high-level AI tank behavior is told when the heart was actually spent so it can escape afterward.
+- Private P2P guests automatically retry if the connection drops after the room handshake but before authoritative match startup completes.
+- After private-room acceptance, the guest briefly re-announces readiness until the authoritative match state arrives; the host uses this to resend/resync the current round if startup packets were interrupted.
+- Private hosts return cleanly to a waiting state if a guest drops before the match begins.
+- Idle guests no longer send an authoritative input packet every frame.
+- Recovery snapshots are not added to an already heavily buffered reliable data channel; critical state events remain reliable and actor traffic retains its existing congestion guard.
+- Service-worker/cache keys were bumped so browsers do not retain the affected v0.16.2.27 networking/death scripts.
+
+Controls remain unchanged:
+- Space: normal bomb
+- E: Bomb Kick in last facing direction
+- W/A/S/D: directional Bomb Kick

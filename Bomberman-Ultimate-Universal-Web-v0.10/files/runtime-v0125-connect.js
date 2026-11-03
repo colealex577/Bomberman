@@ -24,7 +24,7 @@ function hostCandidate(c,reverse){
  c.on('close',function(){if(S.conn===c){S.conn=null;if(S.started&&S.els.matchStatus)S.els.matchStatus.textContent='PLAYER 2 DISCONNECTED'}});
  c.on('error',function(){});
 }
-function probe(){var now=Date.now();if(now-lastProbe<650||!window.Peer||!S.host||!S.host()||S.started||!S.peer||!S.peer.open||S.conn&&S.conn.open)return;var id=String(S.peer.id||'');if(!id||id.indexOf('bomberman-')!==0)return;lastProbe=now;target=rid(id);var wanted=target;auxReady(function(p){if(!S.host()||S.started||S.conn&&S.conn.open||wanted!==target)return;try{hostCandidate(p.connect(wanted,{serialization:'json',reliable:true,metadata:{kind:S.kind,code:S.code,reverse:true}}))}catch(e){}})}
+function probe(){var now=Date.now();if(S.kind==='private'||now-lastProbe<650||!window.Peer||!S.host||!S.host()||S.started||!S.peer||!S.peer.open||S.conn&&S.conn.open)return;var id=String(S.peer.id||'');if(!id||id.indexOf('bomberman-')!==0)return;lastProbe=now;target=rid(id);var wanted=target;auxReady(function(p){if(!S.host()||S.started||S.conn&&S.conn.open||wanted!==target)return;try{hostCandidate(p.connect(wanted,{serialization:'json',reliable:true,metadata:{kind:S.kind,code:S.code,reverse:true}}))}catch(e){}})}
 function guestCandidate(c,finish){
  if(!c)return;
  c.on('data',function(d){
@@ -36,6 +36,8 @@ function guestCandidate(c,finish){
  c.on('error',function(e){trace('guest channel error',e&&e.type)});
 }
 function symmetric(id,generation,done){
+ // Private rooms deliberately use one direct authoritative channel.
+ if(S.kind==='private'&&baseConnect)return baseConnect.call(S,id,generation,done);
  // The dual direct/reverse probe is only for establishing the original match.
  // Once a match is active, reconnect through the authoritative connection path
  // so session identity and full-state resync are preserved.

@@ -6,14 +6,26 @@ function GUILocalization(){
 let Storage={setValue:(key,value)=>{localStorage[key]=JSON.stringify(value)},getValue:(key)=>{let result;try{if(localStorage[key])result=JSON.parse(localStorage[key])}catch(e){throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`)}return result}};
 class StorageError extends Error{constructor(msg){super();this.name='StorageError';this.message=msg||'Storage Error';this.stack=(new Error()).stack}}
 try{localStorage.setItem('BombermanSingleMapV133','classic');localStorage.setItem('BombermanMultiMapV133','classic')}catch(e){}
-function loadScript(id,src,cb){if(document.getElementById(id)){if(cb)cb();return}const s=document.createElement('script');s.id=id;s.src=src;s.onload=()=>{if(cb)cb()};document.head.appendChild(s)}
+function loadScript(id,src,cb){
+ let s=document.getElementById(id),done=false;
+ function finish(){if(done)return;done=true;try{s.dataset.bomberLoaded='1'}catch(e){}if(cb)cb()}
+ if(s){
+  if(s.dataset&&s.dataset.bomberLoaded==='1'){finish();return}
+  s.addEventListener('load',finish,{once:true});
+  /* Preload-created scripts mark themselves on load. If that mark landed just
+     before this listener was attached, observe it on the next task. */
+  setTimeout(function(){if(!done&&s.dataset&&s.dataset.bomberLoaded==='1')finish()},0);
+  return
+ }
+ s=document.createElement('script');s.id=id;s.src=src;s.onload=finish;s.onerror=function(){console.error('Bomberman module failed:',src)};document.head.appendChild(s)
+}
 function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader){console.error('Packed runtime loader missing:',id);return}BomberPackedLoader.load(id,src,function(err){if(!err&&cb)cb()})}
 function dataDiagnosticsDisabled(){try{return new URLSearchParams(location.search).get('nodata')==='1'}catch(e){return false}}
 function loadCompatibility(){
  loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',function(){
   loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',function(){
    if(dataDiagnosticsDisabled())return;
-   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=01630',function(){
+   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=01633',function(){
     loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
      loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120d',function(){
       loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
@@ -23,7 +35,7 @@ function loadCompatibility(){
           loadScript('runtime-v0124-loader','./files/runtime-v0124.js?v=0124',function(){
            loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=0125',function(){
             (function(){
-             loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=0125',function(){
+             loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=01631',function(){
               loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=01629',function(){
                loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
@@ -84,5 +96,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=016225').catch(()=>{}))}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=016228').catch(()=>{}))}
 document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=016225b');loadCompatibility();GUILocalization();gGameEngine.load()});

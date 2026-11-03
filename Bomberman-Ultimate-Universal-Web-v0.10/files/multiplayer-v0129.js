@@ -1,15 +1,18 @@
 /* One host simulation; guests render a revisioned mirror and predict movement only. */
-(function () {
+(function bootBomberMultiplayer129() {
 'use strict';
 const S = window.B115;
-if (!S) return;
+/* B115 is injected asynchronously by the legacy networking bootstrap.
+   Never permanently abort authoritative multiplayer just because that loader
+   has not finished yet. */
+if (!S) { setTimeout(bootBomberMultiplayer129, 40); return; }
 const DS = window.BomberDataSync = {active:false,role:'offline',version:'v0.16.3-authoritative'};
 S.__dataSyncInstalled = true;
 const N = window.BomberMultiplayer = {
- version:'v0.16.3-net', ready:false, roundId:null, roundNumber:0, worldRevision:0,
+ version:'v0.16.3.1-net', ready:false, roundId:null, roundNumber:0, worldRevision:0,
  actorSequence:0, lastActorSequence:0, inputSequence:0, lastProcessedInput:0,
  mirror:null, debug:new URLSearchParams(location.search).has('netdebug'),
- metrics:{guestBotUpdates:0,corrections:0,rejectedPackets:0,resyncs:0},
+ metrics:{guestBotUpdates:0,corrections:0,rejectedPackets:0,resyncs:0,skippedActors:0,initRetries:0},
 };
 const G=()=>window.gGameEngine;
 const host=()=>DS.active&&S.role==='host';
@@ -22,11 +25,13 @@ let session='',lastWorld=null,pending=[],commands=[],serial=0,controlSeq=0,lastC
 let building=null,starting=false,lastFrame=0,lastRecovery=0,lastQueued=0;
 let oldHost,oldGuest,oldSend,baseMove,previousSession='',lastSeenRound=0;
 let budget=200,budgetTime=0,applying=false,announcedRound=null;
+let initAckRound='',lastInitType='',lastInitSent=0,initRetryCount=0;
 const retiredSessions=new Set();
 const legacyWire=/^(dataState|dataWorld|dataBombSpawn|dataBombExplode|v125Move|v125BombRequest|v125BombAck|v125Pickup|key|bomb|streamRetry|streamAck|qolRematchRequest|qolRematchResponse|qolRematchStart)$/;
 const controls=/^(v127DuelResolved|v127AIBonus|v127RematchRequest|v127RematchResponse|v123Profile|spectate|matchEnd|qolOpponentLeft)$/;
-function raw(d){if(S.conn&&S.conn.open)oldSend.call(S,d)}
-function send(kind,data){raw(Object.assign({type:'auth129',kind,roundId:N.roundId,roundNumber:N.roundNumber,session},data))}
+function buffered(){const c=S.conn,dc=c&&(c.dataChannel||c._dc);return Number(dc&&dc.bufferedAmount)||0}
+function raw(d){if(S.conn&&S.conn.open)return oldSend.call(S,d);return false}
+function send(kind,data){const q=buffered();if(kind==='actors'&&q>131072){N.metrics.skippedActors++;return false}if(kind==='snapshot'&&q>262144)return false;return raw(Object.assign({type:'auth129',kind,roundId:N.roundId,roundNumber:N.roundNumber,session},data))}
 function stats(e){return {v:e.velocity,bm:e.bombsMax,bs:e.bombStrength,h:e.hearts||0,k:Math.max(0,Number(e.bombKickCharges)||0),c:copy(e.bonusCounts||{})}}
 function putStats(e,s){if(!s)return;e.velocity=s.v;e.bombsMax=s.bm;e.bombStrength=s.bs;e.hearts=s.h;e.bombKickCharges=Math.max(0,Number(s.k)||0);e.bonusCounts=copy(s.c||{});e.bonusCounts.kick=e.bombKickCharges}
 let roundBots=[];
@@ -119,7 +124,8 @@ function move(p,dir,dt){
 function input(dt,action){
  if(!guest()||!N.roundId||G().menu.visible||G().lobbyOpen)return;
  const p=G().players[1];if(!p||!p.alive)return;
- const cmd={seq:++N.inputSequence,player:1,dt:Math.max(0,Math.min(34,dt)),dir:direction(),at:Date.now()};
+ const dir=direction();if(!action&&dir==='idle')return;
+ const cmd={seq:++N.inputSequence,player:1,dt:Math.max(0,Math.min(34,dt)),dir:dir,at:Date.now()};
  if(action==='bomb')cmd.bomb={x:p.position.x,y:p.position.y};
  else if(action==='kick')cmd.kick={x:p.position.x,y:p.position.y};
  else move(p,cmd.dir,cmd.dt);
@@ -168,14 +174,16 @@ N.frame=function(){
 };
 N.afterFrame=publish;
 function newRound(){
- roundBots=[];N.roundNumber++;N.roundId=session+':'+N.roundNumber;N.worldRevision=0;N.actorSequence=0;N.lastActorSequence=0;N.lastProcessedInput=0;N.inputSequence=0;lastQueued=0;serial=0;commands=[];pending=[];lastWorld=null;budget=200;budgetTime=performance.now();announcedRound=null;
+ roundBots=[];N.roundNumber++;N.roundId=session+':'+N.roundNumber;N.worldRevision=0;N.actorSequence=0;N.lastActorSequence=0;N.lastProcessedInput=0;N.inputSequence=0;lastQueued=0;serial=0;commands=[];pending=[];lastWorld=null;budget=200;budgetTime=performance.now();announcedRound=null;initAckRound='';lastInitType='';lastInitSent=0;initRetryCount=0;
 }
-function initPacket(type){if(!host()||!N.roundId)return;announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:type,profile:{type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()},names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length})}
+function emitInit(type,retry){if(!host()||!N.roundId)return false;announcedRound=N.roundId;publish();const w=world();lastWorld=copy(w);lastInitType=type||lastInitType||'resume';lastInitSent=Date.now();if(retry){initRetryCount++;N.metrics.initRetries++}else{initAckRound='';initRetryCount=0}return send('init',{worldRevision:N.worldRevision,world:w,actors:actorPacket(),startType:lastInitType,profile:{type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()},names:[S.localName,S.remoteName],ultimate:S.ultimate,dropRate:S.dropRate,bots:G().bots.length,initAttempt:initRetryCount})}
+function initPacket(type){return emitInit(type,false)}
+function ackInit(){if(guest()&&N.roundId)send('initAck',{worldRevision:N.worldRevision})}
 function resumeBegin(d){
  N.mirror=copy(d.world);N.worldRevision=d.worldRevision;N.lastActorSequence=0;pending=[];lastFrame=0;DS.active=true;DS.role='guest';S.started=true;S.streamAck=true;S.clearFallback();
  S.remoteName=S.cleanName(d.names[0]);S.localName=S.cleanName(d.names[1]);S.applyMode(d.ultimate,true);S.applyDrop(d.dropRate,true);
  const g=G();g.onlineDataMode=true;g.networkRole='guest';g.playerNames=d.names;g.simulatedOpponentMode=false;g.lobbyOpen=false;
- S.els.lobby.hidden=true;S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.els.matchBar.hidden=false;renderWorld();receiveActors(d.actors);S.els.matchStatus.textContent=(S.kind==='private'?'PRIVATE':'PUBLIC')+' • '+S.localName+' vs '+S.remoteName;S.ensureMusic();S.chatVisibility();N.metrics.resyncs++;
+ S.els.lobby.hidden=true;S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.els.matchBar.hidden=false;renderWorld();receiveActors(d.actors);S.els.matchStatus.textContent=(S.kind==='private'?'PRIVATE':'PUBLIC')+' • '+S.localName+' vs '+S.remoteName;S.ensureMusic();S.chatVisibility();N.metrics.resyncs++;ackInit();
 }
 function begin(d){
  const sameRound=DS.active&&S.role==='guest'&&d.session===session&&d.roundId===N.roundId;
@@ -194,13 +202,14 @@ function begin(d){
  if(d.profile)oldGuest.call(S,d.profile);
  S.send({type:'v123Profile',rating:BomberCharacter.getRating(),appearance:BomberCharacter.get()});
  if(d.startType==='start')oldGuest.call(S,{type:'start',names:d.names,ultimate:d.ultimate,dropRate:d.dropRate});
- S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.els.matchStatus.textContent=(S.kind==='private'?'PRIVATE':'PUBLIC')+' • '+S.localName+' vs '+S.remoteName;S.ensureMusic();S.chatVisibility();
+ S.els.localStage.hidden=false;S.els.remoteStage.hidden=true;S.els.matchStatus.textContent=(S.kind==='private'?'PRIVATE':'PUBLIC')+' • '+S.localName+' vs '+S.remoteName;S.ensureMusic();S.chatVisibility();ackInit();
 }
 function receive(d,isHost){
  if(!d||d.type!=='auth129')return false;
  if(d.kind==='init'&&!isHost){begin(d);return true}
  if(d.roundId!==N.roundId||d.session!==session){N.metrics.rejectedPackets++;return true}
  if(isHost){
+  if(d.kind==='initAck'){initAckRound=d.roundId;return true}
   if(d.kind==='input'){
    const c=d.cmd;if(!c||c.player!==1||!Number.isSafeInteger(c.seq)||c.seq<=lastQueued||!Number.isFinite(c.dt)||c.dt<0||c.dt>34||!['up','down','left','right','idle'].includes(c.dir)||commands.length>=180)return true;
    lastQueued=c.seq;commands.push(c);
@@ -235,7 +244,7 @@ function install(){
  S.hostData=function(d){if(receive(d,true))return;if(d&&(legacyWire.test(d.type)||controls.test(d.type)))return;return oldHost.call(S,d)};
  S.guestData=function(d){if(receive(d,false))return;if(d&&(legacyWire.test(d.type)||controls.test(d.type)||d.type==='start'||d.type==='v127RematchStart'))return;return oldGuest.call(S,d)};
  const start=S.startHostMatch;S.startHostMatch=function(){if(S.started)return;session=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);previousSession='';lastSeenRound=0;retiredSessions.clear();N.roundNumber=0;DS.active=true;DS.role='host';G().onlineDataMode=true;G().networkRole='host';return start.apply(S,arguments)};
- const destroy=S.destroyNetwork;S.destroyNetwork=function(){DS.active=false;DS.role='offline';N.roundId=null;N.mirror=null;pending=[];commands=[];lastWorld=null;return destroy.apply(S,arguments)};
+ const destroy=S.destroyNetwork;S.destroyNetwork=function(){DS.active=false;DS.role='offline';N.roundId=null;N.mirror=null;pending=[];commands=[];lastWorld=null;initAckRound='';lastInitType='';lastInitSent=0;initRetryCount=0;return destroy.apply(S,arguments)};
  S.streamTo=function(){};S.incomingCall=c=>{try{c.close()}catch(e){}};
  const restart=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){if(guest()&&!building)return;if(host()){newRound();starting=true}try{return restart.apply(this,arguments)}finally{starting=false;if(host()){const id=N.roundId;setTimeout(()=>{if(host()&&N.roundId===id&&announcedRound!==id)initPacket('v127RematchStart')},0)}}};
  const tiles=GameEngine.prototype.drawTiles,bonuses=GameEngine.prototype.drawBonuses,bots=GameEngine.prototype.spawnBots;
@@ -265,5 +274,5 @@ function install(){
  return true;
 }
 const t=setInterval(()=>{if(install())clearInterval(t)},40);
-setInterval(()=>{if(!N.ready||!host()||!N.roundId)return;publish();send('actors',actorPacket());if(Date.now()-lastRecovery>3000){lastRecovery=Date.now();recovery()}},1000/30);
+setInterval(()=>{if(!N.ready||!host()||!N.roundId)return;publish();send('actors',actorPacket());const now=Date.now();if(lastInitType&&initAckRound!==N.roundId&&now-lastInitSent>650)emitInit(lastInitType,true);if(now-lastRecovery>3000){lastRecovery=now;recovery()}},1000/30);
 })();

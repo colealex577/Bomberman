@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.25';
+window.BomberBuildVersion='v0.16.2.28';
 window.BomberVersionUIOwner='runtime-v016225-friends-directional';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.25',OWNER='runtime-v016225-friends-directional';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.28',OWNER='runtime-v016225-friends-directional';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{t.textContent=TITLE;document.title=TITLE}catch(e){}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 /* E/Q still throw immediately. During the short direct-throw window, a direction key chooses launch direction without changing movement. */
 (function(){
@@ -18,7 +18,7 @@ var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.25',OWNER='runtim
  window.addEventListener('keydown',function(e){if(editable(e.target))return;if(e.code==='KeyE'){modDown(e,0);return}if(e.code==='KeyQ'){modDown(e,1);return}for(var i=0;i<2;i++){var st=states[i],d=dirFor(i,e.code);if(d&&st.down&&!st.used){stop(e);if(e.repeat)return;swallowed[e.code]=i;if(st.timer){clearTimeout(st.timer);st.timer=null}st.used=true;explicitThrow(i,d);return}}},true);
  window.addEventListener('keyup',function(e){if(editable(e.target))return;if(e.code==='KeyE'){modUp(e,0);return}if(e.code==='KeyQ'){modUp(e,1);return}if(swallowed[e.code]!==undefined){stop(e);delete swallowed[e.code]}},true)
 })();
-function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;(document.head||document.documentElement).appendChild(s)}
+function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;s.onload=function(){try{s.dataset.bomberLoaded='1'}catch(e){}};(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
 early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016223c');
 early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016224');
@@ -41,7 +41,7 @@ early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-pol
 early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
 early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=016211b');
 early('runtime-v01562-public-chat-stability-loader','./files/runtime-v01562-public-chat-stability.js?v=01562');
-early('runtime-v0157-public-behavior-loader','./files/runtime-v0157-public-behavior.js?v=0157');
+early('runtime-v0157-public-behavior-loader','./files/runtime-v0157-public-behavior.js?v=0157b');
 early('runtime-v0158-round-social-loader','./files/runtime-v0158-round-social.js?v=0158');
 if(window.BomberPackedLoader)BomberPackedLoader.load('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629');else early('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js?v=01629');
 early('runtime-v0161-bomb-kick-polish-loader','./files/runtime-v0161-bomb-kick-polish.js?v=01622d');
@@ -50,7 +50,7 @@ early('runtime-v0161-speed-standard-loader','./files/runtime-v0161-speed-standar
 early('runtime-v0161-lobby-chat-cleanup-loader','./files/runtime-v0161-lobby-chat-cleanup.js?v=0161l');
 early('runtime-v016210-ai-policy-loader','./files/runtime-v016210-ai-policy.js?v=016210');
 early('runtime-v016217-ai-mining-spacing-loader','./files/runtime-v016217-ai-mining-spacing.js?v=016217');
-early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211a');
+early('runtime-v016211-stability-loader','./files/runtime-v016211-travel-chat-drops.js?v=016211b');
 early('runtime-v016212-owner-pass-loader','./files/runtime-v016212-owner-pass.js?v=016212');
 (function(){var n=0,m=setInterval(function(){if(window.BomberFix16216&&window.BomberAI16217&&window.BomberFix16218&&window.BomberFix16219&&window.BomberFix16220&&window.BomberFix16221&&window.BomberFix16222&&window.BomberFix16223&&window.BomberFix16224&&window.BomberAuthoritativeSpectatorChat16224&&window.BomberChatBridge16224&&window.BomberFriends16225){if(document.body){document.body.setAttribute('data-v016216-runtime','1');document.body.setAttribute('data-v016217-ai','1');document.body.setAttribute('data-v016218-runtime','1');document.body.setAttribute('data-v016219-runtime','1');document.body.setAttribute('data-v016220-runtime','1');document.body.setAttribute('data-v016221-runtime','1');document.body.setAttribute('data-v016222-runtime','1');document.body.setAttribute('data-v016223-runtime','1');document.body.setAttribute('data-v016224-runtime','1');document.body.setAttribute('data-v016224-authoritative-chat','1');document.body.setAttribute('data-v016224-chat-bridge','1');document.body.setAttribute('data-v016225-runtime','1')}clearInterval(m)}else if(++n>1200)clearInterval(m)},50)})();
 if(!window.gGameEngine)return;
