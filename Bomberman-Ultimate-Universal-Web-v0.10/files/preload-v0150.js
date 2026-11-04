@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.30';
-window.BomberVersionUIOwner='runtime-v016230-round-skill-version';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.30',OWNER='runtime-v016230-round-skill-version';
+window.BomberBuildVersion='v0.16.2.31';
+window.BomberVersionUIOwner='runtime-v016231-round-skill-version';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.31',OWNER='runtime-v016231-round-skill-version';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{t.textContent=TITLE;document.title=TITLE}catch(e){}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 /* E/Q still throw immediately. During the short direct-throw window, a direction key chooses launch direction without changing movement. */
 (function(){

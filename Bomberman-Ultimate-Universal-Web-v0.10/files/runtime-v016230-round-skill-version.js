@@ -1,7 +1,7 @@
 (function () {
  'use strict';
- // v0.16.2.30: a single presentation version, durable round identities, and real AI skill tiers.
- var VERSION='v0.16.2.30',round=0,dead=Object.create(null),installed=false;
+ // v0.16.2.31: a single presentation version, durable round identities, and real AI skill tiers.
+ var VERSION='v0.16.2.31',round=0,dead=Object.create(null),installed=false;
  var stats={eliminations:0,respawnsBlocked:0,visualRestores:0,rematches:0};
  function G(){return window.gGameEngine||null}
  function actors(g){return(g.players||[]).concat(g.bots||[])}

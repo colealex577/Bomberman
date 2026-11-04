@@ -7,9 +7,18 @@ var SCORE_KEY='BombermanRatingV1',WINS_KEY='BombermanPlayerWinsV1',LOSSES_KEY='B
 var POPULATION_SIZE=599,POSITIVE_COUNT=520,LIVE_BUCKET_MS=300000,DAY_MS=86400000,CAREER_EPOCH=Date.UTC(2026,0,1);
 var lastPlayerScore=-1,installed=false,seedRoster=[],roster=[],top50=[],byName={},lastBucket=-1,matchedProfile=null;
 
-var GAMER_PREFIX=['Neon','Pixel','Turbo','Ghost','Nova','Night','Vapor','Cyber','Echo','Astro','Crimson','Volt','Hyper','Rapid','Bomb','Arcade','Grid','Retro','Fuse','Shadow'];
-var GAMER_SUFFIX=['Fox','Pilot','Rider','Wolf','Ace','Viper','Byte','Rush','Runner','Knight','Hawk','Bolt','Rex','Drift','Blaze','Storm','Ninja','Phantom','Rocket','Zero'];
-var MALE_NAMES=['Liam','Noah','Oliver','James','Elijah','Mateo','Theodore','Henry','Lucas','William','Benjamin','Levi','Sebastian','Jack','Ezra','Michael','Daniel','Leo','Owen','Samuel','Hudson','Alexander','Asher','Luca','Ethan','John','David','Jackson','Joseph','Mason','Luke','Matthew','Julian','Dylan','Elias','Jacob','Maverick','Gabriel','Logan','Aiden','Thomas','Isaac','Miles','Grayson','Santiago','Anthony','Wyatt','Carter','Jayden','Ezekiel','Joshua','Andrew','Nathan','Christopher','Caleb','Ryan','Adrian','Cameron','Connor','Aaron','Evan','Nolan','Colton','Landon','Hunter','Tyler','Jordan','Nicholas','Adam','Austin','Brandon','Zachary','Ian','Sean','Gavin','Kevin','Jason','Eric','Cole','Blake','Trevor','Derek','Justin','Marcus','Patrick','Joel','Cody','Max','Ben','Alex','Nate','Sam','Josh','Dan','Chris','Matt','Drew','Jake','Nick'];
+var GAMER_PREFIX=['Neon','Pixel','Turbo','Ghost','Nova','Night'];
+var GAMER_SUFFIX=['Fox','Pilot','Ace','Rider','Bolt','Knight'];
+var CASUAL_HANDLES="toastman,oldpencil,notmike,sleepycat,raincheck,beanz,justhere,coldpizza,bluecouch,oneorange,maybe_joe,bagel,cardboard,skatepark,fuzzy,wetpaint,coffeeplease,monday,fridaynight,sidequest,lowbattery,soggybread,luckyduck,ghosted,noodles,cheddar,socks,olives,pigeon,puddle,brb,heyitsme,lawnchair,toastie,crouton,doorstop,boomerang,ramen,applejuice,freewifi,beepboop,soup,waffle,smallfrog,notyet,clockwise,okok,napkin,sandwich,justchillin,windowseat,pringle,melon,stargazing,lilypad,mailbox,couchpotato,creek,starfish,pinecone,gingerale,probablysam,fridge,catnap,bottlecap,sidewalk,slippers,smol,goodnight,strawberry,peanut,pancakes,whalewatch,mustard,pebble,sunflower,yellowhat,drizzle,indoorcat,leafpile,actuallyno,sometime,maybe_later,parkinglot,knockknock,pretzel,smoothie,apricot,mintchip,regularjoe,randomguy,cloudy,sundae,breadcrumb,snacktime,dandelion,clover,moonbeam,cerealbox,biscuit,carrotcake,weekday,flipflops,something,anotherday,thatguy,potato,fishstick,chickpea,unplugged,slowwifi,justalex,notyourdad,peachtea,purplepen,hardboiled,beachball,button,zipper,bluejay,moss,spoon,window,quietly,cactus,mousepad,toast,twosocks,icedtea,pockets,jellybean,earlybird,teapot,sketchbook,lemonade,garlicbread,palmtree,highfive,tomorrow,wintercoat,eggroll,lostkeys,poptart,birdie,plainbagel,soapdish,blueberry,greenbeans,goodluck,not_today,catdad,dogpark,slowmo,almostthere,waffles,ohwell,heyyo,dailybread,bananas,bluechair,dayoff,milkshake,tealshirt,almostok,justben,sunday,nightowl,teakettle,rusty,peppers,oldschool,daydream,whatever,smalltown,dusty,howdy,lilbean,tuna,smudge,bookworm,maybe,canary,softserve,hellooo,justwait,blurry,zoomies,lowkey,cheesepls,peanutbutter,smallcloud,overcast,upstairs,mountainman,afkagain,clumsy,crackers,goose,busybee,fishbowl,raindrop,streetlamp,dad_jokes,brunch,orangehat,justsomeguy,lemon,fortytwo,skyline,smalls,cozy,one_more,knitsweater,beachday,oldboots,waterbottle,halfawake,blueberryjam".split(',');
+var ODD_HANDLES="x,z,q,v,k,ok,idk,???,._.,-_-,o_o,:),:D,🦆,🍞,🗿,👀,🐢,🎲,🥔,☁️,🪴,🐸,🍉".split(',');
+var SYMBOL_NICKS={'🦆':'duck','🍞':'bread','🗿':'rock','👀':'eyes','🐢':'turtle','🎲':'dice','🥔':'potato','☁️':'cloud','🪴':'plant','🐸':'frog','🍉':'melon','???':'question','._.':'dot','-_-':'dash','o_o':'eyes',':)':'smiley',':D':'smiley'};
+var MALE_NAMES="Liam,Noah,Oliver,James,Elijah,Mateo,Theodore,Henry,Lucas,William,Benjamin,Levi,Sebastian,Jack,Ezra,Michael,Daniel,Leo,Owen,Samuel,Hudson,Alexander,Asher,Luca,Ethan,John,David,Jackson,Joseph,Mason,Luke,Matthew,Julian,Dylan,Elias,Jacob,Maverick,Gabriel,Logan,Aiden,Thomas,Isaac,Miles,Grayson,Santiago,Anthony,Wyatt,Carter,Jayden,Ezekiel,Joshua,Andrew,Nathan,Christopher,Caleb,Ryan,Adrian,Cameron,Connor,Aaron,Evan,Nolan,Colton,Landon,Hunter,Tyler,Jordan,Nicholas,Adam,Austin,Brandon,Zachary,Ian,Sean,Gavin,Kevin,Jason,Eric,Cole,Blake,Trevor,Derek,Justin,Marcus,Patrick,Joel,Cody,Max,Ben,Alex,Nate,Sam,Josh,Dan,Chris,Matt,Drew,Jake,Nick".split(',');
+function nicknameFor(name){
+ name=String(name||'').trim();if(!name)return'player';if(SYMBOL_NICKS[name])return SYMBOL_NICKS[name];
+ var n=name.replace(/[0-9]+$/,'').replace(/[_-]+/g,' ').trim(),part=n.split(/\s+/)[0]||n;
+ var camel=part.match(/^[A-Z]?[a-z]+(?=[A-Z]|$)/);if(camel&&camel[0].length>1)part=camel[0];
+ part=part.replace(/[^A-Za-z0-9]/g,'');return(part||'player').slice(0,11).toLowerCase()
+}
 
 function $(id){return document.getElementById(id)}
 function G(){return window.gGameEngine||null}
@@ -35,31 +44,30 @@ function scoreCurve(rank){
  return 0
 }
 
-function addSeed(out,seen,name,category){
+function addSeed(out,seen,name,category,nick){
  name=String(name||'').replace(/\s+/g,'').slice(0,14);
  if(!name||seen[name])return false;
- seen[name]=1;out.push({name:name,category:category});return true
+ seen[name]=1;out.push({name:name,category:category,nickname:String(nick||nicknameFor(name)).slice(0,12)});return true
 }
 function buildSeedRoster(){
  if(seedRoster.length)return;
  var out=[],seen={},i,j;
- for(i=0;i<GAMER_PREFIX.length&&out.length<180;i++){
-  for(j=0;j<GAMER_SUFFIX.length&&out.length<180;j++){
-   addSeed(out,seen,GAMER_PREFIX[(i*7)%GAMER_PREFIX.length]+GAMER_SUFFIX[(j*9)%GAMER_SUFFIX.length],'gamer');
-  }
- }
  for(i=0;i<MALE_NAMES.length;i++)addSeed(out,seen,MALE_NAMES[i],'male');
- for(i=0;out.length<POPULATION_SIZE;i++){
-  var base=MALE_NAMES[(i*17+11)%MALE_NAMES.length];
-  var n=1+(hash('BM128|number|'+base+'|'+i)%999);
-  addSeed(out,seen,base+n,'number');
+ for(i=0;i<CASUAL_HANDLES.length;i++)addSeed(out,seen,CASUAL_HANDLES[i],'casual');
+ for(i=0;i<ODD_HANDLES.length;i++)addSeed(out,seen,ODD_HANDLES[i],'odd',nicknameFor(ODD_HANDLES[i]));
+ for(i=0;i<24;i++)addSeed(out,seen,GAMER_PREFIX[Math.floor(i/6)%GAMER_PREFIX.length]+GAMER_SUFFIX[i%GAMER_SUFFIX.length],'gamer');
+ for(i=0;i<105;i++){
+  var word=CASUAL_HANDLES[(i*37+19)%CASUAL_HANDLES.length],digits=1+(hash('BM131|word-number|'+word+'|'+i)%989);
+  addSeed(out,seen,word+digits,'casual-number',nicknameFor(word));
  }
- out.sort(function(a,b){
-  var d=(hash('BM128|skill|'+b.name)>>>0)-(hash('BM128|skill|'+a.name)>>>0);
-  return d||a.name.localeCompare(b.name)
- });
+ for(i=0;out.length<POPULATION_SIZE&&i<1500;i++){
+  var base=MALE_NAMES[(i*17+11)%MALE_NAMES.length],n=1+(hash('BM131|name-number|'+base+'|'+i)%999);
+  addSeed(out,seen,base+n,'number',base.toLowerCase());
+ }
+ if(out.length!==POPULATION_SIZE)throw Error('Unexpected simulated population size: '+out.length);
+ out.sort(function(a,b){var d=(hash('BM131|skill|'+b.name)>>>0)-(hash('BM131|skill|'+a.name)>>>0);return d||a.name.localeCompare(b.name)});
  for(i=0;i<out.length;i++){out[i].baseRank=i+1;out[i].baseScore=scoreCurve(i+1)}
- seedRoster=out.slice(0,POPULATION_SIZE)
+ seedRoster=out
 }
 
 // Persist only encounters played on this device; the shared seeded careers remain stable.
@@ -86,7 +94,7 @@ function profileAt(seed,now){
  var days=dayFor(now),activity=1+((h>>>21)%4),added=days*activity;
  var games=baseGames+added,wins=Math.max(1,Math.min(games-1,Math.round(games*baseRate))),losses=Math.max(1,games-wins);
  var played=encounterRecords[seed.name];if(played){sc=clamp(sc+(Number(played.points)||0));wins+=Number(played.wins)||0;losses+=Number(played.losses)||0}
- return{name:seed.name,category:seed.category,score:sc,wins:wins,losses:losses,rate:wins/(wins+losses),baseRank:seed.baseRank,baseScore:seed.baseScore}
+ return{name:seed.name,category:seed.category,nickname:seed.nickname,score:sc,wins:wins,losses:losses,rate:wins/(wins+losses),baseRank:seed.baseRank,baseScore:seed.baseScore}
 }
 function sortProfiles(a,b){return b.score-a.score||tieKey(a.name)-tieKey(b.name)||a.name.localeCompare(b.name)}
 function refreshRoster(now,force){
@@ -177,7 +185,7 @@ function style(){
 function ensureLeaderboard(){
  style();var p=$('v127LeaderboardPanel');if(!p){
   p=document.createElement('div');p.id='v127LeaderboardPanel';p.hidden=true;
-  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Simulated Leaderboard</h2><p>Top 50 of a roughly 600-player simulated population. Names, scores and records are deterministic across devices at the same time; standings move gradually as simulated players gain and lose points.</p></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div><div class="v127_lb_note">The population mixes gamer tags, ordinary male first names, and name-number handles. Your row uses your actual competitive human/fake-human record on this device.</div></div>';
+  p.innerHTML='<div class="v127_lb_card"><div class="v127_lb_head"><div><h2>Simulated Leaderboard</h2></div><button class="v127_lb_close" type="button" aria-label="Close">×</button></div><div id="v127LbYou" class="v127_lb_you"></div><div class="v127_lb_columns"><span>Rank</span><span>Player</span><span>Score</span><span>Win rate</span><span>W–L</span></div><div id="v127LbList" class="v127_lb_list"></div></div>';
   document.body.appendChild(p);p.querySelector('.v127_lb_close').onclick=function(){p.hidden=true;syncTiles()}
  }
  var tile=$('mainLeaderboardTile');if(!tile){
@@ -216,6 +224,7 @@ function install(){
  window.BomberLeaderboard127={
   top50:function(){refreshRoster();return top50.map(function(x){var c=clone(x);c.displayRank=fakeDisplayRank(x.name);return c})},
   profile:function(name){return profile(name)},
+  nickname:function(name){refreshRoster();return byName[name]?byName[name].nickname:nicknameFor(name)},
   recordResult:recordResult,
   population:function(){refreshRoster();return roster.map(clone)},
   rank:function(sc,name){return playerRankAt(sc,name||savedName())},

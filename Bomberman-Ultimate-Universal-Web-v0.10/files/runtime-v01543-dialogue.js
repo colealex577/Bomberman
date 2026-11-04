@@ -8,7 +8,7 @@ function active(){var g=G(),m=g&&g.__v152RosterMode;return m==='observe'||m==='j
 function clean(v){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,160)}
 function pick(a){return a&&a.length?a[Math.floor(Math.random()*a.length)]:''}
 function uniq(a){var out=[],seen={};(a||[]).forEach(function(x){x=clean(x).slice(0,14);if(x&&!seen[x]){seen[x]=1;out.push(x)}});return out}
-function shortName(v){var n=clean(v).slice(0,14).replace(/[_-]+/g,' ').trim(),first=n.split(/\s+/)[0]||n,m=first.match(/^[A-Za-z]+/),letters=m?m[0]:first,camel=letters.match(/^[A-Z]?[a-z]+(?=[A-Z]|$)/);if(camel&&camel[0].length>=2)letters=camel[0];return(letters||first||n).slice(0,10)}
+function shortName(v){var api=window.BomberLeaderboard127;if(api&&api.nickname)return api.nickname(String(v||''));var n=clean(v).slice(0,14).replace(/[0-9]+$/,'').replace(/[_-]+/g,' '),m=n.match(/^[A-Za-z]+/);return(m?m[0]:n||'player').slice(0,10).toLowerCase()}
 function profiles(){var a=A(),st=a&&a.state?a.state():null;return st&&Array.isArray(st.profiles)?st.profiles:[]}
 function simNames(){var g=G(),names=[];profiles().forEach(function(p){if(p&&p.name)names.push(p.name)});(g&&g.bots||[]).forEach(function(b){if(b&&b.simulatedHuman&&b.displayName)names.push(b.displayName)});return uniq(names)}
 function simEntities(){var g=G();return(g&&g.bots||[]).filter(function(b){return!!(b&&b.simulatedHuman)})}
@@ -84,6 +84,10 @@ var CONVOS={
   [['a','you actually plan your bombs or just send it'],['b','little bit of both lol'],['a','that explains a lot']],
   [['a','{bshort} stop stealing every pickup'],['b','get there first'],['a','im trying 😭']],
   [['a','this round already feels weird'],['b','you say that every round'],['a','because every round is weird']],
+  [['a','{bshort} did you see that last chain'],['b','yeah that was kind of ridiculous'],['a','i thought the whole row was gone']],
+  [['a','you lagging at all {bshort}?'],['b','nah feels fine here'],['a','must just be me then']],
+  [['a','{bshort} are you still on one heart'],['b','dont worry about it lol'],['a','so yes']],
+  [['a','im so tired of that corner'],['b','then stop walking into it {ashort}'],['a','reasonable']],
   [['a','how many bombs is too many bombs'],['b','one more than whatever i have'],['a','terrible answer lol']],
   [['a','you ever trust the bots for even one second'],['b','absolutely not'],['a','correct answer']],
   [['a','i keep forgetting how fast you are'],['b','sounds like a you problem'],['a','it keeps becoming one']],

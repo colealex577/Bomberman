@@ -2,7 +2,7 @@
 'use strict';
 var VERSION='v0.15.5',installed=false,oldAppend=null;
 var script={active:false,turns:[],timer:null,serial:0,interrupted:false,lastAt:0,speakers:[]};
-var social={roundKey:'',roundStartedAt:Date.now(),lastAmbientAt:0,lastUserAt:0,replyTimers:[]};
+var social={roundKey:'',roundStartedAt:Date.now(),lastAmbientAt:0,lastUserAt:0,replyTimers:[],nextScriptAt:0,scriptCount:0};
 var population={sessionKey:'',roundObj:null,roundSerial:0,rolled:false,pending:null,active:[],arrivalTimer:null,queueTimer:null,spectatorTimer:null,guestActive:[],guestPending:null};
 var SAFE_OPEN=['alright im just clearing space first','taking the first few lanes slow','im keeping an exit open early','okay lets get some room first','not overcommitting at the start','first few bombs are always awkward','im staying out of the middle for a second','lets see how the board opens'];
 var AMBIENT={
@@ -78,6 +78,66 @@ var SCRIPTS={
   ['that cross lane is doing all the work','everybody keeps walking back into it','some habits are hard to break']
  ]
 };
+var EXTRA_SCRIPTS={
+ general:[
+  ['yo {bshort}, you on the same side again?','yeah i keep ending up here','im not chasing you this time'],
+  ['{bshort} did you just take that shoe','maybe lol','i actually needed that'],
+  ['i swear this game knows when im getting comfortable','you say that every match {ashort}','because every match does it'],
+  ['okay who planted that one','me, sorry {ashort}','nah that was actually good'],
+  ['im playing like i forgot the controls','you got this {ashort}','debatable'],
+  ['wait {bshort} were you going for that pickup','yeah but you got there first','first time for everything'],
+  ['this round is moving fast','we just started {ashort}','exactly my point'],
+  ['not gonna lie i nearly walked into that','i saw you hesitate','mind your business lol'],
+  ['{bshort} you keep getting all the upgrades','i have a system','the system is stealing mine'],
+  ['why am i always the one with no shoes','because you keep running past them','oh right'],
+  ['that was kinda lucky','ill take it {ashort}','yeah fair enough'],
+  ['i think i pressed the wrong direction there','we noticed lol','thanks {bshort}'],
+  ['im trying not to panic this time','good plan','already failed'],
+  ['{bshort} stop camping that side','come make me','alright maybe not']
+ ],
+ opening:[
+  ['{bshort} im clearing left','cool im going right','good lets stay out of each others way'],
+  ['first bomb and i already changed my mind','classic {ashort}','i know'],
+  ['im just trying to get one decent lane','same here','this spawn is a mess'],
+  ['{bshort} you want the middle','nah you can have it','suspiciously generous']
+ ],
+ early:[
+  ['why is everyone going for the same shoe','because its the only one {ashort}','fair point'],
+  ['{bshort} dont block that exit','i wasnt going to','you literally just did'],
+  ['im gonna regret that bomb','you still have time to move','not much lol'],
+  ['that little gap saved me','i thought you were stuck','so did i']
+ ],
+ mid:[
+  ['{bshort} that row is definitely not safe','i see it','just making sure'],
+  ['you almost got me with that','almost is the key word','unfortunately'],
+  ['who keeps dropping bombs in the middle','couldnt be me','sure {bshort}'],
+  ['{bshort} i need you to leave that corner','you first','we can do this all day']
+ ],
+ late:[
+  ['that was a clean dodge {bshort}','thank you thank you','dont get used to compliments'],
+  ['im running out of places to stand','same','i hate this part'],
+  ['{bshort} im not following you in there','thats probably wise','learned that last round'],
+  ['how are we both still alive','no idea {ashort}','lets not question it']
+ ],
+ endgame:[
+  ['im actually nervous now','same here {ashort}','at least its not just me'],
+  ['one of us is gonna throw this','probably me','dont say that {bshort}'],
+  ['{bshort} that was too close','i had like one square','somehow you made it'],
+  ['this match needs to end soon','you volunteering {ashort}?','absolutely not']
+ ],
+ duel:[
+  ['alright {bshort}, just us','yep good luck','you too'],
+  ['you keep faking that same turn','and you keep waiting for it','not anymore'],
+  ['{bshort} i almost had you','almost lol','dont start'],
+  ['if i mess this up dont say anything','wasnt planning to {ashort}','youre definitely gonna say something']
+ ],
+ spectator:[
+  ['{bshort} did you see how i died','yeah that was rough','i thought i had an exit'],
+  ['this is easier to watch than play','way easier','now i can judge everyone'],
+  ['{bshort} dont go into that row','im already moving','good call'],
+  ['i was having such a good round too','yeah you were {ashort}','until i wasnt']
+ ]
+};
 var RESPONSES={
  greeting:['yo','hey lol','sup','yoo whats good','hey man','alright lets go','im here lol','yo good luck'],
  gg:['gg','ggs','good round','yeah gg','that was a fun one','gg that got close','good game lol','ggs, that ending was wild'],
@@ -103,7 +163,7 @@ function now(){return Date.now()}
 function clean(v,n){return String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,n||160)}
 function pick(a){return a&&a.length?a[Math.floor(Math.random()*a.length)]:''}
 function clamp(v,a,b){return Math.max(a,Math.min(b,Number(v)||0))}
-function shortName(v){var n=clean(v,14).replace(/[_-]+/g,' ').trim(),first=n.split(/\s+/)[0]||n,m=first.match(/^[A-Za-z]+/),letters=m?m[0]:first,camel=letters.match(/^[A-Z]?[a-z]+(?=[A-Z]|$)/);if(camel&&camel[0].length>=2)letters=camel[0];return(letters||first||n).slice(0,10)}
+function shortName(v){var api=window.BomberLeaderboard127;if(api&&api.nickname)return api.nickname(String(v||''));var n=clean(v,14).replace(/[0-9]+$/,'').replace(/[_-]+/g,' '),m=n.match(/^[A-Za-z]+/);return(m?m[0]:n||'player').slice(0,10).toLowerCase()}
 function unique(a){var out=[],seen={};(a||[]).forEach(function(x){x=clean(x,14);if(x&&!seen[x]){seen[x]=1;out.push(x)}});return out}
 function observerState(){var a=A();try{return a&&a.state?a.state():null}catch(e){return null}}
 function rosterMode(){var g=G(),st=observerState(),m=g&&g.__v152RosterMode||'';return(m==='observe'||m==='joined')&&st&&st.mode===m?m:''}
@@ -124,12 +184,20 @@ function pendingObserverName(){return population.pending&&population.pending.nam
 function isAiName(name){name=clean(name,14);return aiNames().indexOf(name)>=0||name===clean(pendingObserverName(),14)}
 function actorForName(name){var g=G(),hit=null;name=clean(name,14);(g&&g.bots||[]).forEach(function(b){if(!hit&&b&&clean(b.displayName,14)===name)hit=b});return hit}
 function aliveAiNames(){var s=S(),names=aiNames(),alive=[];names.forEach(function(n){var found=actorForName(n);if(found){if(found.alive!==false)alive.push(n)}else if(s&&s.role==='simulated'&&n===clean(s.remoteName,14))alive.push(n);else if(publicMode()==='guest')alive.push(n)});return unique(alive)}
-function syncSocialRound(){var m=rosterMode(),st=observerState(),g=G(),key='';if(m)key='r|'+m+'|'+(st&&st.roundSerial||0);else if(publicMode())key='p|'+publicMode()+'|'+population.roundSerial;else key='off';if(key!==social.roundKey){social.roundKey=key;social.roundStartedAt=now();social.lastAmbientAt=0;cancelScript();try{if(window.BomberDialogue1543&&BomberDialogue1543.debug)BomberDialogue1543.debug.clearConversation()}catch(e){}}return key}
+function syncSocialRound(){var m=rosterMode(),st=observerState(),g=G(),key='';if(m)key='r|'+m+'|'+(st&&st.roundSerial||0);else if(publicMode())key='p|'+publicMode()+'|'+population.roundSerial;else key='off';if(key!==social.roundKey){social.roundKey=key;social.roundStartedAt=now();social.lastAmbientAt=0;social.nextScriptAt=now()+23000+Math.floor(Math.random()*18000);social.scriptCount=0;cancelScript();try{if(window.BomberDialogue1543&&BomberDialogue1543.debug)BomberDialogue1543.debug.clearConversation()}catch(e){}}return key}
 function roundElapsed(){syncSocialRound();return now()-social.roundStartedAt}
 function cancelScript(){if(script.timer)clearTimeout(script.timer);script.timer=null;script.active=false;script.turns=[];script.speakers=[];script.interrupted=false;if(document.body)document.body.classList.remove('v155_script_lock');clearTyping()}
-function scriptPool(){var k=stageKey();return(SCRIPTS[k]||[]).concat(SCRIPTS[k==='duel'?'late':'early']||[]).slice()}
+function scriptPool(){var k=stageKey();return(SCRIPTS[k]||[]).concat(EXTRA_SCRIPTS[k]||[],EXTRA_SCRIPTS.general,SCRIPTS[k==='duel'?'late':'early']||[])}
 function pumpScript(serial){if(!script.active||serial!==script.serial)return;if(!controlled()||!script.turns.length){cancelScript();return}var turn=script.turns.shift();script.lastAt=now();emit(turn.name,turn.text);if(!script.turns.length){script.timer=setTimeout(function(){if(script.serial===serial)cancelScript()},300);return}script.timer=setTimeout(function(){pumpScript(serial)},720+Math.floor(Math.random()*780))}
-function startScript(){var names=aliveAiNames();if(names.length<2)return false;var lines=pick(scriptPool());if(!lines||!lines.length)return false;cancelScript();var a=pick(names),others=names.filter(function(n){return n!==a}),b=pick(others),turns=[];for(var i=0;i<lines.length;i++)turns.push({name:i%2?b:a,text:lines[i]});script.serial++;script.active=true;script.turns=turns;script.speakers=[a,b];script.interrupted=false;if(document.body)document.body.classList.add('v155_script_lock');pumpScript(script.serial);return true}
+function startScript(){var names=aliveAiNames();if(names.length<2)return false;var lines=pick(scriptPool());if(!lines||!lines.length)return false;cancelScript();var a=pick(names),others=names.filter(function(n){return n!==a}),b=pick(others),turns=[];var ctx={a:a,b:b,ashort:shortName(a),bshort:shortName(b)};for(var i=0;i<lines.length;i++)turns.push({name:i%2?b:a,text:String(lines[i]).replace(/\{(a|b|ashort|bshort)\}/g,function(_,k){return ctx[k]})});script.serial++;social.scriptCount++;script.active=true;script.turns=turns;script.speakers=[a,b];script.interrupted=false;if(document.body)document.body.classList.add('v155_script_lock');pumpScript(script.serial);return true}
+function maybeAutonomousChat(){
+ var m=rosterMode(),g=G();if(!m||!g||!g.playing||g.matchFinished||script.active)return false;
+ if(aliveAiNames().length<2||social.scriptCount>=4||now()-social.lastUserAt<11000)return false;
+ if(!social.nextScriptAt)social.nextScriptAt=now()+26000;
+ if(now()<social.nextScriptAt||roundElapsed()<13500)return false;
+ social.nextScriptAt=now()+27000+Math.floor(Math.random()*26000);
+ return startScript()
+}
 function urgentReaction(text){return roundElapsed()>9000&&/\b(close|almost|barely|clutch|escaped|escape|nearly|one tile)\b/i.test(String(text||''))}
 function safeAmbient(){var k=stageKey();if(roundElapsed()<10000)return pick(SAFE_OPEN);return pick(AMBIENT[k]||AMBIENT.mid)}
 function handleAiTrigger(name,text){syncSocialRound();name=clean(name,14);if(!isAiName(name))return false;if(script.active){if(!script.interrupted&&urgentReaction(text)&&now()-script.lastAt>550){script.interrupted=true;emit(name,pick(CLOSE_REACTIONS));return true}clearTyping();return true}if(now()-social.lastAmbientAt<1900){clearTyping();return true}social.lastAmbientAt=now();var actor=actorForName(name);if(actor&&actor.alive===false){emit(name,pick(SPECTATOR_LINES));return true}var names=aliveAiNames();if(names.length>=2&&roundElapsed()>8500&&Math.random()<.28){startScript();return true}emit(name||pick(names),safeAmbient());return true}
@@ -140,7 +208,7 @@ function clearReplyTimers(){social.replyTimers.forEach(function(t){clearTimeout(
 function scheduleUserReplies(text,fromRemote){var mode=publicMode(),names=aliveAiNames();if(pendingObserverName()&&names.indexOf(pendingObserverName())<0)names.push(pendingObserverName());names=unique(names);if(!names.length)return false;if(mode==='guest'&&!fromRemote)return false;cancelScript();clearReplyTimers();var target=targetedResponder(text,names),primary=target||pick(names),first=replyFor(text,primary),delay=520+Math.floor(Math.random()*650);social.lastUserAt=now();social.replyTimers.push(setTimeout(function(){if(!controlled()||!isAiName(primary))return;emit(primary,first.text)},delay));var remaining=names.filter(function(n){return n!==primary}),followChance=remaining.length?((first.category==='gg'||first.category==='surprise'||first.category==='laugh')?.48:(first.category==='compliment'||first.category==='taunt')?.34:.18):0;if(remaining.length&&Math.random()<followChance){var second=pick(remaining),pool=FOLLOWUPS[first.category]||FOLLOWUPS.generic;social.replyTimers.push(setTimeout(function(){if(!controlled()||!isAiName(second))return;emit(second,pick(pool))},delay+750+Math.floor(Math.random()*650)))}return true}
 function copyMarkers(target,source){['__v01543Dialogue','__v01544ModeGuard','__v01532NoRosterToast','__v01532Public','__v140Dedupe','__v140Old','__v151GuestMap'].forEach(function(k){try{if(source&&source[k]!==undefined)target[k]=source[k]}catch(e){}})}
 function installAppend(){var s=S();if(!s||!s.appendChat)return false;if(s.appendChat.__v0155Social)return true;oldAppend=s.appendChat;function wrapped(name,text,self){if(!controlled())return oldAppend.apply(s,arguments);if(self){var r=oldAppend.apply(s,arguments);scheduleUserReplies(clean(text,160),false);return r}if(isAiName(name)){handleAiTrigger(name,text);return true}return oldAppend.apply(s,arguments)}copyMarkers(wrapped,oldAppend);wrapped.__v0155Social=true;wrapped.__v01543Dialogue=true;wrapped.__v01544ModeGuard=true;wrapped.__v01532NoRosterToast=true;wrapped.__v01543Old=oldAppend.__v01543Old||oldAppend;s.appendChat=wrapped;if(window.BomberOnline&&BomberOnline.appendChat)BomberOnline.appendChat=wrapped;return true}
-function uniqueObserverName(preferred){var s=S(),used=[s&&s.localName,s&&s.remoteName].concat(aiNames()).concat(population.active.map(function(p){return p.name}));if(population.pending)used.push(population.pending.name);used=unique(used);if(preferred&&used.indexOf(clean(preferred,14))<0)return clean(preferred,14);var pool=(s&&s.SIM_NAMES&&s.SIM_NAMES.length?s.SIM_NAMES:['NightByte','NovaRush','FuseRunner','GridGhost','RetroRex','BlastWolf','ArcadeViper','TurboAce','PixelPilot','NeonFox']).slice(),name='',guard=0;while(guard++<30){var base=clean(pick(pool),10),suffix=Math.random()<.38?String(10+Math.floor(Math.random()*890)):'';name=clean(base+suffix,14);if(used.indexOf(name)<0)return name}return clean('Player'+Math.floor(100+Math.random()*900),14)}
+function uniqueObserverName(preferred){var s=S(),used=[s&&s.localName,s&&s.remoteName].concat(aiNames()).concat(population.active.map(function(p){return p.name}));if(population.pending)used.push(population.pending.name);used=unique(used);if(preferred&&used.indexOf(clean(preferred,14))<0)return clean(preferred,14);var pool=(s&&s.SIM_NAMES&&s.SIM_NAMES.length?s.SIM_NAMES:['NightByte','NovaRush','FuseRunner','GridGhost','RetroRex','BlastWolf','ArcadeViper','TurboAce','PixelPilot','NeonFox']).slice(),name='',guard=0;while(guard++<30){var base=clean(pick(pool),14),suffix=Math.random()<.12&&base.length<10&&!/[0-9]$/.test(base)?String(10+Math.floor(Math.random()*890)):'';name=clean(base+suffix,14);if(used.indexOf(name)<0)return name}return clean('Player'+Math.floor(100+Math.random()*900),14)}
 function makeProfile(name){var r=window.BomberCharacter&&BomberCharacter.randomSimRating?BomberCharacter.randomSimRating():Math.round((500+Math.random()*450)/10)*10;return{id:'v155-'+now()+'-'+Math.random().toString(36).slice(2,7),name:uniqueObserverName(name),rating:r,appearance:window.BomberCharacter&&BomberCharacter.random?BomberCharacter.random():null,queued:false,stage:'observing'}}
 function applyAppearance(e,a){if(!e||!e.bmp||!a||!window.BomberCharacter||!BomberCharacter.makeSheet||!window.createjs)return;try{var c=BomberCharacter.makeSheet(a);if(!c)return;var ss=new createjs.SpriteSheet({images:[c],frames:{width:48,height:48,regX:10,regY:12},animations:{idle:[0,0,'idle'],down:[0,3,'down',.1],left:[4,7,'left',.1],up:[8,11,'up',.1],right:[12,15,'right',.1],dead:[16,16,'dead',.1]}}),an=e.bmp.currentAnimation||'idle';e.bmp.spriteSheet=ss;e.characterAppearance=a;try{e.bmp.gotoAndPlay(an)}catch(x){}}catch(err){}}
 function occupiedSlots(){var g=G(),o={};(g&&g.players||[]).forEach(function(e,i){if(!e)return;var s=Number(e.statSlot);o[Number.isFinite(s)?s:i]=1});(g&&g.bots||[]).forEach(function(e,i){if(!e)return;var s=Number(e.statSlot);o[Number.isFinite(s)?s:i+(g.players||[]).length]=1});return o}
@@ -166,5 +234,5 @@ function guestNotice(d){var p=d&&d.profile||{},stage=d&&d.stage;if(stage==='obse
 function attachPublicDataTap(){var s=S(),c=s&&s.conn;if(!s||s.kind!=='public'||!c||!c.open||c.__v155DataTap)return false;c.__v155DataTap=true;c.on('data',function(d){if(!d||s.kind!=='public')return;if(s.role==='host'&&d.type==='chat'&&activePopulationNames().length)scheduleUserReplies(clean(d.text,160),true);if(s.role==='guest'&&d.type==='v155ObserverNotice')guestNotice(d);if(s.role==='guest'&&d.type==='v155AiChat')directAppend(d.name,d.text,false)});return true}
 function corpus(){var out=[];Object.keys(SCRIPTS).forEach(function(k){SCRIPTS[k].forEach(function(s){s.forEach(function(x){out.push(x)})})});return out}
 function install(){if(installed)return true;if(!S()||!G()||!window.BomberChatFix1544||!window.BomberDialogue1543)return false;installed=true;ensureStyle();try{BomberDialogue1543.debug.clearConversation()}catch(e){}installAppend();attachPublicDataTap();window.BomberSocial155={version:VERSION,state:function(){return{scriptActive:script.active,pendingTurns:script.turns.length,roundStartedAt:social.roundStartedAt,aiNames:aiNames(),publicMode:publicMode(),rosterMode:rosterMode(),population:{roundSerial:population.roundSerial,pending:population.pending&&{id:population.pending.id,name:population.pending.name,queued:population.pending.queued,stage:population.pending.stage},active:population.active.map(function(p){return{id:p.id,name:p.name}}),participants:participants(),rolled:population.rolled}}},classify:classify,replyFor:function(text,name){return replyFor(text,name||pick(aiNames())||'Player')},observerChance:observerChance,debug:{forceScript:function(){return startScript()},cancelScript:cancelScript,scriptCorpus:corpus,ambientCorpus:function(){var out=[];Object.keys(AMBIENT).forEach(function(k){out=out.concat(AMBIENT[k])});return out.concat(SAFE_OPEN).concat(CLOSE_REACTIONS)},handleAi:function(name,text){return handleAiTrigger(name,text)},forceObserver:function(name){return observerArrives(name,true)},queueObserver:queuePending,promoteObserver:function(){if(!population.pending)return false;population.pending.queued=true;var p=population.pending;p.stage='active';population.active.push(p);population.pending=null;clearPopulationTimers();announceObserver(p,'joined',false);return!!spawnProfile(p)},spawnActive:spawnActive,population:function(){return{pending:population.pending&&population.pending.name,active:population.active.map(function(p){return p.name}),participants:participants(),roundSerial:population.roundSerial}},resetPopulation:resetPopulation,attachPublicDataTap:attachPublicDataTap}};return true}
-var tries=0,t=setInterval(function(){if(install()||++tries>1200)clearInterval(t)},25);setInterval(function(){if(!installed)return;installAppend();attachPublicDataTap();syncPopulation();syncSocialRound();if(script.active)clearTyping()},90);
+var tries=0,t=setInterval(function(){if(install()||++tries>1200)clearInterval(t)},25);setInterval(function(){if(!installed)return;installAppend();attachPublicDataTap();syncPopulation();syncSocialRound();maybeAutonomousChat();if(script.active)clearTyping()},90);
 })();

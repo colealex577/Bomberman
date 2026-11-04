@@ -28,7 +28,7 @@ body:not(.v137_chat_active) #chatPanel,body:not(.v137_chat_active) #chatToggleBt
 function badge(){var b=$('buildVersion137');if(!b){b=document.createElement('div');b.id='buildVersion137';document.body.appendChild(b)}setText(b,VERSION)}
 function leaderboardText(){
  var panel=$('v127LeaderboardPanel');if(!panel)return;var head=panel.querySelector('.v127_lb_head'),legacy=head&&head.querySelector('p');if(legacy)legacy.classList.add('v137_legacy_hidden');
- if(head&&!$('v137LeaderboardDesc')){var d=document.createElement('div');d.id='v137LeaderboardDesc';d.className='v137_lb_desc';d.textContent='Top 50 of a roughly 600-player population. Scores and records move gradually as players gain and lose points.';var box=head.querySelector('div');if(box)box.appendChild(d)}
+ var oldDesc=$('v137LeaderboardDesc');if(oldDesc)oldDesc.remove();
  var oldNote=panel.querySelector('.v127_lb_note:not(#v137LeaderboardNote)');if(oldNote)oldNote.classList.add('v137_legacy_hidden');
  if(!$('v137LeaderboardNote')){var n=document.createElement('div');n.id='v137LeaderboardNote';n.className='v127_lb_note';n.textContent='Challenge any listed player. Availability changes over time, and accepted challenges use that player’s rating and difficulty.';var card=panel.querySelector('.v127_lb_card');if(card)card.appendChild(n)}
 }

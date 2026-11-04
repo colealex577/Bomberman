@@ -1,0 +1,6 @@
+Bomberman v0.16.2.31 — Casual usernames and observer chat
+- Removed legacy leaderboard population explanation.
+- Rebalanced 599 simulated profiles toward everyday gamer handles, ordinary first names, and name+numbers, with a small selection of symbols and emoji.
+- Every profile now has a stable nickname.
+- Added contextual observer and joined-match conversations with nickname references and limits.
+- Preserves the previous rematch, respawn, and skill fixes.
