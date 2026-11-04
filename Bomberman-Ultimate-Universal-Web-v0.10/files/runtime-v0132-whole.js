@@ -29,7 +29,7 @@ function personality(name,rating){
  return p
 }
 function currentPersonality(){return personality(S.remoteName||'player',scoreFor(S.remoteName))}
-function applyPersonality(bot){if(!bot||!bot.simulatedHuman)return null;var p=personality(S.remoteName||bot.displayName||'player',Number(bot.rating)||scoreFor(S.remoteName));if(bot.__v132BaseAttackWeight==null)bot.__v132BaseAttackWeight=Number(bot.attackWeight)||2;bot.__v132Personality=p;bot.playerStyle=p.style;bot.attackWeight=bot.__v132BaseAttackWeight*(.85+p.aggression*.3);return p}
+function applyPersonality(bot){if(!bot||!bot.simulatedHuman)return null;var p=personality(S.remoteName||bot.displayName||'player',bot.rating!=null&&isFinite(Number(bot.rating))?Number(bot.rating):scoreFor(S.remoteName));if(bot.__v132BaseAttackWeight==null)bot.__v132BaseAttackWeight=Number(bot.attackWeight)||2;bot.__v132Personality=p;bot.playerStyle=p.style;bot.attackWeight=bot.__v132BaseAttackWeight*(.85+p.aggression*.3);return p}
 function same(a,b){return!!(a&&b&&a.x===b.x&&a.y===b.y)}
 function contains(a,p){if(!a||!p)return false;for(var i=0;i<a.length;i++)if(a[i].x===p.x&&a[i].y===p.y)return true;return false}
 function roll(bot,salt){bot.__v132Roll=(bot.__v132Roll||0)+1;return unit(hash32((S.remoteName||'player')+'|'+salt),bot.__v132Roll)}
