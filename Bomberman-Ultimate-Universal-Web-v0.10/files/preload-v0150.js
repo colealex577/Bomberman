@@ -20,7 +20,7 @@ var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.32',OWNER='runtim
 })();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;s.onload=function(){try{s.dataset.bomberLoaded='1'}catch(e){}};(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
-early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016223c');
+early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016232');
 early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016232');
 early('runtime-v016224-authoritative-spectator-chat-loader','./files/runtime-v016224-authoritative-spectator-chat.js?v=016224a');
 early('runtime-v016224-spectator-chat-bridge-loader','./files/runtime-v016224-spectator-chat-bridge.js?v=016224b');
@@ -36,7 +36,7 @@ early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=01629');
 early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016232');
 early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observer-progression.js?v=01541');
 early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-controls.js?v=01541');
-early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=0155');
+early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016232');
 early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-polish.js?v=0156');
 early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
 early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=016211b');

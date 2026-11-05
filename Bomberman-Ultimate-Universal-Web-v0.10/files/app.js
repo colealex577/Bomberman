@@ -56,7 +56,7 @@ function loadCompatibility(){
                                loadScript('runtime-v0150-ai-loader','./files/runtime-v0150-ai.js?v=0150',function(){
                                 loadScript('runtime-v0144-opening-loader','./files/runtime-v0144-opening.js?v=0144',function(){
                                  loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016232',function(){
-                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=01521',function(){
+                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016232',function(){
                                    loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=016232',function(){
                                     var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
                                     loadPackedScript('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629',function(){loadPackedScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js.gz.b64?v=01629',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01629',function(){loadScript('runtime-v01624-ui-stability-loader','./files/runtime-v01624-ui-stability.js?v=01629',function(){loadPackedScript('runtime-v01626-ai-test-room-loader','./files/runtime-v01626-ai-test-room.js.gz.b64?v=01629')})})})});
