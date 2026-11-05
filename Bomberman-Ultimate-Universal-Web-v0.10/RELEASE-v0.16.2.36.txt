@@ -1,0 +1,6 @@
+Bomberman v0.16.2.36 — Lifecycle and simulated-player roster repair
+Root causes: v0150 release patched restart every 120ms and v016230 round lifecycle patched restart every 150ms. Each wrapped the other's current function, causing unbounded stacked restart handlers (observed 90 duplicate reservation/audit calls per restart after 90 loops). Fixed both installers to run once.
+Additional lifecycle fixes in existing source: simulated active roster capped at two public extra participants; replaced oldest on next-round promotion, cleared stale retained bot references on round/session reset. This prevents inactive queued profiles from backfilling the slot of a dead player mid-round.
+Engine setup now cancels stale pending delayed restart-key registrations on a rapid rematch to prevent multiple listeners.
+Tests: 90 repeated hook checks result in one restart/reservation/audit versus 90 duplicates previously. 12 simulated joins across successive rounds do not grow active/retained rosters above 2 or respawn another profile mid-round. All changed JS parses. No Bot AI pathing, difficulty or decision logic changed.
+Live multi-device and extended browser gameplay not verified.

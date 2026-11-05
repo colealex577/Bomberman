@@ -121,6 +121,9 @@ GameEngine = Class.extend({
     },
 
     setup: function() {
+        // A rapid restart must not leave a delayed listener from an older round.
+        if (this.__restartListenerTimer) clearTimeout(this.__restartListenerTimer);
+        var setupSerial = this.__setupSerial = (Number(this.__setupSerial) || 0) + 1;
         if (!gInputEngine.bindings.length) {
             gInputEngine.setup();
         }
@@ -143,7 +146,9 @@ GameEngine = Class.extend({
 
         // Restart listener
         // Timeout because when you press enter in address bar too long, it would not show menu
-        setTimeout(function() {
+        this.__restartListenerTimer = setTimeout(function() {
+            if (gGameEngine.__setupSerial !== setupSerial) return;
+            gGameEngine.__restartListenerTimer = null;
             gInputEngine.addListener('restart', function() {
                 if (gGameEngine.playersCount == 0) {
                     gGameEngine.menu.setMode('single');

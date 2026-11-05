@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v0.16.2.35';
+window.BomberBuildVersion='v0.16.2.36';
 window.BomberVersionUIOwner='runtime-v016230-round-skill-version';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.35',OWNER='runtime-v016230-round-skill-version';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.36',OWNER='runtime-v016230-round-skill-version';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{t.textContent=TITLE;document.title=TITLE}catch(e){}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 /* E/Q still throw immediately. During the short direct-throw window, a direction key chooses launch direction without changing movement. */
 (function(){
@@ -20,8 +20,8 @@ var VERSION=window.BomberBuildVersion,TITLE='Bomberman v0.16.2.35',OWNER='runtim
 })();
 function early(id,src){if(document.getElementById(id))return;var s=document.createElement('script');s.id=id;s.src=src;s.onload=function(){try{s.dataset.bomberLoaded='1'}catch(e){}};(document.head||document.documentElement).appendChild(s)}
 early('runtime-v016222-return-defense-controls-loader','./files/runtime-v016222-return-defense-controls.js?v=016222');
-early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016235');
-early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016235');
+early('runtime-v016223-public-presence-controls-loader','./files/runtime-v016223-public-presence-controls.js?v=016236');
+early('runtime-v016224-observer-sim-chat-loader','./files/runtime-v016224-observer-sim-chat.js?v=016236');
 early('runtime-v016224-authoritative-spectator-chat-loader','./files/runtime-v016224-authoritative-spectator-chat.js?v=016224a');
 early('runtime-v016224-spectator-chat-bridge-loader','./files/runtime-v016224-spectator-chat-bridge.js?v=016224b');
 early('runtime-v016225-friends-directional-loader','./files/runtime-v016225-friends-directional.js?v=016225');
@@ -33,10 +33,10 @@ early('runtime-v016215-bomb-travel-loader','./files/runtime-v016215-bomb-travel.
 early('runtime-v016216-wall-response-loader','./files/runtime-v016216-wall-response.js?v=016217');
 early('matchmaking-v0151-loader','./files/matchmaking-v0151.js?v=01544');
 early('runtime-v0151-polish-loader','./files/runtime-v0151-polish.js?v=01629');
-early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016235');
+early('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016236');
 early('runtime-v0153-observer-progression-loader','./files/runtime-v0153-observer-progression.js?v=01541');
 early('runtime-v0154-observer-controls-loader','./files/runtime-v0154-observer-controls.js?v=01541');
-early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016235');
+early('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016236');
 early('runtime-v0156-gameplay-polish-loader','./files/runtime-v0156-gameplay-polish.js?v=0156');
 early('runtime-v0156-killnames-loader','./files/runtime-v0156-killnames.js?v=0156');
 early('runtime-v01561-onboarding-brand-loader','./files/runtime-v01561-onboarding-brand.js?v=016211b');
