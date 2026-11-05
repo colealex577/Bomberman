@@ -105,8 +105,8 @@ function help(){
  if(a&&a.textContent!==want)try{a.textContent=want}catch(e){}
  if(t){
   var old=String(t.textContent||''),next=old;
-  if(/^Traveling bomb:/i.test(old))next='Traveling bomb: press W/A/S/D to fire a moving Bomb Kick up, left, down, or right. One Bomb Kick charge is consumed. Space places a normal stationary bomb.';
-  else if(/^Tutorial complete\./i.test(old))next='Tutorial complete. Core controls: arrow keys = move • Space = normal bomb • W/A/S/D = directional Bomb Kick • walk into a bomb = kick it. On mobile, use the yellow Bomb Kick button.';
+  if(/^Traveling bomb:/i.test(old))next='Traveling bomb: press W/A/S/D to fire a moving Bomb Kick in that direction. One Bomb Kick charge is consumed. Space places a normal stationary bomb.';
+  else if(/^Tutorial complete\./i.test(old))next='Tutorial complete. Core controls: arrow keys = move • Space = normal bomb • W/A/S/D = directional Bomb Kick • walk into a bomb = kick it. On mobile, the yellow Bomb Kick button launches it immediately.';
   if(old!==next)t.textContent=next
  }
 }
