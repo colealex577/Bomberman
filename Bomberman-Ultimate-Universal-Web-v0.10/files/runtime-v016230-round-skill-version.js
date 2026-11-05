@@ -1,7 +1,7 @@
 (function () {
  'use strict';
- // v0.16.2.33: a single presentation version, durable round identities, and real AI skill tiers.
- var VERSION='v0.16.2.31',round=0,dead=Object.create(null),installed=false;
+ // v0.16.2.34: round lifecycle and sprite recovery only; historical artificial AI decision throttling removed.
+ var VERSION='v0.16.2.34',round=0,dead=Object.create(null),installed=false;
  var stats={eliminations:0,respawnsBlocked:0,visualRestores:0,rematches:0};
  function G(){return window.gGameEngine||null}
  function actors(g){return(g.players||[]).concat(g.bots||[])}
@@ -19,13 +19,9 @@
  function rating(b){if(!b)return 650;var values=[b.__v16232SkillRating,b.__v152Profile&&b.__v152Profile.baseSkillRating,b.__v152Profile&&b.__v152Profile.rating,b.__v16224Profile&&b.__v16224Profile.rating,b.rating,b.humanRating,b.__v152Profile&&b.__v152Profile.score];for(var i=0;i<values.length;i++){if(values[i]!==null&&values[i]!==undefined&&values[i]!==''&&isFinite(Number(values[i])))return Math.max(0,Math.min(1000,Number(values[i])))}return 650}
  function tier(r){return r<200?'beginner':r<400?'novice':r<600?'intermediate':r<800?'advanced':'expert'}
  function timing(r){return r<200?[580,1050]:r<400?[350,750]:r<600?[190,430]:r<800?[60,210]:[0,0]}
- function patchSkill(){if(!window.Bot)return;var P=Bot.prototype;
-  if(P.chooseNextAction&&!P.chooseNextAction.__v16230Skill){var prev=P.chooseNextAction;function choose(){if(this.simulatedHuman&&this.alive!==false&&!this.escapeMode){var r=rating(this),ms=timing(r),now=Date.now(),safe=true;try{safe=this.isSafe(this.position)}catch(e){}if(safe&&now<(this.__v16230NextDecision||0))return;this.__v16230NextDecision=now+ms[0]+Math.floor(Math.random()*(ms[1]-ms[0]+1))}return prev.apply(this,arguments)}choose.__v16230Skill=true;P.chooseNextAction=choose}
-  if(P.shouldPlantStrategicBomb&&!P.shouldPlantStrategicBomb.__v16230Skill){var old=P.shouldPlantStrategicBomb;function plant(op){if(!this.simulatedHuman)return old.apply(this,arguments);var r=rating(this);if(r>=800)return old.apply(this,arguments);var now=Date.now();if(now<(this.__v16230NoAttackUntil||0))return false;var chance=r<200?.16:r<400?.32:r<600?.53:.76;this.__v16230NoAttackUntil=now+(r<200?1100:r<400?850:r<600?550:300);if(Math.random()>chance)return false;return old.apply(this,arguments)}plant.__v16230Skill=true;P.shouldPlantStrategicBomb=plant}
-  if(P.findAggressiveLanePath&&!P.findAggressiveLanePath.__v16230Skill){var prior=P.findAggressiveLanePath;function lane(){if(this.simulatedHuman&&rating(this)<300)return null;return prior.apply(this,arguments)}lane.__v16230Skill=true;P.findAggressiveLanePath=lane}
- }
+
  function versionUi(){var badge=document.getElementById('releaseBadge1561');if(!badge)return;var strong=badge.querySelector('strong');if(strong){try{if(strong.textContent!==VERSION)strong.textContent=VERSION}catch(e){}}var label='Bomberman '+VERSION+', Remastered by Cole Alexander';if(badge.getAttribute('aria-label')!==label)badge.setAttribute('aria-label',label)}
- function install(){if(!G()||!window.GameEngine||!window.Player||!window.Bot)return false;patchRestart();patchDeaths();patchFade();patchBotUpdate();patchSkill();versionUi();if(!installed){installed=true;window.BomberRelease16230={version:VERSION,rating:rating,tier:tier,timing:timing,audit:audit,stats:function(){return{round:round,dead:Object.keys(dead),counters:Object.assign({},stats)}}};if(document.body)document.body.setAttribute('data-v016230','1')}return true}
+ function install(){if(!G()||!window.GameEngine||!window.Player||!window.Bot)return false;patchRestart();patchDeaths();patchFade();patchBotUpdate();versionUi();if(!installed){installed=true;window.BomberRelease16230={version:VERSION,rating:rating,tier:tier,timing:timing,audit:audit,stats:function(){return{round:round,dead:Object.keys(dead),counters:Object.assign({},stats)}}};if(document.body)document.body.setAttribute('data-v016230','1')}return true}
  var attempts=0,timer=setInterval(function(){if(install()||++attempts>2400)clearInterval(timer)},25);
- setInterval(function(){if(!installed)return;patchRestart();patchDeaths();patchFade();patchBotUpdate();patchSkill();audit();versionUi()},150);
+ setInterval(function(){if(!installed)return;patchRestart();patchDeaths();patchFade();patchBotUpdate();audit();versionUi()},150);
 })();

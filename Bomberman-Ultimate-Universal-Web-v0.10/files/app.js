@@ -33,31 +33,31 @@ function loadCompatibility(){
         loadScript('runtime-v0123-final-loader','./files/runtime-v0123-final.js?v=0123c',function(){
          loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d',function(){
           loadScript('runtime-v0124-loader','./files/runtime-v0124.js?v=0124',function(){
-           loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=016233',function(){
+           loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=016234',function(){
             (function(){
              loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=01631',function(){
               loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=01629',function(){
                loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
-                 loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=016233',function(){
+                 loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=016234',function(){
                   loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d',function(){
-                   loadScript('runtime-v0130-social-loader','./files/runtime-v0130-social.js?v=016233',function(){
+                   loadScript('runtime-v0130-social-loader','./files/runtime-v0130-social.js?v=016234',function(){
                     loadScript('runtime-v0130-fix-loader','./files/runtime-v0130-fix.js?v=0130b',function(){
                      loadScript('runtime-v0131-polish-loader','./files/runtime-v0131-polish.js?v=0131',function(){
                       loadScript('runtime-v0132-whole-loader','./files/runtime-v0132-whole.js?v=0132',function(){
                        loadScript('runtime-v0133-maps-loader','./files/runtime-v0133-maps.js?v=0151',function(){
                         loadScript('runtime-v0134-gameplay-loader','./files/runtime-v0134-gameplay.js?v=0142',function(){
                          loadScript('runtime-v0135-polish-loader','./files/runtime-v0135-polish.js?v=0135',function(){
-                          loadScript('runtime-v0136-challenge-loader','./files/runtime-v0136-challenge.js?v=016233',function(){
-                           loadScript('runtime-v0137-stability-loader','./files/runtime-v0137-stability.js?v=016233',function(){
+                          loadScript('runtime-v0136-challenge-loader','./files/runtime-v0136-challenge.js?v=016234',function(){
+                           loadScript('runtime-v0137-stability-loader','./files/runtime-v0137-stability.js?v=016234',function(){
                             loadScript('runtime-v0138-ai-social-loader','./files/runtime-v0138-ai-social.js?v=0142',function(){
                              loadScript('runtime-v0140-stability-social-loader','./files/runtime-v0140-stability-social.js?v=0142',function(){
                               loadScript('runtime-v0143-intelligence-loader','./files/runtime-v0143-intelligence.js?v=0143',function(){
                                loadScript('runtime-v0150-ai-loader','./files/runtime-v0150-ai.js?v=0150',function(){
                                 loadScript('runtime-v0144-opening-loader','./files/runtime-v0144-opening.js?v=0144',function(){
-                                 loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016233',function(){
-                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016233',function(){
-                                   loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=016233',function(){
+                                 loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016234',function(){
+                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016234',function(){
+                                   loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=016234',function(){
                                     var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
                                     loadPackedScript('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629',function(){loadPackedScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js.gz.b64?v=01629',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01629',function(){loadScript('runtime-v01624-ui-stability-loader','./files/runtime-v01624-ui-stability.js?v=01629',function(){loadPackedScript('runtime-v01626-ai-test-room-loader','./files/runtime-v01626-ai-test-room.js.gz.b64?v=01629')})})})});
                                    });
@@ -96,5 +96,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=016233').catch(()=>{}))}
-document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=016233');loadCompatibility();GUILocalization();gGameEngine.load()});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=016234').catch(()=>{}))}
+document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=016234');loadCompatibility();GUILocalization();gGameEngine.load()});

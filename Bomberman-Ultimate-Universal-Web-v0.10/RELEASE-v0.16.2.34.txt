@@ -1,0 +1,5 @@
+Bomberman v0.16.2.34 — AI regression rollback
+Root cause: the v0.16.2.30 chooseNextAction throttle blocked normal AI decisions for 60-1050 ms by rating. It became live after the missing script reference was fixed in v0.16.2.32. The v0.16.2.33 movement interceptor added another competing AI decision layer.
+Changes: removed v0.16.2.30 chooseNextAction, shouldPlantStrategicBomb and findAggressiveLanePath monkey patches; removed v0.16.2.33 setNextTile detour interceptor from the loaded runtime. Restored pre-throttle AI planner. Kept rematch/death/sprite fixes; preserved persistent identities and skill attributes; retained outward Bomb Kick border guard in isolated border-only module. No new AI behavior was added.
+Tests: eight uninterrupted simulated decisions, unchanged Bot.setNextTile and Bot.shouldPlantStrategicBomb, restart wrapper present, border outward/inward/normal behavior.
+Live gameplay has not been exhaustively tested.

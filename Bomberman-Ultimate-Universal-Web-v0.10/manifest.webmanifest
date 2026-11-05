@@ -1,7 +1,7 @@
 {
-  "name": "Bomberman Ultimate Online v0.16.2.33",
+  "name": "Bomberman Ultimate Online v0.16.2.34",
   "short_name": "Bomberman",
-  "description": "Bomberman Ultimate Online v0.16.2.33 with smarter time-aware AI, online multiplayer, Ultimate Mode, and expanded maps.",
+  "description": "Bomberman Ultimate Online v0.16.2.34 with smarter time-aware AI, online multiplayer, Ultimate Mode, and expanded maps.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
