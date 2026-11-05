@@ -8,7 +8,7 @@ function syncRankedSim(){
  var p=L.profile(S.remoteName);if(!p)return;
  var internalRating=p.score===0?Number.MIN_VALUE:p.score;
  g.simulatedRating=internalRating;S.simulatedRating=internalRating;
- var sim=g.simulatedOpponent;if(sim){sim.rating=p.score;sim.humanRating=p.score;sim.leaderboardRank=p.displayRank;if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.score)}
+ var sim=g.simulatedOpponent;if(sim){sim.rating=p.score;sim.humanRating=p.score;sim.leaderboardRank=p.displayRank;if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.baseScore)}
  var hud=document.getElementById('qolStatHud'),box=sim&&hud&&hud.querySelector('.qol_stat_box[data-slot="'+sim.statSlot+'"]');if(box){box.setAttribute('data-rating',String(p.score));box.setAttribute('data-rank',String(p.displayRank));var pts=box.querySelector('.v125_points');if(pts)pts.textContent=String(p.score)+' · #'+String(p.displayRank)}
  if(S.els&&S.els.matchStatus&&S.els.matchBar&&!S.els.matchBar.hidden){var ps=playerScore(),pr=L.rank(ps,playerName()),desired='SIMULATED • '+playerName()+' '+ps+' (#'+pr+') vs '+p.name+' '+p.score+' (#'+p.displayRank+')';if(S.els.matchStatus.textContent!==desired)S.els.matchStatus.textContent=desired}
 }

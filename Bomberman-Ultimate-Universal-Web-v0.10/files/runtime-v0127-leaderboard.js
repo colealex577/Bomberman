@@ -142,7 +142,7 @@ function enforceFakeProfile(){
  g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=p.score||Number.MIN_VALUE;
  var sim=g.simulatedOpponent;if(sim){
   sim.rating=p.score;sim.humanRating=p.score;sim.leaderboardRank=p.matchRank||p.displayRank||p.rank;
-  if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.score)
+  if(window.BomberCharacter&&BomberCharacter.skillFromRating)sim.humanSkill=BomberCharacter.skillFromRating(p.baseScore)
  }
  var lr=localRank(),rr=p.matchRank||p.displayRank||p.rank;
  if(S.els&&S.els.matchStatus&&S.els.matchBar&&!S.els.matchBar.hidden){
@@ -204,14 +204,7 @@ function renderLeaderboard(){
   html+='<div class="v127_lb_row '+(j<3?'top3 ':'')+(r.you?'you':'')+'"><span class="rank">#'+(j+1)+'</span><span class="name">'+escapeHtml(r.name)+(r.you?' (You)':'')+'</span><span class="score">'+r.score+'</span><span>'+((rw+rl)?(rr*100).toFixed(1)+'%':'—')+'</span><span>'+rw+'–'+rl+'</span></div>'
  }list.innerHTML=html
 }
-function decorateHudRanks(){
- var g=G(),hud=$('qolStatHud');if(!g||!hud)return;var slots=g.getContestantsByStatSlot?g.getContestantsByStatSlot():[];
- for(var i=0;i<4;i++){
-  var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box)continue;var rank='';
-  if(e&&e===g.simulatedOpponent&&S.role==='simulated'){var p=currentFake();rank=p?(p.matchRank||p.displayRank||p.rank):''}
-  box.setAttribute('data-rank',rank?String(rank):'')
- }
-}
+function decorateHudRanks(){var g=G(),hud=$('qolStatHud');if(!g||!hud)return;var slots=g.getContestantsByStatSlot?g.getContestantsByStatSlot():[],lp=S.role==='guest'?g.players&&g.players[1]:g.players&&g.players[0];for(var i=0;i<4;i++){var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box||!e)continue;var rank=null;if(e===lp)rank=localRank();else if(e.simulatedHuman||e===g.simulatedOpponent&&S.role==='simulated'){var p=profile(e.displayName||S.remoteName);rank=p&&(p.displayRank||p.rank)}else if(!(e instanceof Bot)&&isFinite(Number(e.rating)))rank=playerRankAt(e.rating,e.displayName);box.setAttribute('data-rank',rank?String(rank):'')}}
 function syncTiles(){
  var g=G(),lb=ensureLeaderboard(),cust=$('mainCustomizeTile'),settings=$('mainSettingsTile'),panel=$('v127LeaderboardPanel'),sp=$('v127SettingsPanel'),cp=$('characterPanel');if(!g||!g.menu||!lb)return;
  var show=!!(g.menu.visible&&!g.lobbyOpen&&(!panel||panel.hidden)&&(!sp||sp.hidden)&&(!cp||cp.hidden));lb.style.display=show?'flex':'none';if(settings&&panel&&!panel.hidden)settings.style.display='none';if(cust&&panel&&!panel.hidden)cust.style.display='none';if(!show)return;

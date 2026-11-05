@@ -1,6 +1,6 @@
 (function () {
  'use strict';
- // v0.16.2.31: a single presentation version, durable round identities, and real AI skill tiers.
+ // v0.16.2.32: a single presentation version, durable round identities, and real AI skill tiers.
  var VERSION='v0.16.2.31',round=0,dead=Object.create(null),installed=false;
  var stats={eliminations:0,respawnsBlocked:0,visualRestores:0,rematches:0};
  function G(){return window.gGameEngine||null}
@@ -16,7 +16,7 @@
  function patchDeaths(){if(!window.Player||!window.Bot)return;[['Player',Player],['Bot',Bot]].forEach(function(pair){var proto=pair[1].prototype,old=proto.die;if(!old||old.__v16230Patch)return;function die(){if(this.__v16230Terminal||this.alive===false)return;var r=old.apply(this,arguments);if(this.simulatedHuman&&this.__v16228Eliminated)this.alive=false;if(this.alive===false)markDead(this);return r}die.__v16230Patch=true;proto.die=die})}
  function patchFade(){if(!window.Player||!Player.prototype.fade||Player.prototype.fade.__v16230Patch)return;function fade(){if(this.alive!==false||this.__v16230FadeDone||this.__v16230FadeInterval)return;var a=this,bmp=a.bmp;if(!bmp)return;var started=Date.now();a.__v16230FadeInterval=setInterval(function(){if(a.alive!==false||!bmp){clearInterval(a.__v16230FadeInterval);a.__v16230FadeInterval=null;return}var age=Date.now()-started;if(age>=900)bmp.alpha=Math.max(0,1-(age-900)/600);if(age>=1600||bmp.alpha<=0){bmp.alpha=0;a.__v16230FadeDone=true;clearInterval(a.__v16230FadeInterval);a.__v16230FadeInterval=null}},30)}fade.__v16230Patch=true;Player.prototype.fade=fade}
  function patchBotUpdate(){if(!window.Bot||!Bot.prototype.update)return;var old=Bot.prototype.update;if(old.__v16230Patch)return;function update(){if(this.__v16230Terminal||this.alive===false)return;return old.apply(this,arguments)}update.__v16230Patch=true;Bot.prototype.update=update}
- function rating(b){if(!b)return 650;var values=[b.__v152Profile&&b.__v152Profile.rating,b.__v16224Profile&&b.__v16224Profile.rating,b.rating,b.humanRating,b.__v152Profile&&b.__v152Profile.score];for(var i=0;i<values.length;i++){if(values[i]!==null&&values[i]!==undefined&&values[i]!==''&&isFinite(Number(values[i])))return Math.max(0,Math.min(1000,Number(values[i])))}return 650}
+ function rating(b){if(!b)return 650;var values=[b.__v16232SkillRating,b.__v152Profile&&b.__v152Profile.baseSkillRating,b.__v152Profile&&b.__v152Profile.rating,b.__v16224Profile&&b.__v16224Profile.rating,b.rating,b.humanRating,b.__v152Profile&&b.__v152Profile.score];for(var i=0;i<values.length;i++){if(values[i]!==null&&values[i]!==undefined&&values[i]!==''&&isFinite(Number(values[i])))return Math.max(0,Math.min(1000,Number(values[i])))}return 650}
  function tier(r){return r<200?'beginner':r<400?'novice':r<600?'intermediate':r<800?'advanced':'expert'}
  function timing(r){return r<200?[580,1050]:r<400?[350,750]:r<600?[190,430]:r<800?[60,210]:[0,0]}
  function patchSkill(){if(!window.Bot)return;var P=Bot.prototype;

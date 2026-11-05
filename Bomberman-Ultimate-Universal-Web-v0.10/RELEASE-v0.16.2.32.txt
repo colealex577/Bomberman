@@ -1,0 +1,6 @@
+Bomberman v0.16.2.32 — Persistent simulated player identities.
+- Leaderboard names now resolve to a shared deterministic outfit, playstyle, base skill, nickname and evolving rating across simulated matchmaking, observed/joined rounds, and leaderboard challenges.
+- Score and calculated leaderboard rank display for local players and simulated humans in stat HUD.
+- WASD fire Bomb Kick wording replaces old equip instructions; Space remains normal bomb; arrow keys control movement.
+- Fixed missing skill/rematch runtime script reference in index.
+- More detailed real-time multiplayer behavior remains subject to live testing.
