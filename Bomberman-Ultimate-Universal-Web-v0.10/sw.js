@@ -1,4 +1,4 @@
-const CACHE='bomberman-ultimate-v016232-persistent-identities-hud-controls-cache3';
+const CACHE='bomberman-ultimate-v016232-persistent-identities-hud-controls-cache4';
 const CORE=[
  './','./index.html','./manifest.webmanifest',
  './files/css/style.css?v=0119','./files/css/bootstrap.css',
