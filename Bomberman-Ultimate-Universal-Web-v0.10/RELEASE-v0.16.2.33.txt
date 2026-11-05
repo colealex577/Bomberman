@@ -1,0 +1,1 @@
+v0.16.2.33 — Opening AI oscillation safe path detours; reject outward Bomb Kick throws at map boundary before bomb placement and charge consumption. Preserve normal bombs, inward throws, existing wall corner travel and emergency escapes. Isolated tests passed; live multiplayer not yet validated.
