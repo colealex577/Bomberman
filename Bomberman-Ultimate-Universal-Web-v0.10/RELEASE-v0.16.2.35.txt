@@ -1,0 +1,4 @@
+Bomberman v0.16.2.35 — direct source fix, no AI changes.
+Root cause: in runtime-v0155-social-population.js, spawnActive() ran repeatedly, but Bot.die() removed dead simulated bots from g.bots. spawnProfile() interpreted the removed bot as unspawned and recreated it, often at bottom-left (slot 1).
+Fix: track which active simulated profile has been spawned during each round. Reset this tracking on genuine round transitions and public-session reset, rather than on individual deaths.
+Before/after regression: the original code respawned the dead bottom-left bot twice; the corrected code never respawned mid-round and created it once on the next round. AI behavior unchanged.
