@@ -134,7 +134,7 @@ function patchNetworkProfiles(){
 }
 
 function settleRating(won){
-  var g=window.gGameEngine;if(!g||g.__v123RatingSettled)return null;g.__v123RatingSettled=true;var before=loadRating(),delta=won?10:-10,after=saveRating(before+delta);g.__v123RatingResult={before:before,after:after,delta:after-before,won:!!won};var lp=localPlayer();if(lp)lp.rating=after;sendProfile(true);updateRatingHud();updatePostRating();return g.__v123RatingResult
+  var g=window.gGameEngine;if(!g||g.__v123RatingSettled)return null;g.__v123RatingSettled=true;var before=loadRating(),delta=won?10:0,after=saveRating(before+delta);g.__v123RatingResult={before:before,after:after,delta:after-before,won:!!won};var lp=localPlayer();if(lp)lp.rating=after;sendProfile(true);updateRatingHud();updatePostRating();return g.__v123RatingResult
 }
 function settleFromMatchEnd(){var p=localPlayer();if(p)settleRating(p.alive!==false)}
 function updatePostRating(){var g=window.gGameEngine,res=g&&g.__v123RatingResult,o=$('qolPostMatch');if(!res||!o||o.hidden)return;var copy=o.querySelector('.qol_copy');if(!copy)return;var sign=res.delta>0?'+':'';copy.textContent='Choose what you want to do next. Rating '+formatRating(res.after)+' ('+sign+res.delta+').'}

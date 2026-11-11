@@ -72,10 +72,10 @@ function buildSeedRoster(){
 
 // Persist only encounters played on this device; the shared seeded careers remain stable.
 var encounterRecords=(function(){try{return JSON.parse(localStorage.getItem('BombermanSimEncountersV129')||'{}')||{}}catch(e){return {}}})();
-function recordResult(name,delta){
- var current=profile(name);if([10,-10,5].indexOf(delta)<0||!current)return null;
+function recordResult(name,delta,outcome){
+ var current=profile(name);delta=Number(delta);if(!Number.isFinite(delta)||Math.abs(delta)>100||!current)return null;
  var r=encounterRecords[name]||{points:0,wins:0,losses:0};
- r.points+=clamp(current.score+delta)-current.score;if(delta===10)r.wins++;if(delta===-10)r.losses++;encounterRecords[name]=r;
+ r.points+=clamp(current.score+delta)-current.score;if(outcome==='win')r.wins++;if(outcome==='loss')r.losses++;encounterRecords[name]=r;
  try{localStorage.setItem('BombermanSimEncountersV129',JSON.stringify(encounterRecords))}catch(e){}
  refreshRoster(Date.now(),true);renderLeaderboard();enforceFakeProfile();return profile(name)
 }

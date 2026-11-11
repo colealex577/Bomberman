@@ -14,7 +14,9 @@ S.makeSessionToken=function(){return Date.now().toString(36)+'-'+Math.random().t
 S.ensureSessionToken=function(){if(!S.sessionToken)S.sessionToken=S.makeSessionToken();return S.sessionToken};
 S.readName=function(){S.localName=S.cleanName(S.els.name&&S.els.name.value);if(S.els.name)S.els.name.value=S.localName;try{localStorage.setItem('BombermanPlayerName',S.localName)}catch(e){}return S.localName};
 S.host=function(){return S.role==='host'};S.guest=function(){return S.role==='guest'};S.online=function(){return S.host()||S.guest()};
-S.privateId=function(c){return'bomberman-v16226-private-'+c+'-4f7b2a9c'};
+// A shared one-digit code can have several simultaneous hosts. Slot 0 retains the original ID.
+S.PRIVATE_SLOTS=6;
+S.privateId=function(c,slot){var base='bomberman-v16226-private-'+c+'-4f7b2a9c';return !slot?base:base+'-s'+(Number(slot)+1)};
 S.status=function(t,k){if(!S.els.status)return;S.els.status.textContent=t||'';S.els.status.className='online_status '+(k||'')};
 S.clamp=function(v){v=Math.round(Number(v));return Math.max(16,Math.min(100,isFinite(v)?v:16))};
 S.render=function(){var u=S.ultimate;[S.els.ultimate,S.els.ultimateLobby].forEach(function(b){if(!b)return;b.textContent=u?'ULTIMATE MODE: ON':'ULTIMATE MODE: OFF';b.classList.toggle('on',u);b.disabled=S.guest()});if(S.els.drop){S.els.drop.value=u?100:S.dropRate;S.els.drop.disabled=u||S.guest();S.els.dropValue.textContent=u?'100% · ULTIMATE':(S.dropRate===16?'16% · DEFAULT':S.dropRate+'%')}};

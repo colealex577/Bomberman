@@ -17,6 +17,8 @@ InputEngine = Class.extend({
     },
 
     setup: function() {
+        if (this.__setupComplete) return;
+        this.__setupComplete = true;
         this.bind(38, 'up');
         this.bind(37, 'left');
         this.bind(40, 'down');

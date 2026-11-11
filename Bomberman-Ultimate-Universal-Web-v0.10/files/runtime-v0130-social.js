@@ -5,9 +5,10 @@ var S=window.B115,Q=window.BomberQOL;
 if(!S||!Q)return;
 var BEST_KEY='BombermanBestOfV130',RIVAL_KEY='BombermanRivalriesV130';
 var installed=false,wireInstalled=false,simSession=0,roundSerial=0,currentRoundKey='',lastRoundObject=null;
-var remoteBestOf=null,lastStatsSend=0,lastKillText='',toastTimer=null,rivalTimer=null;
+var remoteBestOf=null,lastStatsSend=0,lastKillText='',toastTimer=null,rivalTimer=null,specialToastUntil=0;
 var stats=null,guestStats=null,setState=null,lastProcessedDuel=null;
 var bombSeen=new WeakSet(),threats=new WeakMap();
+var scoreEventSerial=0,seenScorePackets=Object.create(null),triple={id:"",opponent:"",wins:0,losses:0,total:0};
 var debug=/[?&]netdebug=1(?:&|$)/.test(location.search);
 function $(id){return document.getElementById(id)}
 function G(){return window.gGameEngine||null}
@@ -23,10 +24,67 @@ function clean(v){return String(v||'Player').replace(/[<>]/g,'').replace(/\s+/g,
 function localName(){return clean(S.localName||localStorage.getItem('BombermanPlayerName')||'Player')}
 function opponentName(){return clean(S.remoteName||'Opponent')}
 function score(){try{return Math.max(0,Math.min(1000,Math.round(Number(localStorage.getItem('BombermanRatingV1'))||0)))}catch(e){return 0}}
+/* Event-driven score ledger. Transport lives with existing social messages rather than per-round hooks. */
+function localSlot(){return S.role==='guest'?1:0}
+function scoreLocal(delta,reason){
+ delta=Math.round(Number(delta)||0);if(!delta||!window.BomberV127)return 0;
+ var before=BomberV127.getScore(),after=BomberV127.setScore(before+delta),actual=after-before,g=G();
+ if(g){var old=g.__v123RatingResult,initial=old&&Number.isFinite(Number(old.before))?Number(old.before):before;
+   g.__v123RatingResult={before:initial,after:after,delta:after-initial,won:actual>0,label:reason||''};
+   var entity=g.players&&g.players[localSlot()];if(entity)entity.rating=after;
+   if(g.updateStatHud)try{g.updateStatHud()}catch(e){}
+ }
+ if(isOnline()&&S.conn&&S.conn.open&&window.BomberCharacter){
+   try{S.send({type:'v123Profile',appearance:BomberCharacter.get(),rating:after})}catch(e){}
+ }
+ return actual
+}
+function scoreSim(delta){
+ var g=G(),e=g&&g.simulatedOpponent;
+ if(!e||!window.BomberLeaderboard127)return 0;
+ var p=BomberLeaderboard127.recordResult(S.remoteName,delta);
+ if(p){e.rating=p.score;g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating}
+ return delta
+}
+function scoreActor(actor,delta,reason){
+ var g=G();if(!g||!actor||!authoritative())return 0;
+ if(actor===g.players[0])return scoreLocal(delta,reason);
+ if(S.role==='simulated'&&actor===g.simulatedOpponent)return scoreSim(delta);
+ if(isHost()&&actor===g.players[1]){
+   sendSide({type:'v130Score',seq:++scoreEventSerial,round:roundId(),delta:delta,reason:reason||''});return delta
+ }
+ return 0
+}
+function creditDamage(victim,bomb){
+ if(!authoritative()||!bomb||!victim)return 0;
+ var returned=bomb.__v16221ReturnSender,attacker=returned&&returned.originalOwner===victim?returned.redirector:(bomb.__v16211TravelOwner||bomb.__v16221LaunchOwner||bomb.owner);
+ if(!attacker||attacker===victim)return 0;
+ return scoreActor(attacker,5,'Nonlethal bomb damage')
+}
+function scoreTriple(won){
+ if(!isOpponentMatch())return;
+ var id=sessionId(),opp=opponentName();
+ if(triple.id!==id||triple.opponent!==opp)triple={id:id,opponent:opp,wins:0,losses:0,total:0};
+ triple.total++;if(won)triple.wins++;else triple.losses++;
+ if(triple.total!==3)return;
+ var message='';
+ if(triple.wins===3){scoreLocal(30,'3–0 sweep');message='PERFECT 3–0 SWEEP! +30'}
+ else if(triple.losses===3){scoreLocal(-30,'0–3 sweep');message='0–3 SWEEP • −30'}
+ triple={id:id,opponent:opp,wins:0,losses:0,total:0};return message
+}
+function scorePacket(d){
+ if(!d||d.type!=='v130Score'||!isGuest())return false;
+ var nowRound=roundId();if(!nowRound||d.round!==nowRound)return true;
+ var seq=Number(d.seq),delta=Number(d.delta);
+ if(!Number.isSafeInteger(seq)||seq<1||!Number.isInteger(delta)||Math.abs(delta)>100)return true;
+ var key=nowRound+':'+seq;if(seenScorePackets[key])return true;seenScorePackets[key]=true;
+ if(Object.keys(seenScorePackets).length>200)seenScorePackets=Object.create(null);
+ scoreLocal(delta,String(d.reason||'Score bonus').slice(0,50));return true
+}
 function playerRank(){try{return window.BomberLeaderboard127?BomberLeaderboard127.rank(score(),localName()):null}catch(e){return null}}
 function opponentProfile(){try{return window.BomberLeaderboard127&&S.role==='simulated'?BomberLeaderboard127.profile(S.remoteName):null}catch(e){return null}}
 function entityName(e){var g=G();if(!e)return'Unknown';if(g){if(e===g.players[0])return clean(e.displayName||g.playerNames&&g.playerNames[0]||S.localName||'Player 1');if(e===g.players[1])return clean(e.displayName||g.playerNames&&g.playerNames[1]||S.remoteName||'Player 2');if(e===g.simulatedOpponent)return opponentName()}return clean(e.__v130AiName||e.displayName||'AI')}
-function entityKey(e){var g=G();if(!g||!e)return null;if(e===g.players[0])return'p0';if(e===g.players[1])return'p1';if(e===g.simulatedOpponent)return'sim';if(e.__v130AiKey)return e.__v130AiKey;var i=g.bots?g.bots.indexOf(e):-1;if(i>=0){e.__v130AiKey='ai'+i;e.__v130AiName='AI '+(i+1);return e.__v130AiKey}return null}
+function entityKey(e){var g=G();if(!g||!e)return null;if(e===g.players[0])return'p0';if(e===g.players[1])return'p1';if(e===g.simulatedOpponent)return'sim';if(e.__v130AiKey)return e.__v130AiKey;var i=g.bots?g.bots.indexOf(e):-1;if(i>=0){e.__v130AiKey='ai'+i;e.__v130AiName='AI '+(i+1);return e.__v130AiKey}if(e.isBot){e.__v130AiKey='ai'+(Number.isFinite(Number(e.statSlot))?Number(e.statSlot):Number(e.id)||0);return e.__v130AiKey}return null}
 function humanKeys(){return S.role==='simulated'?['p0','sim']:['p0','p1']}
 function blank(){return{kills:0,deaths:0,bombs:0,blocks:0,pickups:0,clutches:0}}
 function freshStats(){return{round:currentRoundKey,p0:blank(),p1:blank(),sim:blank(),lastKill:''}}
@@ -49,27 +107,61 @@ function sendSide(packet){if(!isOnline()||!S.conn||!S.conn.open)return;try{S.sen
 function sendStats(force){if(!isHost()||!stats)return;var now=Date.now();if(!force&&now-lastStatsSend<350)return;lastStatsSend=now;sendSide({type:'v130Stats',stats:snapshotStats(),set:setCopy(),kill:lastKillText})}
 function sendSetConfig(){if(isHost())sendSide({type:'v130SetConfig',bestOf:getBestOf(),session:sessionId()})}
 function sendSetState(){if(isHost())sendSide({type:'v130SetState',set:setCopy()})}
-function handleSide(d){if(!d||typeof d.type!=='string')return false;if(d.type==='v130SetConfig'){if(isGuest()){remoteBestOf=clampSet(d.bestOf);var s=ensureSet(false);if(s&&!s.rounds&&!s.complete)s.bestOf=remoteBestOf;renderAll()}return true}if(d.type==='v130SetState'){if(isGuest()&&d.set){setState=JSON.parse(JSON.stringify(d.set));renderAll()}return true}if(d.type==='v130Stats'){if(isGuest()){guestStats=d.stats||null;if(d.set)setState=JSON.parse(JSON.stringify(d.set));if(d.kill)lastKillText=d.kill;renderAll()}return true}if(d.type==='v130Kill'){if(isGuest()){lastKillText=String(d.text||'');showToast(lastKillText,'kill');renderAll()}return true}if(d.type==='v130Clutch'){if(isGuest())showToast(String(d.text||'CLUTCH!'),'clutch');return true}return false}
+function handleSide(d){if(!d||typeof d.type!=='string')return false;if(d.type==='v130Score')return scorePacket(d);if(d.type==='v130SetConfig'){if(isGuest()){remoteBestOf=clampSet(d.bestOf);var s=ensureSet(false);if(s&&!s.rounds&&!s.complete)s.bestOf=remoteBestOf;renderAll()}return true}if(d.type==='v130SetState'){if(isGuest()&&d.set){setState=JSON.parse(JSON.stringify(d.set));renderAll()}return true}if(d.type==='v130Stats'){if(isGuest()){guestStats=d.stats||null;if(d.set)setState=JSON.parse(JSON.stringify(d.set));if(d.kill)lastKillText=d.kill;renderAll()}return true}if(d.type==='v130Kill'){if(isGuest()){lastKillText=String(d.text||'');showToast(lastKillText,d.special?'clutch':'kill');renderAll()}return true}if(d.type==='v130Clutch'){if(isGuest())showToast(String(d.text||'CLUTCH!'),'clutch');return true}return false}
 function installWire(){if(wireInstalled||!window.BomberMultiplayer||!BomberMultiplayer.ready)return false;wireInstalled=true;var oh=S.hostData,og=S.guestData;S.hostData=function(d){if(handleSide(d))return;return oh.apply(S,arguments)};S.guestData=function(d){if(handleSide(d))return;return og.apply(S,arguments)};return true}
 function ownerKey(b){if(!b)return null;if(b.__v130OwnerKey)return b.__v130OwnerKey;var g=G(),all=[];if(!g)return null;if(b.owner){var direct=entityKey(b.owner);if(direct){b.__v130OwnerKey=direct;return direct}}all=(g.players||[]).concat(g.bots||[]);if(g.simulatedOpponent&&all.indexOf(g.simulatedOpponent)<0)all.push(g.simulatedOpponent);for(var i=0;i<all.length;i++){var e=all[i];if(e&&e.bombs&&e.bombs.indexOf(b)>=0){b.__v130OwnerKey=entityKey(e);return b.__v130OwnerKey}}return null}
 function markBombs(){if(!authoritative()||!stats)return;var g=G();if(!g)return;for(var i=0;i<g.bombs.length;i++){var b=g.bombs[i],k=ownerKey(b);if(!k||bombSeen.has(b))continue;bombSeen.add(b);if(k==='p0'||k==='p1'||k==='sim')stat(k).bombs++}}
 function containsPos(a,p){if(!a||!p)return false;for(var i=0;i<a.length;i++)if(a[i].x===p.x&&a[i].y===p.y)return true;return false}
-function killerBomb(e){var g=G();if(!g||!e)return null;for(var i=0;i<g.bombs.length;i++){var b=g.bombs[i];if(!b.exploded)continue;for(var j=0;j<(b.fires||[]).length;j++)if(b.fires[j].position.x===e.position.x&&b.fires[j].position.y===e.position.y)return b}return null}
+function killerBomb(e){var g=G();if(!g||!e)return null;if(e.__v130FatalBomb&&e.__v130FatalBomb.exploded)return e.__v130FatalBomb;for(var i=0;i<g.bombs.length;i++){var b=g.bombs[i];if(!b.exploded)continue;for(var j=0;j<(b.fires||[]).length;j++)if(b.fires[j].position.x===e.position.x&&b.fires[j].position.y===e.position.y)return b}return null}
 function keyName(k){var g=G();if(!g)return'Unknown';if(k==='p0')return entityName(g.players[0]);if(k==='p1')return entityName(g.players[1]);if(k==='sim')return entityName(g.simulatedOpponent);if(/^ai/.test(k)){var idx=Number(k.slice(2));var b=(g.__v130RoundBots||[])[idx];return b?entityName(b):'AI '+(idx+1)}return'Unknown'}
-function showToast(text,kind){if(!text)return;ensureUI();var t=$('v130Toast');if(!t)return;t.className='v130_toast '+(kind||'');t.textContent=text;t.hidden=false;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
-function announceDeath(e){if(!authoritative()||!stats||!e)return;var key=entityKey(e),guard=currentRoundKey||roundId();if(!key||e.__v130DeathRound===guard)return;e.__v130DeathRound=guard;var s=stat(key);s.deaths++;var b=killerBomb(e),kk=ownerKey(b),victim=entityName(e),text='';if(kk){if(kk===key)text=victim+' was caught by their own bomb';else{text=keyName(kk)+' eliminated '+victim;if(kk==='p0'||kk==='p1'||kk==='sim')stat(kk).kills++}}else text=victim+' was eliminated';lastKillText=text;stats.lastKill=text;showToast(text,'kill');if(isHost()){sendSide({type:'v130Kill',text:text});sendStats(true)}renderAll()}
-function patchDeaths(){if(Player.prototype.__v130DeathStats)return;Player.prototype.__v130DeathStats=true;var pd=Player.prototype.die;Player.prototype.die=function(){if(this.alive!==false)announceDeath(this);return pd.apply(this,arguments)};if(window.Bot){var bd=Bot.prototype.die;Bot.prototype.die=function(){if(this.alive!==false)announceDeath(this);return bd.apply(this,arguments)}}}
+function showToast(text,kind){if(!text)return;var now=Date.now();if(/^RETURN TO SENDER!/i.test(text))specialToastUntil=now+2600;else if(now<specialToastUntil)return;ensureUI();var t=$('v130Toast');if(!t)return;t.className='v130_toast '+(kind||'');t.textContent=text;t.hidden=false;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
+function announceDeath(e){
+ if(!authoritative()||!e)return;if(!stats)stats=freshStats();
+ var key=entityKey(e),guard=currentRoundKey||roundId()||('local-'+roundSerial);
+ if(!key||e.__v130DeathRound===guard)return;e.__v130DeathRound=guard;
+ var st=stat(key);st.deaths++;
+ var b=killerBomb(e),mark=b&&b.__v16221ReturnSender,returned=!!(mark&&mark.originalOwner===e&&mark.redirector&&mark.redirector!==e);
+ var attacker=b&&(returned?mark.redirector:(b.__v16211TravelOwner||b.__v16221LaunchOwner||b.owner)),kk=entityKey(attacker),victim=entityName(e),text='';
+ var thrown=!!(b&&(b.__v16211TravelStartedAt||b.__v16221LaunchOwner||b.__v160Moving||b.__v16211Redirected||returned));
+ if(attacker&&attacker!==e){
+   text=entityName(attacker)+' eliminated '+victim;
+   if(kk==='p0'||kk==='p1'||kk==='sim')stat(kk).kills++;
+   scoreActor(attacker,e===G().simulatedOpponent||G().players.indexOf(e)>=0||e.simulatedHuman?10:5,'Elimination');
+   if(thrown)scoreActor(attacker,5,'Bomb throw elimination');
+   if(returned){scoreActor(attacker,10,'Return to sender');text='RETURN TO SENDER! '+entityName(attacker)+' sent '+victim+' their own bomb • +10';}
+ }else if(attacker===e)text=victim+' was caught by their own bomb';
+ else text=victim+' was eliminated';
+ lastKillText=text;stats.lastKill=text;showToast(text,returned?'clutch':'kill');
+ if(isHost()){sendSide({type:'v130Kill',text:text,special:returned});sendStats(true)}renderAll()
+}
+function defenseCounts(e){return [Number(e&&e.hearts)||0,Number(e&&e.bonusCounts&&e.bonusCounts.heart)||0,Number(e&&e.extraHearts)||0,Number(e&&e.health)||0,Number(e&&e.hp)||0,Number(e&&e.hitPoints)||0]}
+function lostDefense(before,after){return before.some(function(n,i){return n>after[i]})}
+function patchDeaths(){if(Player.prototype.__v130DeathStats)return;Player.prototype.__v130DeathStats=true;
+ var pd=Player.prototype.die;
+ Player.prototype.die=function(){if(this.alive===false)return;var before=defenseCounts(this),wasAlive=this.alive!==false,r=pd.apply(this,arguments);
+   if(wasAlive&&this.alive===false)announceDeath(this);
+   else if(wasAlive&&lostDefense(before,defenseCounts(this)))creditDamage(this,killerBomb(this));
+   return r
+ };
+ if(window.Bot){var bd=Bot.prototype.die;
+   Bot.prototype.die=function(){if(this.alive===false)return;var before=defenseCounts(this),wasAlive=this.alive!==false,r=bd.apply(this,arguments);
+     if(wasAlive&&this.alive===false)announceDeath(this);
+     else if(wasAlive&&lostDefense(before,defenseCounts(this)))creditDamage(this,killerBomb(this));
+     return r
+   }
+ }
+}
 function patchPickups(){if(Player.prototype.__v130PickupStats)return;Player.prototype.__v130PickupStats=true;var old=Player.prototype.handleBonusCollision;Player.prototype.handleBonusCollision=function(){if(!authoritative()||!stats)return old.apply(this,arguments);var g=G(),before=g?g.bonuses.length:0,k=entityKey(this),r=old.apply(this,arguments),after=g?g.bonuses.length:before;if((k==='p0'||k==='p1'||k==='sim')&&after<before)stat(k).pickups+=before-after;return r}}
 function remainingMs(b){if(!b||b.exploded)return Infinity;if(Number.isFinite(b.endTime))return b.endTime-Date.now();var fps=(window.createjs&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(G()&&G().fps)||50;return Math.max(0,((Number(b.timerMax)||2)*fps-(Number(b.timer)||0))*1000/fps)}
 function humanEntities(){var g=G(),a=[];if(!g)return a;if(g.players)for(var i=0;i<g.players.length;i++)if(g.players[i])a.push(g.players[i]);if(S.role==='simulated'&&g.simulatedOpponent)a.push(g.simulatedOpponent);return a}
 function scanThreats(){if(!authoritative()||!stats)return;var g=G();if(!g)return;var now=Date.now(),hum=humanEntities();for(var i=0;i<hum.length;i++){var e=hum[i];if(!e||e.alive===false)continue;var list=threats.get(e)||[];for(var j=0;j<g.bombs.length;j++){var b=g.bombs[j],rem=remainingMs(b);if(rem<0||rem>500||b.exploded)continue;var danger=[];try{danger=b.getDangerPositions()}catch(x){}if(!containsPos(danger,e.position))continue;var found=false;for(var q=0;q<list.length;q++)if(list[q].bomb===b){list[q].at=now;found=true;break}if(!found)list.push({bomb:b,at:now})}list=list.filter(function(x){return now-x.at<800&&!x.bomb.exploded});if(list.length>4)list=list.slice(-4);threats.set(e,list)}}
 function clutchCheck(b,blast){if(!authoritative()||!stats)return;var hum=humanEntities(),now=Date.now();if(!b.__v130ClutchKeys)b.__v130ClutchKeys={};for(var i=0;i<hum.length;i++){var e=hum[i],k=entityKey(e);if(!e||e.alive===false||!k||b.__v130ClutchKeys[k])continue;var list=threats.get(e)||[],near=false;for(var j=0;j<list.length;j++)if(list[j].bomb===b&&now-list[j].at<750){near=true;break}if(near&&!containsPos(blast,e.position)){b.__v130ClutchKeys[k]=1;stat(k).clutches++;var text='CLUTCH! '+entityName(e)+' escaped the blast';showToast(text,'clutch');if(isHost())sendSide({type:'v130Clutch',text:text});sendStats(true)}}}
 function patchBombExplosion(){if(Bomb.prototype.__v130Stats)return;Bomb.prototype.__v130Stats=true;var old=Bomb.prototype.explode;Bomb.prototype.explode=function(){if(authoritative()&&!this.exploded&&stats){var k=ownerKey(this),danger=[];try{danger=this.getDangerPositions()}catch(e){}if(k==='p0'||k==='p1'||k==='sim'){var wood=0,g=G();for(var i=0;i<danger.length;i++)if(g.getTileMaterial(danger[i])==='wood')wood++;stat(k).blocks+=wood}clutchCheck(this,danger)}return old.apply(this,arguments)}}
-function patchRestart(){if(GameEngine.prototype.__v130RoundHook)return;GameEngine.prototype.__v130RoundHook=true;var old=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){roundSerial++;var r=old.apply(this,arguments);setTimeout(function(){checkRound(true)},0);return r}}
-function processDuel(){var g=G(),r=g&&g.__v127Round;if(!r||!r.duelResolved||r.__v130SocialCounted)return;r.__v130SocialCounted=true;if(!isOpponentMatch())return;var s=ensureSet(false),localSlot=S.role==='guest'?1:0,won=S.role==='simulated'?r.winner===0:r.winner===localSlot;s.rounds++;if(won)s.localWins++;else s.opponentWins++;var rec=recordRival(won),need=winsNeeded(s.bestOf);if(s.localWins>=need||s.opponentWins>=need)s.complete=true;lastProcessedDuel=currentRoundKey;showToast(s.complete?(won?'SET WON '+s.localWins+'–'+s.opponentWins:'SET LOST '+s.localWins+'–'+s.opponentWins):'ROUND '+s.rounds+' · SET '+s.localWins+'–'+s.opponentWins,'set');if(isHost())sendSetState();renderAll()}
+function patchRestart(){if(GameEngine.prototype.__v130RoundHook)return;GameEngine.prototype.__v130RoundHook=true;var old=GameEngine.prototype.restart;GameEngine.prototype.restart=function(){roundSerial++;if(!isOpponentMatch())stats=freshStats();var r=old.apply(this,arguments);setTimeout(function(){checkRound(true)},0);return r}}
+function processDuel(){var g=G(),r=g&&g.__v127Round;if(!r||!r.duelResolved||r.__v130SocialCounted)return;r.__v130SocialCounted=true;if(!isOpponentMatch())return;var s=ensureSet(false),localSlot=S.role==='guest'?1:0,won=S.role==='simulated'?r.winner===0:r.winner===localSlot;s.rounds++;if(won)s.localWins++;else s.opponentWins++;var rec=recordRival(won),need=winsNeeded(s.bestOf),sweepMessage=scoreTriple(won);if(s.localWins>=need||s.opponentWins>=need)s.complete=true;lastProcessedDuel=currentRoundKey;showToast(sweepMessage||(s.complete?(won?'SET WON '+s.localWins+'–'+s.opponentWins:'SET LOST '+s.localWins+'–'+s.opponentWins):'ROUND '+s.rounds+' · SET '+s.localWins+'–'+s.opponentWins),sweepMessage&&won?'clutch':'set');if(isHost())sendSetState();renderAll()}
 function rivalryText(){if(!isOpponentMatch())return'';var r=rivalry();return r.games?'Rivalry · '+localName()+' '+r.wins+'–'+r.losses+' '+opponentName():''}
 function announceRival(){var s=ensureSet(false),r=rivalry();if(!s||s.rivalAnnounced||s.rounds||r.games<2)return;s.rivalAnnounced=true;ensureUI();var b=$('v130Rival');if(!b)return;b.innerHTML='<strong>RIVAL MATCH</strong><span>'+escapeHtml(localName())+' '+r.wins+'–'+r.losses+' '+escapeHtml(opponentName())+'</span>';b.hidden=false;if(rivalTimer)clearTimeout(rivalTimer);rivalTimer=setTimeout(function(){b.hidden=true},2600)}
-function checkRound(force){if(!isOpponentMatch())return;var rk=roundId();if(!rk)return;if(!force&&rk===currentRoundKey)return;currentRoundKey=rk;lastRoundObject=G()&&G().__v127Round||null;bombSeen=new WeakSet();threats=new WeakMap();stats=freshStats();guestStats=null;lastKillText='';var g=G();if(g){g.__v130RoundBots=(g.bots||[]).slice();for(var i=0;i<g.__v130RoundBots.length;i++){g.__v130RoundBots[i].__v130AiKey='ai'+i;g.__v130RoundBots[i].__v130AiName='AI '+(i+1)}}ensureSet(true);announceRival();if(isHost()){sendSetConfig();sendStats(true)}renderAll()}
+function checkRound(force){if(!isOpponentMatch())return;var rk=roundId();if(!rk)return;if(!force&&rk===currentRoundKey)return;currentRoundKey=rk;seenScorePackets=Object.create(null);lastRoundObject=G()&&G().__v127Round||null;bombSeen=new WeakSet();threats=new WeakMap();stats=freshStats();guestStats=null;lastKillText='';var g=G();if(g){g.__v130RoundBots=(g.bots||[]).slice();for(var i=0;i<g.__v130RoundBots.length;i++){g.__v130RoundBots[i].__v130AiKey='ai'+i;g.__v130RoundBots[i].__v130AiName='AI '+(i+1)}}ensureSet(true);announceRival();if(isHost()){sendSetConfig();sendStats(true)}renderAll()}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function ensureStyle(){if($('v130Style'))return;var st=document.createElement('style');st.id='v130Style';st.textContent=`
 #buildVersion130{position:fixed;top:calc(env(safe-area-inset-top,0px) + 5px);left:calc(env(safe-area-inset-left,0px) + 6px);z-index:2147483647;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.72);color:#fff;font:700 9px/1.25 Arial,sans-serif;pointer-events:none}#buildVersion129{display:none!important}
@@ -92,7 +184,7 @@ function renderSetHud(){var h=$('v130SetHud');if(!h)return;var s=setState;if(!is
 function sanitizeUI(){var panel=$('v127LeaderboardPanel');if(panel){var h=panel.querySelector('h2');if(h)h.textContent='Leaderboard';var p=panel.querySelector('.v127_lb_head p');if(p)p.remove();var note=panel.querySelector('.v127_lb_note');if(note)note.textContent='Player records evolve over time and update when you meet them in matches.'}var tile=$('mainLeaderboardTile');if(tile)tile.setAttribute('aria-label','Leaderboard');var nodes=document.querySelectorAll('#qolEliminated .qol_status,#qolPostMatch .qol_status,#qolRematchPrompt .qol_status,#v127SettingsPanel p');for(var i=0;i<nodes.length;i++){var txt=nodes[i].textContent||'',n=txt.replace(/simulated[- ]human/ig,'player').replace(/fake[- ]human/ig,'player').replace(/simulated opponent/ig,'opponent').replace(/simulated/ig,'public');if(n!==txt)nodes[i].textContent=n}if(S.role==='simulated'&&S.els&&S.els.matchStatus&&S.els.matchBar&&!S.els.matchBar.hidden){var p2=opponentProfile(),lr=playerRank(),rr=p2&&(p2.displayRank||p2.rank);S.els.matchStatus.textContent='PUBLIC • '+localName()+' '+score()+(lr?' (#'+lr+')':'')+' vs '+opponentName()+(p2?' '+p2.score:'')+(rr?' (#'+rr+')':'')}}
 function renderAll(){ensureUI();renderSetHud();renderPost();sanitizeUI()}
 function wrapSimStart(){if(S.__v130SimStart)return;S.__v130SimStart=true;var old=S.startSimulated;S.startSimulated=function(){simSession++;roundSerial=0;setState=null;var r=old.apply(S,arguments);setTimeout(function(){checkRound(true);renderAll()},0);return r}}
-function install(){if(installed)return true;if(!window.GameEngine||!window.Player||!window.Bot||!window.Bomb||!window.BomberV127||!window.BomberLeaderboard127||!window.BomberMultiplayer||!BomberMultiplayer.ready||!G())return false;installed=true;installWire();wrapSimStart();patchDeaths();patchPickups();patchBombExplosion();patchRestart();ensureUI();checkRound(true);window.BomberSocial130={version:VERSION,getBestOf:getBestOf,setBestOf:setBestOf,set:function(){return setCopy()},stats:function(){return JSON.parse(JSON.stringify(displayStats()))},rivalry:rivalry,sanitize:sanitizeUI};if(debug){BomberSocial130.debug={setRival:function(w,l){var all=loadRivals(),k=rivalKey();all[k]={wins:Number(w)||0,losses:Number(l)||0,games:(Number(w)||0)+(Number(l)||0),last:Date.now()};saveRivals(all);renderAll()},clutch:function(k){var text='CLUTCH! '+nameForStatKey(k||'p0')+' escaped the blast';stat(k||'p0').clutches++;showToast(text,'clutch');renderAll()},kill:function(text){lastKillText=String(text||'Test elimination');if(stats)stats.lastKill=lastKillText;showToast(lastKillText,'kill');renderAll()}}}return true}
+function install(){if(installed)return true;if(!window.GameEngine||!window.Player||!window.Bot||!window.Bomb||!window.BomberV127||!window.BomberLeaderboard127||!window.BomberMultiplayer||!BomberMultiplayer.ready||!G())return false;installed=true;installWire();wrapSimStart();patchDeaths();patchPickups();patchBombExplosion();patchRestart();ensureUI();checkRound(true);window.BomberSocial130={version:VERSION,onDamage:creditDamage,scoreEvent:scoreActor,scoreLocal:scoreLocal,triple:scoreTriple,getBestOf:getBestOf,setBestOf:setBestOf,set:function(){return setCopy()},stats:function(){return JSON.parse(JSON.stringify(displayStats()))},rivalry:rivalry,sanitize:sanitizeUI};if(debug){BomberSocial130.debug={setRival:function(w,l){var all=loadRivals(),k=rivalKey();all[k]={wins:Number(w)||0,losses:Number(l)||0,games:(Number(w)||0)+(Number(l)||0),last:Date.now()};saveRivals(all);renderAll()},clutch:function(k){var text='CLUTCH! '+nameForStatKey(k||'p0')+' escaped the blast';stat(k||'p0').clutches++;showToast(text,'clutch');renderAll()},kill:function(text){lastKillText=String(text||'Test elimination');if(stats)stats.lastKill=lastKillText;showToast(lastKillText,'kill');renderAll()}}}return true}
 var tries=0,t=setInterval(function(){if(install()||++tries>800)clearInterval(t)},40);
 setInterval(function(){if(!installed)return;installWire();var rk=roundId();if(isOpponentMatch()&&rk&&rk!==currentRoundKey)checkRound(false);markBombs();scanThreats();processDuel();if(isHost())sendStats(false);renderAll()},100);
 })();

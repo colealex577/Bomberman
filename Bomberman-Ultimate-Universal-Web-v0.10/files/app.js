@@ -28,7 +28,7 @@ function loadCompatibility(){
    loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=01633',function(){
     loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
      loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120d',function(){
-      loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=0123',function(){
+      loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=private016236a',function(){
        loadScript('runtime-v0123-fix-loader','./files/runtime-v0123-fix.js?v=0123b',function(){
         loadScript('runtime-v0123-final-loader','./files/runtime-v0123-final.js?v=0123c',function(){
          loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d',function(){
@@ -37,11 +37,11 @@ function loadCompatibility(){
             (function(){
              loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=01631',function(){
               loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=01629',function(){
-               loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=0127',function(){
+               loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=private016236b',function(){
                 loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
-                 loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=016236',function(){
+                 loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=private016236a',function(){
                   loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d',function(){
-                   loadScript('runtime-v0130-social-loader','./files/runtime-v0130-social.js?v=016236',function(){
+                   loadScript('runtime-v0130-social-loader','./files/runtime-v0130-social.js?v=private016236a',function(){
                     loadScript('runtime-v0130-fix-loader','./files/runtime-v0130-fix.js?v=0130b',function(){
                      loadScript('runtime-v0131-polish-loader','./files/runtime-v0131-polish.js?v=0131',function(){
                       loadScript('runtime-v0132-whole-loader','./files/runtime-v0132-whole.js?v=0132',function(){
@@ -96,5 +96,5 @@ function loadCompatibility(){
   });
  });
 }
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=016236').catch(()=>{}))}
-document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=016236');loadCompatibility();GUILocalization();gGameEngine.load()});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=private016236-kick1').catch(()=>{}))}
+document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=private016236b');loadCompatibility();GUILocalization();gGameEngine.load()});

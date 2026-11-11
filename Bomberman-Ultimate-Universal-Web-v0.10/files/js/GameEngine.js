@@ -124,9 +124,8 @@ GameEngine = Class.extend({
         // A rapid restart must not leave a delayed listener from an older round.
         if (this.__restartListenerTimer) clearTimeout(this.__restartListenerTimer);
         var setupSerial = this.__setupSerial = (Number(this.__setupSerial) || 0) + 1;
-        if (!gInputEngine.bindings.length) {
-            gInputEngine.setup();
-        }
+        // InputEngine.setup installs document listeners. It must run exactly once per tab.
+        if (!gInputEngine.__setupComplete) gInputEngine.setup();
 
         this.bombs = [];
         this.tiles = [];

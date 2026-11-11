@@ -91,10 +91,20 @@ S.startPrivateHost=function(){
  var generation=S.generation;
  S.loadPeer(function(){
    if(generation!==S.generation||!S.host()||S.kind!=='private'||S.code!==code)return;
-   var p=new Peer(S.privateId(code),S.ICE);S.peer=p;S.recover(p);
-   p.on('open',function(){if(S.peer===p&&generation===S.generation)S.status('Private room '+code+' ready • waiting for friend','good')});
-   p.on('connection',function(c){if(S.peer===p&&generation===S.generation&&S.host()&&S.kind==='private')S.acceptPrivateHost(c);else try{c.close()}catch(e){}});
-   p.on('error',function(e){if(S.peer!==p||generation!==S.generation)return;S.status(e&&e.type==='unavailable-id'?'Code '+code+' is already being hosted. Choose Join if that is your friend.':'Private host error: '+((e&&e.type)||'unknown'),'error')})
+   function claim(slot){
+     if(generation!==S.generation||!S.host()||S.kind!=='private')return;
+     if(slot>=S.PRIVATE_SLOTS){S.status('All private room slots for code '+code+' are occupied. Try another code.','error');return}
+     var p=new Peer(S.privateId(code,slot),S.ICE);S.peer=p;S.recover(p);
+     p.on('open',function(){if(S.peer===p&&generation===S.generation)S.status('Private room '+code+' ready • waiting for friend','good')});
+     p.on('connection',function(c){if(S.peer===p&&generation===S.generation&&S.host()&&S.kind==='private')S.acceptPrivateHost(c);else try{c.close()}catch(e){}});
+     p.on('error',function(e){if(S.peer!==p||generation!==S.generation)return;
+       if(e&&e.type==='unavailable-id'){
+         S.peer=null;try{p.destroy()}catch(x){}
+         S.status('Room '+code+' slot occupied • trying another slot…','working');claim(slot+1)
+       }else S.status('Private host error: '+((e&&e.type)||'unknown'),'error')
+     })
+   }
+   claim(0)
  })
 };
 
@@ -139,7 +149,7 @@ function connectPrivateFresh(id,generation,done){
      S.guestData(d)
    });
    c.on('error',function(){if(!c.open)fail()});
-   c.on('close',function(){clearProbe();if(S.conn!==c)return;S.stopHeartbeat();S.conn=null;S.privateHandshakeComplete=false;if(S.started){if(S.els.matchStatus)S.els.matchStatus.textContent='PRIVATE • RECONNECTING TO HOST…';S.reconnectGuest()}else if(generation===S.generation&&S.guest()&&S.kind==='private'){S.status('Private connection interrupted • retrying room '+S.code+'…','working');if(S.retry)clearTimeout(S.retry);S.retry=setTimeout(function(){S.retry=null;if(generation===S.generation&&S.guest()&&S.kind==='private'&&!S.started)S.retryPrivate(generation)},300)}else if(!finished)fail()});
+   c.on('close',function(){clearProbe();if(S.conn!==c)return;S.stopHeartbeat();S.conn=null;S.privateHandshakeComplete=false;if(S.started){if(S.els.matchStatus)S.els.matchStatus.textContent='PRIVATE • RECONNECTING TO HOST…';S.reconnectGuest()}else if(generation===S.generation&&S.guest()&&S.kind==='private'){if(!finished)fail('Private connection interrupted • checking another room slot…');else if(!S.started&&!S.retry)S.retry=setTimeout(function(){S.retry=null;S.retryPrivate(generation,0)},300)}else if(!finished)fail()});
    timer=setTimeout(function(){if(!accepted)fail('Private handshake timed out • retrying room '+S.code+'…')},15000)
  });
  p.on('error',function(e){if(e&&e.type==='peer-unavailable')fail();else if(!finished)fail()})
@@ -156,7 +166,7 @@ S.startPrivateJoin=function(){
  S.destroyNetwork();S.readName();S.code=code;S.kind='private';S.privateRoomEpoch='';S.privateHandshakeComplete=false;S.ensureSessionToken();S.setRole('guest');
  S.waiting('Joining private match • code '+code,'Looking for your friend. Private rooms do not use simulated fallback.');S.status('Looking for room '+code+'…','working');var g=S.generation;S.loadPeer(function(){S.retryPrivate(g)})
 };
-S.retryPrivate=function(g){if(g!==S.generation||!S.guest()||S.kind!=='private')return;S.connectFresh(S.privateId(S.code),g,function(ok){if(!ok&&g===S.generation&&S.guest()&&S.kind==='private'){S.status('Room '+S.code+' not found yet • retrying…','working');S.retry=setTimeout(function(){S.retryPrivate(g)},900)}})};
+S.retryPrivate=function(g,slot){if(g!==S.generation||!S.guest()||S.kind!=='private'||S.started)return;slot=Number(slot)||0;if(slot>=S.PRIVATE_SLOTS){S.status('Room '+S.code+' not found yet • retrying available slots…','working');if(S.retry)clearTimeout(S.retry);S.retry=setTimeout(function(){S.retry=null;S.retryPrivate(g,0)},900);return}S.connectFresh(S.privateId(S.code,slot),g,function(ok){if(!ok&&g===S.generation&&S.guest()&&S.kind==='private'&&!S.started)S.retryPrivate(g,slot+1)})};
 
 S.guestData=function(d){
  if(!d||typeof d!=='object')return;S.noteNetwork();
@@ -180,5 +190,5 @@ S.guestData=function(d){
 S.incomingCall=function(c){S.call=c;c.answer();c.on('stream',function(st){S.streamAck=true;S.els.video.srcObject=st;S.els.remoteStage.hidden=false;S.els.localStage.hidden=true;S.els.lobby.hidden=true;S.els.matchBar.hidden=false;try{var p=S.els.video.play();if(p&&p.catch)p.catch(function(){})}catch(e){}S.ensureMusic();S.send({type:'streamAck'});S.chatVisibility()});c.on('error',function(){if(S.conn&&S.conn.open)S.send({type:'streamRetry'})})};
 S.startHostMatch=function(id,name){if(S.started)return;S.started=true;S.clearFallback();S.remoteName=S.cleanName(name||'Player 2');if(window.gGameEngine){gGameEngine.simulatedOpponentMode=false;gGameEngine.playerNames=[S.localName,S.remoteName];gGameEngine.lobbyOpen=false;S.els.lobby.hidden=true;S.els.matchBar.hidden=false;S.els.matchStatus.textContent=(S.kind==='private'?'PRIVATE':'PUBLIC')+' • '+S.localName+' vs '+S.remoteName;gGameEngine.menu.setMode('multi')}S.send({type:'start',ultimate:S.ultimate,dropRate:S.dropRate,names:[S.localName,S.remoteName],kind:S.kind,code:S.code});S.chatVisibility();setTimeout(function(){S.streamTo(id,0)},500)};
 S.streamTo=function(id,n){if(!S.host()||!S.peer||!S.conn||!S.conn.open||S.streamAck)return;var canvas=S.$('canvas');if(!canvas||!canvas.captureStream){S.els.matchStatus.textContent='STREAM ERROR — UPDATE BROWSER';return}try{if(S.call)S.call.close()}catch(e){}try{var st=canvas.captureStream(30);S.call=S.peer.call(id,st,{metadata:{type:'bomberman',attempt:n}});S.call.on('error',function(){if(n<4)S.streamRetry=setTimeout(function(){S.streamTo(id,n+1)},1200)});S.streamRetry=setTimeout(function(){if(!S.streamAck&&n<4)S.streamTo(id,n+1)},3200)}catch(e){S.status('Stream error: '+e.message,'error')}};
-S.startSimulated=function(){if(S.kind!=='public'||!S.online())return;S.readName();S.remoteName=S.SIM_NAMES[Math.floor(Math.random()*S.SIM_NAMES.length)];S.destroyNetwork();S.kind='public';S.setRole('simulated');S.els.lobby.hidden=true;S.els.remoteStage.hidden=true;S.els.localStage.hidden=false;S.els.matchBar.hidden=false;S.els.matchStatus.textContent='PUBLIC • SIMULATED • '+S.localName+' vs '+S.remoteName;if(window.gGameEngine){gGameEngine.playerNames=[S.localName,S.remoteName];gGameEngine.lobbyOpen=false;gGameEngine.simulatedOpponentMode=true;gGameEngine.menu.setMode('simulated');S.ensureMusic();S.chatVisibility();setTimeout(function(){S.simSay(S.SIM_START)},550)}};
+S.startSimulated=function(){if(S.kind!=='public'||!S.online())return;S.readName();S.remoteName=S.SIM_NAMES[Math.floor(Math.random()*S.SIM_NAMES.length)];S.destroyNetwork();S.kind='public';S.setRole('simulated');S.els.lobby.hidden=true;S.els.remoteStage.hidden=true;S.els.localStage.hidden=false;S.els.matchBar.hidden=false;S.els.matchStatus.textContent='PUBLIC • '+S.localName+' vs '+S.remoteName;if(window.gGameEngine){gGameEngine.playerNames=[S.localName,S.remoteName];gGameEngine.lobbyOpen=false;gGameEngine.simulatedOpponentMode=true;gGameEngine.menu.setMode('simulated');S.ensureMusic();S.chatVisibility();setTimeout(function(){S.simSay(S.SIM_START)},550)}};
 })();

@@ -24,19 +24,39 @@ function standardAIAlive(){var g=G(),n=0;if(!g||!g.bots)return 0;for(var i=0;i<g
 function entityFor(side){var g=G();if(!g)return null;if(side==='sim')return g.simulatedOpponent||null;return g.players&&g.players[Number(side)]||null}
 function sendProfile(){if(!online()||!S.conn||!S.conn.open||!window.BomberCharacter)return;try{S.send({type:'v123Profile',appearance:BomberCharacter.get(),rating:score()})}catch(e){}}
 function adjustLocal(delta){var after=setScore(score()+delta),p=localPlayer();if(p)p.rating=after;sendProfile();return after}
-function adjustSim(delta){var g=G(),p=g&&g.simulatedOpponent;if(!p)return;if(window.BomberLeaderboard127&&BomberLeaderboard127.recordResult){var ranked=BomberLeaderboard127.recordResult(S.remoteName,delta);if(ranked){p.rating=ranked.score;g.simulatedRating=ranked.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating;return}}var v=clamp((Number(p.rating)||Number(g.simulatedRating)||650)+delta);p.rating=v;g.simulatedRating=v;S.simulatedRating=v;try{if(g.updateStatHud)g.updateStatHud()}catch(e){}}
+function adjustSim(delta,outcome){var g=G(),p=g&&g.simulatedOpponent;if(!p)return;if(window.BomberLeaderboard127&&BomberLeaderboard127.recordResult){var ranked=BomberLeaderboard127.recordResult(S.remoteName,delta,outcome);if(ranked){p.rating=ranked.score;g.simulatedRating=ranked.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating;return}}var v=clamp((Number(p.rating)||Number(g.simulatedRating)||650)+delta);p.rating=v;g.simulatedRating=v;S.simulatedRating=v;try{if(g.updateStatHud)g.updateStatHud()}catch(e){}}
+function awardTopTenWin(){
+ var g=G(),other=null,rank=Infinity;
+ if(!g)return false;
+ if(simulated()){
+   var p=window.BomberLeaderboard127&&BomberLeaderboard127.profile(S.remoteName);
+   if(p)rank=Number(p.matchRank||p.displayRank||p.rank);
+ }else if(online()){
+   other=g.players&&g.players[localSlot()===0?1:0];
+   if(other){
+     rank=Number(other.leaderboardRank);
+     if(!Number.isFinite(rank)||rank<=0){
+       var rating=Number(other.rating),name=humanName(localSlot()===0?1:0);
+       if(!Number.isFinite(rating)&&window.BomberCharacter&&BomberCharacter.getRemote){var remote=BomberCharacter.getRemote();rating=Number(remote&&remote.rating)}
+       if(Number.isFinite(rating)&&window.BomberLeaderboard127)rank=BomberLeaderboard127.rank(rating,name);
+     }
+   }
+ }
+ if(!(rank>=1&&rank<=10))return false;
+ var before=score();adjustLocal(20);setLocalRatingResult(score()-before,'Top 10 victory');return true
+}
 function markLegacyScoringDone(){var g=G();if(g)g.__v123RatingSettled=true}
-function setLocalRatingResult(delta,label){var g=G();if(!g)return;g.__v123RatingResult={before:clamp(score()-delta),after:score(),delta:delta,won:delta>0,label:label||''}}
+function setLocalRatingResult(delta,label){var g=G();if(!g)return;var prior=g.__v123RatingResult,initial=prior&&Number.isFinite(Number(prior.before))?Number(prior.before):clamp(score()-delta);g.__v123RatingResult={before:initial,after:score(),delta:score()-initial,won:delta>0,label:label||''}}
 
 function applyDuelResult(loser,winner){
  var g=G(),r=round();if(!g||!r||r.duelResolved)return false;
  r.duelResolved=true;r.loser=loser;r.winner=winner;r.hadAI=standardAIAlive()>0;r.aiBonusResolved=!r.hadAI;markLegacyScoringDone();
  if(simulated()){
-   if(winner===0){var w0=adjustLocal(10);setLocalRatingResult(10,'Human duel win');adjustSim(-10)}
-   else if(loser===0){var l0=adjustLocal(-10);setLocalRatingResult(l0===score()?0:-10,'Human duel loss');adjustSim(10)}
+   if(winner===0){var w0=score();adjustLocal(10);setLocalRatingResult(score()-w0,'Round win');adjustSim(0,'loss');awardTopTenWin()}
+   else if(loser===0){adjustSim(10,'win')}
  }else if(online()){
-   var ls=localSlot();if(winner===ls){var before=score();adjustLocal(10);setLocalRatingResult(score()-before,'Human duel win')}
-   else if(loser===ls){var beforeL=score();adjustLocal(-10);setLocalRatingResult(score()-beforeL,'Human duel loss');r.localEliminated=true}
+   var ls=localSlot();if(winner===ls){var before=score();adjustLocal(10);setLocalRatingResult(score()-before,'Round win');awardTopTenWin()}
+   else if(loser===ls){r.localEliminated=true}
  }
  if(simulated()&&loser===0)r.localEliminated=true;
  updateRematchAvailability();
@@ -44,8 +64,8 @@ function applyDuelResult(loser,winner){
 }
 function resolveOnlineDuel(loser){if(!online()||!(S.host&&S.host()))return false;var winner=loser===0?1:0,ok=applyDuelResult(loser,winner);if(ok&&S.conn&&S.conn.open)S.send({type:'v127DuelResolved',loser:loser,winner:winner});return ok}
 function applyAIBonus(winner,awarded){var r=round();if(!r||r.aiBonusResolved)return;r.aiBonusResolved=true;if(!awarded)return;if(simulated()){
- if(winner===0){var b=score();adjustLocal(5);setLocalRatingResult(score()-b,'AI clear bonus')}else if(winner==='sim')adjustSim(5)
- }else if(online()&&winner===localSlot()){var before=score();adjustLocal(5);setLocalRatingResult(score()-before,'AI clear bonus')}
+ /* Individual AI kills, not board clearing, award points. */
+ }else if(online()&&winner===localSlot()){ /* no duplicate AI-clear award */ }
 }
 function checkAIBonus(){
  var g=G(),r=round();if(!g||!r||!r.duelResolved||!r.hadAI||r.aiBonusResolved)return;
@@ -137,7 +157,7 @@ function patchMatchLog(){
  var host=S.startPublicHost;S.startPublicHost=function(){networkGuard=true;var r=host.apply(S,arguments);networkGuard=false;publicStart('host');return r};
  var start=S.startHostMatch;S.startHostMatch=function(id,name){var r=start.apply(S,arguments);if(S.kind==='public')publicMatched(S.remoteName||name);return r};
  var guest=S.guestData;S.guestData=function(d){var r=guest.apply(S,arguments);if(d&&d.type==='start'&&S.kind==='public')publicMatched(S.remoteName);return r};
- var sim=S.startSimulated;S.startSimulated=function(){var id=activeLogId;networkGuard=true;var r=sim.apply(S,arguments);networkGuard=false;if(id){updateLog(id,'Simulated fallback: '+S.remoteName);if(activeLogId===id)activeLogId=null}return r};
+ var sim=S.startSimulated;S.startSimulated=function(){var id=activeLogId;networkGuard=true;var r=sim.apply(S,arguments);networkGuard=false;if(id){updateLog(id,'Public opponent found: '+S.remoteName);if(activeLogId===id)activeLogId=null}return r};
  var destroy=S.destroyNetwork;S.destroyNetwork=function(){if(!networkGuard&&activeLogId){updateLog(activeLogId,'Cancelled / disconnected');activeLogId=null}return destroy.apply(S,arguments)}
 }
 function renderLog(){var root=$('v127LogList');if(!root)return;var a=loadLog().slice().reverse().slice(0,40);root.textContent='';if(!a.length){var e=document.createElement('div');e.className='v127_empty';e.textContent='No public matchmaking activity recorded on this device yet.';root.appendChild(e);return}for(var i=0;i<a.length;i++){var x=a[i],row=document.createElement('div');row.className='v127_log_row';var t=new Date(x.ts);row.innerHTML='<time></time><strong></strong><span></span>';row.querySelector('time').textContent=t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});row.querySelector('strong').textContent=x.username;row.querySelector('span').textContent=x.result||x.event;root.appendChild(row)}}
