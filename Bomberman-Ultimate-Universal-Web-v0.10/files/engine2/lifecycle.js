@@ -11,6 +11,7 @@
   function setupGame(game){
     if(!game) throw new Error('Missing game for setup');
     current=game;generation++;phase='setting-up';stats.setups++;
+    if(global.BomberEngine2Render)global.BomberEngine2Render.attach(game);
     try { var result=originalSetup.call(game);if(global.BomberEngine2Diagnostics)global.BomberEngine2Diagnostics.afterSetup(game);return result; }
     catch(err){stats.errors++;phase='error';throw err}
     finally { if(phase==='setting-up') phase='ready'; }
@@ -151,7 +152,7 @@
   }
 
   global.BomberEngine2Lifecycle=Object.freeze({
-    version:'2.0.2-dev',setupGame:setupGame,frame:frame,restart:restart,
+    version:'2.1.1',setupGame:setupGame,frame:frame,restart:restart,
     snapshot:function(){return{phase:phase,generation:generation,roundToken:current&&current.__setupSerial||0,setups:stats.setups,restarts:stats.restarts,frames:stats.frames,errors:stats.errors}}
   });
 })(window);

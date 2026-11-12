@@ -1,0 +1,5 @@
+Bomberman v2.1.1 — independent 120 FPS rendering and high-resolution arena
+Includes v2.1.0 social AI and Arcade UI.
+Graphics: Auto/60/120 FPS; 1x/2x/3x backing resolution. Default Auto/2x.
+Gameplay ticker remains 50 Hz; network and rules unchanged.
+See ENGINE2_211_RELEASE_NOTES.md for details.

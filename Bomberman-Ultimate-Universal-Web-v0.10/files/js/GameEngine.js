@@ -47,6 +47,7 @@ GameEngine = Class.extend({
     load: function() {
         // Init canvas
         this.stage = new createjs.Stage("canvas");
+        if (window.BomberEngine2Render) BomberEngine2Render.attach(this);
         this.stage.enableMouseOver();
         if (createjs.Touch && createjs.Touch.isSupported && createjs.Touch.isSupported()) {
             createjs.Touch.enable(this.stage, true, false);

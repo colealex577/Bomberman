@@ -1,0 +1,7 @@
+# Bomberman v2.1.1 — High-refresh rendering
+
+This release includes the v2.1.0 social AI and responsive UI overhaul, plus an independent display-paced renderer. It preserves the 50 Hz CreateJS game ticker, stage animation ticks, collision and tile geometry, existing bomb timing, AI rules, scoring, and multiplayer packet cadence. The renderer captures actor and traveling bomb sprite positions on each simulation stage update, interpolates visual positions between samples, and restores all coordinates synchronously. Round changes, teleports, and asynchronous network corrections snap to current state. The renderer owns one requestAnimationFrame loop for the stage and skips hidden canvases.
+
+Graphics settings (home menu): Auto (default, up to 120 FPS), 60 FPS, or 120 FPS; Original 545×416, High 1090×832 (default), or Ultra 1635×1248. Rendering uses a scaled stage with identical logical coordinates. The original sprites are preserved; resolution increases raster clarity rather than adding texture detail. Actual frame rate depends on browser, display, workload, and device. Spectator video still uses its existing capture cadence; the higher canvas resolution can increase video encoding load.
+
+Tests: engine2-render-211-regression.mjs exercises 120 display frames against 50 simulation stage ticks, 60 FPS cap, all scales, visual-only interpolation, single loop ownership, round replacement, async correction, and hidden canvas. Existing gameplay tests remain included.

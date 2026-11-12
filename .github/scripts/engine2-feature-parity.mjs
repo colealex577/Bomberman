@@ -6,7 +6,9 @@ const root=path.resolve(import.meta.dirname,'../..');
 const reference=JSON.parse(fs.readFileSync(path.join(root,'.github/fixtures/engine2-baseline-manifest.json'),'utf8'));
 const baseline=path.resolve(root,'../baseline');
 const changed202=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_202_CHANGED_FILES.json'),'utf8'));
-const excluded=new Set([...changed202.map(p=>'Bomberman-Ultimate-Universal-Web-v0.10/'+p),
+const changed210=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_210_CHANGED_FILES.json'),'utf8'));
+const changed211=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_211_CHANGED_FILES.json'),'utf8'));
+const excluded=new Set([...changed211,...changed210,...changed202.map(p=>'Bomberman-Ultimate-Universal-Web-v0.10/'+p),
   'Bomberman-Ultimate-Universal-Web-v0.10/index.html',
   'Bomberman-Ultimate-Universal-Web-v0.10/sw.js',
   'Bomberman-Ultimate-Universal-Web-v0.10/files/app.js',
@@ -33,6 +35,10 @@ for(const f of old){
  const newHash=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex');
  assert.equal(newHash,oldHash,'UNCHANGED FEATURE SOURCE MUTATED: '+f);preserved++;
 }
+const prior202=JSON.parse(fs.readFileSync(path.join(root,'.github/fixtures/engine2-202-manifest.json'),'utf8'));
+const approved210=new Set([...changed210,...changed211]);let preserved202=0;
+for(const [f,h] of Object.entries(prior202.sha256)){assert.ok(now.includes(f),'MISSING 2.0.2 SOURCE: '+f);if(approved210.has(f))continue;assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex'),h,'UNDECLARED CHANGE: '+f);preserved202++;}
+console.log('2.0.2 BASELINE INVENTORY',JSON.stringify({retained:Object.keys(prior202.sha256).length,byteIdentical:preserved202,declaredChanges:approved210.size}));
 const game=path.join(root,'Bomberman-Ultimate-Universal-Web-v0.10');
 const html=fs.readFileSync(path.join(game,'index.html'),'utf8');
 const app=fs.readFileSync(path.join(game,'files/app.js'),'utf8');
@@ -58,10 +64,10 @@ const checks={
   audio: fs.existsSync(path.join(game,'files/sound/game.ogg')),
   scoring: /Top 10 victory/.test(fs.readFileSync(path.join(game,'files/runtime-v0127.js'),'utf8')),
   stage: /id="canvas"/.test(html),
-  serviceWorker: /202dev/.test(app),
+  serviceWorker: /sw\.js\?v=211/.test(app),
   compatibilityManifest: manifest.length===39 && manifest.filter(x=>x.kind==='packed').length===3,
   newLifecycle: /BomberEngine2Lifecycle/.test(fs.readFileSync(path.join(game,'files/js/GameEngine.js'),'utf8')),
-  oldSourceUnmodified: preserved>=165
+  oldSourceUnmodified: preserved===old.filter(f=>!excluded.has(f)).length
 };
 for(const [name,ok] of Object.entries(checks))assert.ok(ok,'Missing or disconnected feature contract: '+name);
 const scripts=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(x=>x[1]),loaded=manifest.map(x=>x.src);

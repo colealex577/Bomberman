@@ -107,7 +107,7 @@ function wireCharacterPanel(){
 }
 
 function patchMenu(){
-  if(!window.Menu||Menu.prototype.__v123Character)return;Menu.prototype.__v123Character=true;var oldDraw=Menu.prototype.draw;
+  if(!window.Menu||Menu.prototype.__v123Character)return;Menu.prototype.__v123Character=true;if(window.BomberUI210)return;var oldDraw=Menu.prototype.draw;
   Menu.prototype.draw=function(text){var r=oldDraw.apply(this,arguments),w=gGameEngine.size.w,modeSize=110,modesDistance=20,modesY=188;var singleX=w/2-modeSize-modesDistance,multiX=w/2+modesDistance;for(var i=0;i<this.views.length;i++){var v=this.views[i];if(!v||typeof v.x!=='number'||typeof v.y!=='number'||v.y<modesY-8||v.y>modesY+modeSize+15)continue;if(v.x>=singleX-15&&v.x<w/2)v.x-=50;else if(v.x>=multiX-15)v.x+=50}
     var x=w/2-modeSize/2,card=new createjs.Container();card.x=x;card.y=modesY;card.addChild(new createjs.Shape(new createjs.Graphics().beginFill('rgba(0,0,0,.5)').drawRect(0,0,modeSize,modeSize)));var sheet=makeCharacterSheet(loadAppearance());if(sheet){var icon=new createjs.Bitmap(sheet);icon.sourceRect=new createjs.Rectangle(0,0,48,48);icon.x=(modeSize-48)/2;icon.y=8;card.addChild(icon)}var t=new createjs.Text('character','15px Helvetica','#74b9ff');t.x=(modeSize-t.getMeasuredWidth())/2;t.y=61;card.addChild(t);var nm=new createjs.Text(savedName(),'bold 9px Helvetica','#ffffff');nm.textAlign='center';nm.maxWidth=98;nm.x=modeSize/2;nm.y=81;card.addChild(nm);var rt=new createjs.Text('rating '+formatRating(loadRating()),'bold 8px Helvetica','#b9ef8c');rt.textAlign='center';rt.x=modeSize/2;rt.y=95;card.addChild(rt);gGameEngine.stage.addChild(card);this.views.push(card);this.setHandCursor(card);card.addEventListener('click',openCharacterPanel);return r
   }

@@ -1,0 +1,3 @@
+Bomberman v2.1.0 — Social AI & Arcade UI
+Responsive HTML home, refreshed menus and controls, consistent simulated personalities, state-validated conversations.
+Preserves 2.0.2 gameplay and stability systems. See ENGINE2_210_RELEASE_NOTES.md in the build root.

@@ -1,8 +1,8 @@
 (function(){
 'use strict';
-window.BomberBuildVersion='v2.0.2';
+window.BomberBuildVersion='v2.1.1';
 window.BomberVersionUIOwner='runtime-v016230-round-skill-version';
-var VERSION=window.BomberBuildVersion,TITLE='Bomberman v2.0.2',OWNER='runtime-v016230-round-skill-version';
+var VERSION=window.BomberBuildVersion,TITLE='Bomberman v2.1.1',OWNER='runtime-v016230-round-skill-version';
 (function(){var t=document.querySelector('title');if(!t){t=document.createElement('title');(document.head||document.documentElement).appendChild(t)}try{t.textContent=TITLE;document.title=TITLE}catch(e){}try{Object.defineProperty(window,'BomberBuildVersion',{configurable:false,enumerable:true,get:function(){return VERSION},set:function(){}})}catch(e){}try{Object.defineProperty(window,'BomberVersionUIOwner',{configurable:false,enumerable:true,get:function(){return OWNER},set:function(){}})}catch(e){}try{Object.defineProperty(t,'textContent',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){t.textContent=TITLE}try{Object.defineProperty(document,'title',{configurable:false,get:function(){return TITLE},set:function(){}})}catch(e){}})();
 /* E/Q still throw immediately. During the short direct-throw window, a direction key chooses launch direction without changing movement. */
 (function(){
@@ -57,6 +57,7 @@ if(!window.gGameEngine)return;
 var game=window.gGameEngine;
 game.load=function(){
  this.stage=new createjs.Stage('canvas');
+ if(window.BomberEngine2Render)BomberEngine2Render.attach(this);
  this.stage.enableMouseOver();
  if(createjs.Touch&&createjs.Touch.isSupported&&createjs.Touch.isSupported())createjs.Touch.enable(this.stage,true,false);
  var that=this,assets={playerBoy:'./files/img/george.png',playerGirl:'./files/img/betty.png',playerGirl2:'./files/img/betty2.png',tile_grass:'./files/img/tile_grass.png',tile_wall:'./files/img/tile_wall.png',tile_wood:'./files/img/tile_wood.png',bomb:'./files/img/bomb.png',fire:'./files/img/fire.png',bonuses:'./files/img/bonuses.png',kickBonus:'./files/img/bomb_kick.png'},images={},keys=Object.keys(assets),pending=keys.length,done=false;
