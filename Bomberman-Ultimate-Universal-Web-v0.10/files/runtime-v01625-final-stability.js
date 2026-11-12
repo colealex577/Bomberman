@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var VERSION='v0.16.2.5',installed=false,normalizing=false,observer=null,titleLocked=false;
-window.BOMBERMAN_BUILD_VERSION=VERSION;
+window.BOMBERMAN_BUILD_VERSION=window.BomberBuildVersion||VERSION;
 function $(id){return document.getElementById(id)}
 function setText(el,text){if(el&&el.textContent!==text)el.textContent=text}
 function ensureStyle(){
@@ -12,10 +12,10 @@ function ensureStyle(){
 `;(document.head||document.documentElement).appendChild(s)
 }
 function lockTitle(){
- if(titleLocked)return;titleLocked=true;try{var d=Object.getOwnPropertyDescriptor(Document.prototype,'title');if(!d||!d.get||!d.set)return;Object.defineProperty(document,'title',{configurable:true,get:function(){return d.get.call(document)},set:function(v){var x=String(v||'');if(/^Bomberman v0\.16\.0$/i.test(x)||/^Bomberman v0\.16\.2\.4$/i.test(x))x='Bomberman '+VERSION;d.set.call(document,x)}})}catch(e){}
+ if(titleLocked)return;titleLocked=true;try{var d=Object.getOwnPropertyDescriptor(Document.prototype,'title');if(!d||!d.get||!d.set)return;Object.defineProperty(document,'title',{configurable:true,get:function(){return d.get.call(document)},set:function(v){var x=String(v||'');if(/^Bomberman v0\.16\.0$/i.test(x)||/^Bomberman v0\.16\.2\.4$/i.test(x))x='Bomberman '+(window.BomberBuildVersion||VERSION);d.set.call(document,x)}})}catch(e){}
 }
 function version(){
- ensureStyle();window.BOMBERMAN_BUILD_VERSION=VERSION;var b=$('buildVersion1625');if(!b){b=document.createElement('div');b.id='buildVersion1625';b.setAttribute('aria-label','Game version');document.body.appendChild(b)}setText(b,VERSION);if(document.title!=='Bomberman '+VERSION)document.title='Bomberman '+VERSION;
+ ensureStyle();window.BOMBERMAN_BUILD_VERSION=window.BomberBuildVersion||VERSION;var b=$('buildVersion1625');if(!b){b=document.createElement('div');b.id='buildVersion1625';b.setAttribute('aria-label','Game version');document.body.appendChild(b)}setText(b,VERSION);if(document.title!=='Bomberman '+(window.BomberBuildVersion||VERSION))document.title='Bomberman '+(window.BomberBuildVersion||VERSION);
  var legacy=$('releaseBadge1561');if(legacy)legacy.hidden=true
 }
 function scrubText(t){t=String(t||'');return t.replace(/simulated fallback/ig,'matchmaking fallback').replace(/simulated opponent/ig,'public opponent').replace(/simulated player/ig,'player').replace(/simulated/ig,'public')}

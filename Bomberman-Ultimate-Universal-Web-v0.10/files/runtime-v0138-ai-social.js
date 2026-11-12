@@ -48,6 +48,7 @@ function motion(bot){if(!bot.__v138Motion){bot.__v138Motion={lastPxX:Number(bot.
 function speedStep(){var g=G();return g&&g.ultimateMode?4:.8}
 function baseSpeed(){var g=G();return g&&g.ultimateMode?4:2}
 function ensureSpeed(bot){
+ if(window.BomberSpeed161&&bot){BomberSpeed161.normalize(bot);return bot.velocity;}
  if(window.BomberMovementController)return BomberMovementController.ensureSpeed(bot);
  if(!bot)return 0;if(bot.__v138BaseSpeed==null){var raw=Number(bot.velocity);bot.__v138BaseSpeed=isFinite(raw)&&raw>0?raw:baseSpeed();if(bot.__v138Shoes==null)bot.__v138Shoes=0}
  var exact=bot.__v138BaseSpeed+Math.max(0,Number(bot.__v138Shoes)||0)*speedStep();if(Math.abs((Number(bot.velocity)||0)-exact)>.001)bot.velocity=exact;return exact

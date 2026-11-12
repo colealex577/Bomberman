@@ -8,7 +8,7 @@ function protectTitle(){
  try{
   if(document.__v1626TitleGuard)return;
   var d=Object.getOwnPropertyDescriptor(Document.prototype,'title');if(!d||!d.get||!d.set)return;
-  Object.defineProperty(document,'title',{configurable:true,enumerable:d.enumerable,get:function(){return d.get.call(this)},set:function(v){var s=String(v||'');if(/^Bomberman\s+v/i.test(s))s='Bomberman '+VERSION;return d.set.call(this,s)}});
+  Object.defineProperty(document,'title',{configurable:true,enumerable:d.enumerable,get:function(){return d.get.call(this)},set:function(v){var s=String(v||'');if(/^Bomberman\s+v/i.test(s))s='Bomberman '+(window.BomberBuildVersion||VERSION);return d.set.call(this,s)}});
   document.__v1626TitleGuard=true
  }catch(e){}
 }
@@ -23,7 +23,7 @@ function version(){
  protectTitle();ensureStyle();window.BOMBERMAN_BUILD_VERSION=VERSION;
  if(!document.body)return;
  var b=$('currentVersionBadge1626');if(!b){b=document.createElement('div');b.id='currentVersionBadge1626';b.setAttribute('aria-label','Game version');document.body.appendChild(b)}setText(b,VERSION);
- if(document.title!=='Bomberman '+VERSION)document.title='Bomberman '+VERSION;
+ if(document.title!=='Bomberman '+(window.BomberBuildVersion||VERSION))document.title='Bomberman '+(window.BomberBuildVersion||VERSION);
  var old=$('v139SearchShield');if(old&&!old.hidden)old.hidden=true
 }
 function scrubText(t){return String(t||'').replace(/simulated fallback/ig,'matchmaking fallback').replace(/simulated opponent/ig,'public opponent').replace(/simulated player/ig,'player').replace(/simulated/ig,'public')}

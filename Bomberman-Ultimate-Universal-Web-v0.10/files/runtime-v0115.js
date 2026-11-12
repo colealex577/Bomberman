@@ -8,7 +8,7 @@ window.SimulatedHumanBot = Bot.extend({
     this.simulatedHuman=true;
     this.attackWeight=3.25;
     Player.prototype.init.call(this,position,null,1);
-    this.velocity=gGameEngine.ultimateMode?4:2;
+    this.velocity=2;
     this.targetPosition={x:position.x,y:position.y};
     this.targetBitmapPosition=Utils.convertToBitmapPosition(position);
     this.startTimerMax=Math.random()*40;

@@ -15,8 +15,8 @@ body.qol_toolbar_active .game_toolbar{width:min(96vw,545px)!important;max-width:
 }
 function ownVersion(){
  ensureStyle();window.BomberBuildVersion=VERSION;
- var b=$('releaseBadge1561');if(b){var strong=b.querySelector('strong'),label='Bomberman '+VERSION+', Remastered by Cole Alexander';setText(strong,VERSION);if(b.getAttribute('aria-label')!==label)b.setAttribute('aria-label',label)}
- var title='Bomberman '+VERSION;if(document.title!==title)document.title=title
+ var b=$('releaseBadge1561');if(b){var strong=b.querySelector('strong'),label='Bomberman '+(window.BomberBuildVersion||VERSION)+', Remastered by Cole Alexander';setText(strong,VERSION);if(b.getAttribute('aria-label')!==label)b.setAttribute('aria-label',label)}
+ var title='Bomberman '+(window.BomberBuildVersion||VERSION);if(document.title!==title)document.title=title
 }
 function stableMatchChrome(){
  var S=window.B115,bar=S&&S.els&&S.els.matchBar||$('onlineMatchBar'),legacy=S&&S.els&&S.els.matchStatus||$('onlineMatchStatus');if(legacy)legacy.classList.add('v137_legacy_hidden');

@@ -58,13 +58,17 @@ Player = Entity.extend({
     deadTimer: 0,
 
     init: function(position, controls, id) {
+        this.velocity = 2;
+        this.bombsMax = 1;
+        this.bombStrength = 1;
+        this.alive = true;
+        this.escapeBomb = null;
+        this.bombs = [];
         if (id) {
             this.id = id;
         }
 
-        if (controls) {
-            this.controls = controls;
-        }
+        this.controls = Object.assign({}, controls || this.controls);
 
         var img = gGameEngine.playerBoyImg;
         if (this instanceof Bot && !this.simulatedHuman) {

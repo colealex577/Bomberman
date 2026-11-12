@@ -29,7 +29,7 @@ function install(){
   return old.apply(this,arguments)
  }
  placeBomb.__v16234BorderOnly=true;
- P.prototype.placeBomb=placeBomb;return true
+ Object.keys(old).forEach(function(k){if(k.indexOf("__")===0&&old[k]===true)placeBomb[k]=true});P.prototype.placeBomb=placeBomb;return true
 }
 window.BomberBorderGuard16234={version:VERSION,install:install,outward:outward,stats:function(){return{blockedOutwardThrows:blocked}}};
 install();setInterval(install,180);

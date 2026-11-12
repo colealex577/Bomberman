@@ -115,7 +115,7 @@ function patchMenu(){
 function patchPlayers(){if(!window.Player||Player.prototype.__v123Character)return;Player.prototype.__v123Character=true;var oldInit=Player.prototype.init;Player.prototype.init=function(){var r=oldInit.apply(this,arguments);setTimeout(applyProfilesToEntities,0);return r}}
 
 function applySimSkill(bot,rating){
-  if(!bot||!bot.simulatedHuman)return;rating=clampRating(rating);var skill=skillFromRating(rating);bot.rating=rating;bot.humanRating=rating;bot.humanSkill=skill;bot.skillTier=skillLabel(rating);bot.attackWeight=1.7+skill*4.3;bot.velocity=Math.max(Number(bot.velocity)||2,2+skill*.45)
+  if(!bot||!bot.simulatedHuman)return;rating=clampRating(rating);var skill=skillFromRating(rating);bot.rating=rating;bot.humanRating=rating;bot.humanSkill=skill;bot.skillTier=skillLabel(rating);bot.attackWeight=1.7+skill*4.3;if(window.BomberSpeed161)BomberSpeed161.normalize(bot);else bot.velocity=2
 }
 function patchSimAI(){
   if(!window.Bot||Bot.prototype.__v123Skill)return;Bot.prototype.__v123Skill=true;

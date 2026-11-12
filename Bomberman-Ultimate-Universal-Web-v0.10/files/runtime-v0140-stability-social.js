@@ -217,6 +217,7 @@ function patchOpenBoardTargeting(){
  Bot.prototype.getBestBonusPath=function(){return openBoard(this)?null:oldBonus.apply(this,arguments)};
 }
 function ensureSpeed(bot){
+ if(window.BomberSpeed161&&bot){BomberSpeed161.normalize(bot);return bot.velocity;}
  if(!bot||!authority())return bot&&bot.velocity;var base={easy:1.55,normal:2,hard:2.4,expert:2.75},g=G(),step=g.ultimateMode?4:.8;
  if(bot.__v138Shoes==null)bot.__v138Shoes=Math.max(0,Number(bot.bonusCounts&&bot.bonusCounts.speed)||0);
  if(bot.__v138BaseSpeed==null)bot.__v138BaseSpeed=Math.max(g.ultimateMode?4:2,Number(bot.velocity)||0);
@@ -252,7 +253,7 @@ function patchMovement(){
   this.dirX=Math.abs(dx)>.01?(dx>0?1:-1):0;this.dirY=this.dirX?0:Math.abs(dy)>.01?(dy>0?1:-1):0;
   if(this.dirX)this.direction=this.dirX>0?'right':'left';else if(this.dirY)this.direction=this.dirY>0?'down':'up';
  };
- Bot.prototype.moveToTargetPosition=function(){if(!authority())return;this.setNextTile(this.targetPosition);var before={x:this.bmp.x,y:this.bmp.y};
+ Bot.prototype.moveToTargetPosition=function(){if(!authority())return;ensureSpeed(this);this.setNextTile(this.targetPosition);var before={x:this.bmp.x,y:this.bmp.y};
   // Clamp a centering step too: the base mover clamps only against the final target.
   var velocity=this.velocity,center=Utils.convertToBitmapPosition(this.position),dx=this.targetBitmapPosition.x-this.bmp.x,dy=this.targetBitmapPosition.y-this.bmp.y;
   if(Math.abs(dx)>.01&&Math.abs(dy)>.01){var gap=this.dirX?Math.abs(center.x-this.bmp.x):Math.abs(center.y-this.bmp.y);this.velocity=Math.min(velocity,gap)}

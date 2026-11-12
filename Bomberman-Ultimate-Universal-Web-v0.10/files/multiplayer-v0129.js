@@ -131,9 +131,10 @@ function input(dt,action){
  else move(p,cmd.dir,cmd.dt);
  pending.push(cmd);if(pending.length>180)pending.shift();send('input',{cmd});
 }
-function canPlace(p,x,y){const g=G();return !!(p&&p.alive&&!g.menu.visible&&!g.matchFinished&&Number.isInteger(x)&&Number.isInteger(y)&&x===p.position.x&&y===p.position.y&&g.getTileMaterial({x,y})==='grass'&&!g.bombs.some(b=>!b.exploded&&b.position.x===x&&b.position.y===y)&&p.bombs.filter(b=>!b.exploded).length<p.bombsMax)}
+function canPlace(p,x,y){const g=G();return !!(p&&p.alive&&!g.menu.visible&&!g.matchFinished&&Number.isInteger(x)&&Number.isInteger(y)&&x===p.position.x&&y===p.position.y&&g.getTileMaterial({x,y})==='grass'&&!(window.BomberEngine2Round?BomberEngine2Round.occupied(p):g.bombs.some(b=>!b.exploded&&b.position.x===x&&b.position.y===y))&&(window.BomberEngine2Round?BomberEngine2Round.capacity(p):p.bombs.filter(b=>!b.exploded).length)<p.bombsMax)}
 function plant(p,x,y){
  const g=G();x=p.position.x;y=p.position.y;if(!canPlace(p,x,y))return false;p.bombKickArmed=false;
+ if(window.BomberEngine2Round&&typeof p.placeBomb==='function'){const b=BomberEngine2Round.normal(p);if(b){b.__v125OwnerSlot=1;ensureBomb(b);p.escapeBomb=b}return b}
  const b=new Bomb({x,y},p.bombStrength);b.owner=p;b.__v125OwnerSlot=1;ensureBomb(b);g.stage.addChild(b.bmp);p.bombs.push(b);g.bombs.push(b);p.escapeBomb=b;b.setExplodeListener(()=>Utils.removeFromArray(p.bombs,b));return b;
 }
 function kickPlant(p,x,y){
@@ -191,7 +192,7 @@ function begin(d){
  if(retiredSessions.has(d.session))return;
  if(d.session===previousSession&&d.roundNumber<=lastSeenRound)return;
  if(previousSession&&previousSession!==d.session)retiredSessions.add(previousSession);
- previousSession=d.session;lastSeenRound=d.roundNumber;session=d.session;N.roundId=d.roundId;N.roundNumber=d.roundNumber;N.worldRevision=d.worldRevision;N.lastActorSequence=0;N.inputSequence=0;N.lastProcessedInput=0;pending=[];lastFrame=0;lastControl=0;
+ previousSession=d.session;lastSeenRound=d.roundNumber;session=d.session;N.roundId=d.roundId;N.roundNumber=d.roundNumber;N.worldRevision=d.worldRevision;N.lastActorSequence=0;N.inputSequence=0;N.lastProcessedInput=0;pending=[];lastFrame=0;lastControl=0;if(window.BomberEngine2Input)BomberEngine2Input.resetActions(gInputEngine);
  DS.active=true;DS.role='guest';S.started=true;S.streamAck=true;S.clearFallback();
  S.remoteName=S.cleanName(d.names[0]);S.localName=S.cleanName(d.names[1]);S.applyMode(d.ultimate,true);S.applyDrop(d.dropRate,true);
  const g=G();g.onlineDataMode=true;g.networkRole='guest';g.playerNames=d.names;g.simulatedOpponentMode=false;g.lobbyOpen=false;

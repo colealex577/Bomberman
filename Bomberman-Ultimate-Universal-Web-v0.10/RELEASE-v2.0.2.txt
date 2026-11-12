@@ -1,0 +1,5 @@
+Bomberman v2.0.2 — public release
+
+Round-owned normal-bomb placement, stable bomb/kick input and compatibility wrappers, equal initial movement speed (2 pixels/tick) for all humans and AI. Speed increases only through earned pickups; Ultimate Mode retains its pickup multiplier. Existing gameplay modules, assets, and network protocol remain included.
+
+See ../ENGINE2_202_RELEASE_NOTES.md for tests, implementation details and live-game verification limitations.

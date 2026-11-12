@@ -14,11 +14,14 @@ InputEngine = Class.extend({
     listeners: [],
 
     init: function() {
+        // Do not share mutable key maps between separate InputEngine instances.
+        this.bindings = {};
+        this.actions = {};
+        this.listeners = [];
     },
 
     setup: function() {
         if (this.__setupComplete) return;
-        this.__setupComplete = true;
         this.bind(38, 'up');
         this.bind(37, 'left');
         this.bind(40, 'down');
@@ -36,8 +39,7 @@ InputEngine = Class.extend({
         this.bind(27, 'escape');
         this.bind(77, 'mute');
 
-        document.addEventListener('keydown', this.onKeyDown);
-        document.addEventListener('keyup', this.onKeyUp);
+        BomberEngine2Input.attach(this);
     },
 
     isEditableTarget: function(target) {
@@ -58,18 +60,12 @@ InputEngine = Class.extend({
     },
 
     onKeyUp: function(event) {
-        if (gInputEngine.isEditableTarget(event.target)) return true;
         var action = gInputEngine.bindings[event.keyCode];
+        if (gInputEngine.isEditableTarget(event.target)) { if(action)gInputEngine.actions[action]=false;return true; }
         if (action) {
             gInputEngine.actions[action] = false;
 
-            var listeners = gInputEngine.listeners[action];
-            if (listeners) {
-                for (var i = 0; i < listeners.length; i++) {
-                    var listener = listeners[i];
-                    listener();
-                }
-            }
+            BomberEngine2Input.dispatch(gInputEngine, action);
             event.preventDefault();
         }
         return false;

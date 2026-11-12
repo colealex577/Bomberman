@@ -22,7 +22,7 @@ function patchBonus(){
   if(mirror==='heart'){var h=old.call(this,position,0);this.position={x:position.x,y:position.y};renderHeart(this);return h}
   var r2=old.apply(this,arguments);if(this.type==='kick')renderKick(this);return r2
  };
- wrapped.__v161Compat=true;wrapped.__v161Wrapped=old;Bonus.prototype.init=wrapped;return true
+ wrapped.__v161Compat=true;wrapped.__v161Wrapped=old;Object.keys(old).forEach(function(k){if(k.indexOf("__")===0&&old[k]===true)wrapped[k]=true});Bonus.prototype.init=wrapped;return true
 }
 function removeBonus(g,b){try{if(b&&b.bmp)g.stage.removeChild(b.bmp)}catch(e){}var i=(g.bonuses||[]).indexOf(b);if(i>=0)g.bonuses.splice(i,1)}
 function typeIndex(t){return t==='speed'?0:t==='bomb'?1:t==='fire'?2:t==='heart'?3:t==='kick'?4:0}

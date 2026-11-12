@@ -6,95 +6,16 @@ function GUILocalization(){
 let Storage={setValue:(key,value)=>{localStorage[key]=JSON.stringify(value)},getValue:(key)=>{let result;try{if(localStorage[key])result=JSON.parse(localStorage[key])}catch(e){throw new StorageError(`Error in localStorage[${key}] value. ${localStorage[key]}`)}return result}};
 class StorageError extends Error{constructor(msg){super();this.name='StorageError';this.message=msg||'Storage Error';this.stack=(new Error()).stack}}
 try{localStorage.setItem('BombermanSingleMapV133','classic');localStorage.setItem('BombermanMultiMapV133','classic')}catch(e){}
-function loadScript(id,src,cb){
- let s=document.getElementById(id),done=false;
- function finish(){if(done)return;done=true;try{s.dataset.bomberLoaded='1'}catch(e){}if(cb)cb()}
- if(s){
-  if(s.dataset&&s.dataset.bomberLoaded==='1'){finish();return}
-  s.addEventListener('load',finish,{once:true});
-  /* Preload-created scripts mark themselves on load. If that mark landed just
-     before this listener was attached, observe it on the next task. */
-  setTimeout(function(){if(!done&&s.dataset&&s.dataset.bomberLoaded==='1')finish()},0);
-  return
- }
- s=document.createElement('script');s.id=id;s.src=src;s.onload=finish;s.onerror=function(){console.error('Bomberman module failed:',src)};document.head.appendChild(s)
+
+/* The existing public API is preserved; the new coordinator owns module ordering. */
+function loadCompatibility(){return BomberEngine2Loader.run()}
+function loadScript(id,src,cb){var p=BomberEngine2Loader.script(id,src);if(cb)p.then(cb).catch(function(err){console.error(err)});return p}
+function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader)return Promise.reject(new Error('Packed runtime loader missing'));var p=BomberPackedLoader.load(id,src);if(cb)p.then(function(){cb()}).catch(function(err){console.error(err)});return p}
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+ window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js?v=202dev').catch(function(){})});
 }
-function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader){console.error('Packed runtime loader missing:',id);return}BomberPackedLoader.load(id,src,function(err){if(!err&&cb)cb()})}
-function dataDiagnosticsDisabled(){try{return new URLSearchParams(location.search).get('nodata')==='1'}catch(e){return false}}
-function loadCompatibility(){
- loadScript('runtime-v0118-fix-loader','./files/runtime-v0116-fix.js?v=0118',function(){
-  loadScript('runtime-v0119-loader','./files/runtime-v0119.js?v=0119',function(){
-   if(dataDiagnosticsDisabled())return;
-   loadScript('net-v0120-data-loader','./files/multiplayer-v0129.js?v=01633',function(){
-    loadScript('runtime-v0120-qol-loader','./files/runtime-v0120-qol.js?v=0120',function(){
-     loadScript('runtime-v0120-qol-fix-loader','./files/runtime-v0120-qol-fix.js?v=0120d',function(){
-      loadScript('runtime-v0123-loader','./files/runtime-v0123.js?v=private016236a',function(){
-       loadScript('runtime-v0123-fix-loader','./files/runtime-v0123-fix.js?v=0123b',function(){
-        loadScript('runtime-v0123-final-loader','./files/runtime-v0123-final.js?v=0123c',function(){
-         loadScript('runtime-v0123-polish-loader','./files/runtime-v0123-polish.js?v=0123d',function(){
-          loadScript('runtime-v0124-loader','./files/runtime-v0124.js?v=0124',function(){
-           loadScript('runtime-v0125-core-loader','./files/runtime-v0125-core.js?v=016236',function(){
-            (function(){
-             loadScript('runtime-v0125-connect-loader','./files/runtime-v0125-connect.js?v=01631',function(){
-              loadScript('runtime-v0126-ai-loader','./files/runtime-v0126-ai.js?v=01629',function(){
-               loadScript('runtime-v0127-loader','./files/runtime-v0127.js?v=private016236b',function(){
-                loadScript('runtime-v0127-fix-loader','./files/runtime-v0127-fix.js?v=0127b',function(){
-                 loadScript('runtime-v0127-leaderboard-loader','./files/runtime-v0127-leaderboard.js?v=private016236a',function(){
-                  loadScript('runtime-v0127-menu-fix-loader','./files/runtime-v0127-menu-fix.js?v=0127d',function(){
-                   loadScript('runtime-v0130-social-loader','./files/runtime-v0130-social.js?v=private016236a',function(){
-                    loadScript('runtime-v0130-fix-loader','./files/runtime-v0130-fix.js?v=0130b',function(){
-                     loadScript('runtime-v0131-polish-loader','./files/runtime-v0131-polish.js?v=0131',function(){
-                      loadScript('runtime-v0132-whole-loader','./files/runtime-v0132-whole.js?v=0132',function(){
-                       loadScript('runtime-v0133-maps-loader','./files/runtime-v0133-maps.js?v=0151',function(){
-                        loadScript('runtime-v0134-gameplay-loader','./files/runtime-v0134-gameplay.js?v=0142',function(){
-                         loadScript('runtime-v0135-polish-loader','./files/runtime-v0135-polish.js?v=0135',function(){
-                          loadScript('runtime-v0136-challenge-loader','./files/runtime-v0136-challenge.js?v=016236',function(){
-                           loadScript('runtime-v0137-stability-loader','./files/runtime-v0137-stability.js?v=016236',function(){
-                            loadScript('runtime-v0138-ai-social-loader','./files/runtime-v0138-ai-social.js?v=0142',function(){
-                             loadScript('runtime-v0140-stability-social-loader','./files/runtime-v0140-stability-social.js?v=0142',function(){
-                              loadScript('runtime-v0143-intelligence-loader','./files/runtime-v0143-intelligence.js?v=0143',function(){
-                               loadScript('runtime-v0150-ai-loader','./files/runtime-v0150-ai.js?v=0150',function(){
-                                loadScript('runtime-v0144-opening-loader','./files/runtime-v0144-opening.js?v=0144',function(){
-                                 loadScript('runtime-v0152-human-observer-loader','./files/runtime-v0152-human-observer.js?v=016236',function(){
-                                  loadScript('runtime-v0150-release-loader','./files/runtime-v0150-release.js?v=016236',function(){
-                                   loadScript('runtime-v01543-dialogue-loader','./files/runtime-v01543-dialogue.js?v=016236',function(){
-                                    var roundKey='';setInterval(function(){var d=window.BomberDialogue1543,a=window.BomberHumanObserver152;if(!d||!a||!a.state)return;var st=a.state(),k=(st.mode||'')+'|'+(st.roundSerial||0);if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}},250);
-                                    loadPackedScript('runtime-v0160-bomb-kick-loader','./files/runtime-v0160-bomb-kick.js.gz.b64?v=01629',function(){loadPackedScript('runtime-v0162-ai-core-loader','./files/runtime-v0162-ai-core.js.gz.b64?v=01629',function(){loadScript('runtime-v01621-gameplay-fixes-loader','./files/runtime-v01621-gameplay-fixes.js?v=01629',function(){loadScript('runtime-v01624-ui-stability-loader','./files/runtime-v01624-ui-stability.js?v=01629',function(){loadPackedScript('runtime-v01626-ai-test-room-loader','./files/runtime-v01626-ai-test-room.js.gz.b64?v=01629')})})})});
-                                   });
-                                  });
-                                 });
-                                });
-                               });
-                              });
-                             });
-                            });
-                           });
-                          });
-                         });
-                        });
-                       });
-                      });
-                     });
-                    });
-                   });
-                  });
-                 });
-                });
-               });
-              });
-             });
-            })();
-           });
-          });
-         });
-        });
-       });
-      });
-     });
-    });
-   });
-  });
- });
-}
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=private016236-kick1').catch(()=>{}))}
-document.addEventListener('DOMContentLoaded',()=>{loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=016225a');loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=private016236b');loadCompatibility();GUILocalization();gGameEngine.load()});
+document.addEventListener('DOMContentLoaded',function(){
+ loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=202dev');
+ loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=202dev');
+ loadCompatibility();GUILocalization();gGameEngine.load();
+});

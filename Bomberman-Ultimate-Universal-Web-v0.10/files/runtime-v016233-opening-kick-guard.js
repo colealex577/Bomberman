@@ -44,10 +44,10 @@ function outward(a){var g=G(),p=a&&a.position,d=a&&dir(a);if(!g||!p||!d||!isFini
 }
 function install(){var B=window.Bot,P=window.Player;
  if(B&&B.prototype.setNextTile&&!B.prototype.setNextTile.__v16233){var old=B.prototype.setNextTile;
-  function set(p){var n=p;try{n=redirect(this,p)}catch(e){}return old.call(this,n)}set.__v16233=true;B.prototype.setNextTile=set}
+  function set(p){var n=p;try{n=redirect(this,p)}catch(e){}return old.call(this,n)}set.__v16233=true;Object.keys(old).forEach(function(k){if(k.indexOf("__")===0&&old[k]===true)set[k]=true});B.prototype.setNextTile=set}
  if(P&&P.prototype.placeBomb&&!P.prototype.placeBomb.__v16233){var prior=P.prototype.placeBomb;
   function place(){if(this.bombKickArmed&&Number(this.bombKickCharges)>0&&outward(this)){blocked++;return false}return prior.apply(this,arguments)}
-  place.__v16233=true;P.prototype.placeBomb=place}
+  place.__v16233=true;Object.keys(prior).forEach(function(k){if(k.indexOf("__")===0&&prior[k]===true)place[k]=true});P.prototype.placeBomb=place}
 }
 window.BomberFix16233={version:'v0.16.2.33',outward:outward,redirect:redirect,install:install,stats:function(){return{detours:detours,blockedOutwardThrows:blocked}}};
 install();setInterval(install,180);

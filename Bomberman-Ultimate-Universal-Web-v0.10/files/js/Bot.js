@@ -22,7 +22,7 @@ Bot = Player.extend({
     init: function(position) {
         this._super(position);
         // Ultimate-only AI speed buff. Human players keep their original speed.
-        this.velocity = gGameEngine.ultimateMode ? 4 : 2;
+        this.velocity = 2;
         this.targetPosition = {x: position.x, y: position.y};
         this.targetBitmapPosition = Utils.convertToBitmapPosition(position);
         this.startTimerMax = Math.random() * 40;
@@ -181,7 +181,7 @@ Bot = Player.extend({
         if (shouldAggro && !this.hyperAggressive) {
             this.hyperAggressive = true;
             if (!this.hyperAggroSpeedApplied) {
-                this.velocity = Math.max(this.velocity * 1.6, gGameEngine.ultimateMode ? 6.0 : 3.2);
+                if(window.BomberSpeed161)BomberSpeed161.normalize(this);
                 this.hyperAggroSpeedApplied = true;
             }
         }
@@ -839,6 +839,7 @@ Bot = Player.extend({
     },
 
     plantBomb: function() {
+        if(window.BomberEngine2Round)BomberEngine2Round.syncOwned(this);
         if (this.hasBomb(this.position) || this.activeBombCount() >= this.bombsMax) return false;
         var bomb = new Bomb({x:this.position.x,y:this.position.y}, this.bombStrength);
         gGameEngine.stage.addChild(bomb.bmp);
