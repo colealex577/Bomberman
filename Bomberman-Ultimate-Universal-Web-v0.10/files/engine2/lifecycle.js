@@ -7,10 +7,25 @@
   'use strict';
   var stats={setups:0,restarts:0,frames:0,errors:0};
   var current=null,phase='boot',generation=0;
+  var accumulator=0,clockStats={callbacks:0,steps:0,catchUpSteps:0,droppedMs:0,lastDelta:20};
+  function tick(event){
+    var g=global.gGameEngine;if(!g)return;
+    var delta=event&&Number(event.delta);if(!Number.isFinite(delta)||delta<=0)delta=20;
+    clockStats.callbacks++;clockStats.lastDelta=delta;
+    if(global.document&&global.document.hidden){accumulator=0;return}
+    if(global.B115&&(B115.role==='guest'||B115.role==='spectator')||!g.playing||g.lobbyOpen||g.menu&&g.menu.visible){accumulator=0;g.update();clockStats.steps++;return}
+    if(delta>120){clockStats.droppedMs+=delta-120;delta=120}
+    accumulator+=delta;var steps=0,round=g.__setupSerial;
+    while(accumulator>=20&&steps<5){accumulator-=20;g.update();steps++;clockStats.steps++;if(g.__setupSerial!==round){accumulator=0;break}}
+    if(steps>1)clockStats.catchUpSteps+=steps-1;
+    if(accumulator>=20){clockStats.droppedMs+=accumulator-(accumulator%20);accumulator%=20}
+  }
+  function clock(){return Object.assign({accumulatorMs:accumulator},clockStats)}
+  if(global.document&&global.document.addEventListener)global.document.addEventListener('visibilitychange',function(){accumulator=0});
 
   function setupGame(game){
     if(!game) throw new Error('Missing game for setup');
-    current=game;generation++;phase='setting-up';stats.setups++;
+    current=game;accumulator=0;generation++;phase='setting-up';stats.setups++;
     if(global.BomberEngine2Render)global.BomberEngine2Render.attach(game);
     try { var result=originalSetup.call(game);if(global.BomberEngine2Diagnostics)global.BomberEngine2Diagnostics.afterSetup(game);return result; }
     catch(err){stats.errors++;phase='error';throw err}
@@ -63,7 +78,7 @@
     
             // Start loop
             if (!createjs.Ticker.hasEventListener('tick')) {
-                createjs.Ticker.addEventListener('tick', gGameEngine.update);
+                createjs.Ticker.addEventListener('tick', tick);
                 createjs.Ticker.setFPS(this.fps);
             }
             var v07SoundDefaultApplied = Boolean(Storage.getValue('soundDefaultV07Applied'));
@@ -93,7 +108,7 @@
   function frame(game){
     if(!game)return;
     stats.frames++;
-    var d=global.BomberEngine2Diagnostics;return d?d.measureFrame(game,function(){return originalFrame.call(game)}):originalFrame.call(game);
+    var d=global.BomberEngine2Diagnostics;game.__engine2TileIndexActive=true;game.__engine2TileIndex=null;try{return d?d.measureFrame(game,function(){return originalFrame.call(game)}):originalFrame.call(game)}finally{game.__engine2TileIndexActive=false;game.__engine2TileIndex=null}
   }
   function originalFrame(){
             if (window.BomberMultiplayer && BomberMultiplayer.frame()) return;
@@ -152,7 +167,7 @@
   }
 
   global.BomberEngine2Lifecycle=Object.freeze({
-    version:'2.1.1',setupGame:setupGame,frame:frame,restart:restart,
+    version:'2.1.2',setupGame:setupGame,frame:frame,restart:restart,clock:clock,tick:tick,
     snapshot:function(){return{phase:phase,generation:generation,roundToken:current&&current.__setupSerial||0,setups:stats.setups,restarts:stats.restarts,frames:stats.frames,errors:stats.errors}}
   });
 })(window);

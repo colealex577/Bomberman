@@ -52,6 +52,7 @@ function load(dir){
    stats:ctx.BomberEngine2Lifecycle?.snapshot(),inputStats:ctx.BomberEngine2Input?.snapshot()};
 }
 const old=load(base),cur=load(root);
+assert.equal(cur.counters.dom.visibilitychange,1,'One clock reset listener');delete cur.counters.dom.visibilitychange;
 const props=['counters','setupSerial','inputListeners','actions','inputHandlers'];
 for(const p of props){assert.deepEqual(JSON.parse(JSON.stringify(cur[p])),JSON.parse(JSON.stringify(old[p])), 'Mismatch in '+p)}
 assert.equal(cur.stats.setups,40);assert.equal(cur.stats.restarts,39);assert.equal(cur.stats.frames,20);

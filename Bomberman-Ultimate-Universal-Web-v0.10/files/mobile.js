@@ -21,12 +21,8 @@
         if (!window.gInputEngine) return;
         gInputEngine.actions[action] = down;
         if (!down) {
-            var listeners = gInputEngine.listeners[action];
-            if (listeners) {
-                for (var i = 0; i < listeners.length; i++) {
-                    try { listeners[i](); } catch (e) {}
-                }
-            }
+            if(window.BomberEngine2Input)BomberEngine2Input.dispatch(gInputEngine,action);
+            else {var listeners=gInputEngine.listeners[action]||[];listeners.slice().forEach(function(fn){try{fn()}catch(e){}})}
         }
     }
 
@@ -47,10 +43,11 @@
 
     function releaseAll() {
         Object.keys(held).forEach(function (action) {
-            if (held[action]) setAction(action, false);
+            if (held[action]) {if(action==='bomb'&&!isGuest()&&window.gInputEngine)gInputEngine.actions[action]=false;else setAction(action,false);}
             held[action] = false;
         });
-        joystickAction = null;
+        joystickAction = null;joystickPointerId=null;
+        var base=document.getElementById('mobileJoystick'),knob=document.getElementById('mobileJoystickKnob');if(base)base.classList.remove('active');if(knob)knob.style.transform='translate3d(0,0,0)';
     }
 
     function bindBombButton(btn) {
@@ -82,10 +79,20 @@
         if (joystickAction) hold(joystickAction, true);
     }
 
+    function selectDirection(dx,dy,old,engage,release){
+        var distance=Math.hypot(dx,dy);if(distance<(old?release:engage))return null;
+        var horizontal=Math.abs(dx),vertical=Math.abs(dy),h=dx<0?'left':'right',v=dy<0?'up':'down';
+        // Small motion engages at full speed; a little angular hysteresis prevents diagonal flicker.
+        if(old===h&&horizontal>=vertical*.82)return h;
+        if(old===v&&vertical>=horizontal*.82)return v;
+        return horizontal>=vertical?h:v;
+    }
+    window.BomberMobile212={isTouchPlatform:isTouchPlatform,selectDirection:function(dx,dy,old){return selectDirection(dx,dy,old,5,3)},releaseAll:releaseAll};
     function bindJoystick(base, knob) {
         if (!base || !knob) return;
         var maxRadius = 44;
-        var deadZone = 12;
+        var deadZone = 5;
+        var releaseZone = 3;
 
         function updateFromPointer(e) {
             var rect = base.getBoundingClientRect();
@@ -94,23 +101,16 @@
             var dx = e.clientX - cx;
             var dy = e.clientY - cy;
             var dist = Math.sqrt(dx*dx + dy*dy);
-            var scale = dist > maxRadius ? maxRadius / dist : 1;
-            var kx = dx * scale;
-            var ky = dy * scale;
-            knob.style.transform = 'translate3d(' + kx.toFixed(1) + 'px,' + ky.toFixed(1) + 'px,0)';
-
-            if (dist < deadZone) {
-                setJoystickAction(null);
-                return;
-            }
-            // Bomberman moves on a cardinal grid; dominant-axis selection gives a
-            // fluid analog feel while avoiding diagonal collision jitter.
-            if (Math.abs(dx) > Math.abs(dy)) setJoystickAction(dx > 0 ? 'right' : 'left');
-            else setJoystickAction(dy > 0 ? 'down' : 'up');
+            var next = selectDirection(dx,dy,joystickAction,deadZone,releaseZone);
+            var radius=Math.min(maxRadius,Math.max(0,(Math.min(rect.width,rect.height)-Math.max(knob.offsetWidth,knob.offsetHeight))/2-4));
+            var kx=next==='left'?-radius:next==='right'?radius:0,ky=next==='up'?-radius:next==='down'?radius:0;
+            knob.style.transform='translate3d('+kx.toFixed(1)+'px,'+ky.toFixed(1)+'px,0)';
+            setJoystickAction(next);
         }
 
         function down(e) {
             e.preventDefault();
+            if(joystickPointerId!==null&&joystickPointerId!==e.pointerId)return;
             joystickPointerId = e.pointerId;
             try { base.setPointerCapture(e.pointerId); } catch (ignore) {}
             base.classList.add('active');
@@ -159,6 +159,8 @@
 
         document.addEventListener('pointerdown', unlockAudio, {once:true, passive:true});
         window.addEventListener('blur', releaseAll);
+        window.addEventListener('orientationchange',releaseAll);
+        window.addEventListener('resize',function(){if(joystickPointerId!==null)releaseAll()});
         document.addEventListener('visibilitychange', function () { if (document.hidden) releaseAll(); });
 
         var mute = document.getElementById('mobileMuteBtn');

@@ -24,7 +24,7 @@ function expandedScript(url){
   });
 }
 function packedScript(url){
-  return fetch(url,{cache:'no-store'})
+  return fetch(url,{cache:'default'})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status+' loading '+url);return r.text()})
     .then(decodeGzipBase64)
     .then(function(source){(0,eval)(source+'\n//# sourceURL='+url.replace(/\.gz\.b64(?:\?.*)?$/,'.js'));return true});

@@ -682,7 +682,7 @@ Bot = Player.extend({
 
     buildDangerTimeMap: function(extraOrigin, extraStrength) {
         var dangerTime = {};
-        var fps = createjs.Ticker.getMeasuredFPS() || gGameEngine.fps || 50;
+        var fps = (window.gGameEngine&&gGameEngine.fps||50) || gGameEngine.fps || 50;
         function mark(self, positions, remainingFrames) {
             for (var i=0; i<positions.length; i++) {
                 var k = self.key(positions[i]);
@@ -811,7 +811,7 @@ Bot = Player.extend({
     getMostImmediateThreatBomb: function() {
         var best = null;
         var bestRemaining = Infinity;
-        var fps = createjs.Ticker.getMeasuredFPS() || gGameEngine.fps || 50;
+        var fps = (window.gGameEngine&&gGameEngine.fps||50) || gGameEngine.fps || 50;
         for (var i=0; i<gGameEngine.bombs.length; i++) {
             var bomb = gGameEngine.bombs[i];
             if (bomb.exploded) continue;

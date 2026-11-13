@@ -1,4 +1,4 @@
-/* 2.1.1 — one authoritative, state-aware simulated conversation owner.
+/* 2.1.2 — one authoritative, state-aware simulated conversation owner.
  * No network service or model. Real human messages use the existing transport.
  * All delayed speech is revalidated against the live match before delivery. */
 (function(w){'use strict';
@@ -54,6 +54,6 @@ function tick(){var c=read();if(!c){if(state.key)reset(null);return}var t=now();
 }
 // Legacy chat sources remain available for historical reference, but never generate
 // new AI text when this owner is active. Transport and system notices are untouched.
-w.BomberSocial210={version:'2.1.1',active:true,identity,classify,answer,read,valid,tick,onHuman,debug:{state:()=>({round:state.key,rounds:state.rounds,pending:state.pending.map(q=>({...q})),phase:state.phase}),reset,enqueue,line,script}};
+w.BomberSocial210={version:'2.1.2',active:true,identity,classify,answer,read,valid,tick,onHuman,debug:{state:()=>({round:state.key,rounds:state.rounds,pending:state.pending.map(q=>({...q})),phase:state.phase}),reset,enqueue,line,script}};
 setInterval(tick,350);
 })(window);

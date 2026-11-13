@@ -14,15 +14,16 @@ function nativeAppearance(name){
  var h=hash('v136|appearance|'+name),h2=hash('v136|gear|'+name),h3=hash('v136|shoes|'+name),r=h2%100;
  return{gender:h%100<20?'female':'male',skin:SKINS[(h>>>8)%SKINS.length],glasses:((h2>>>9)%100)<34,hat:r<50?'none':r<76?'cap':'beanie',shoes:SHOES[h3%SHOES.length]}
 }
+var profileCache=new Map(),cacheEpoch=-1;
 function profile(name){
- name=clean(name);var l=L(),p=l&&l.profile&&l.profile(name);
+ name=clean(name);var epoch=Math.floor(Date.now()/1000);if(epoch!==cacheEpoch){cacheEpoch=epoch;profileCache.clear()}if(profileCache.has(name))return profileCache.get(name);var l=L(),p=l&&l.profile&&l.profile(name);
  if(!p)return null;
  var base=Number(p.baseScore),rating=clamp(p.score),skill=isFinite(base)?clamp(base):rating;
  var stage=(hash('v16232|style|'+name)>>>0)%STYLES.length,app=(C()&&C().appearanceFor?C().appearanceFor(name):nativeAppearance(name));
  var rank=Number(p.displayRank||p.rank);
- return{id:'sim:'+name,name:name,nickname:String(p.nickname||name).slice(0,12),rating:rating,score:rating,
+ var result={id:'sim:'+name,name:name,nickname:String(p.nickname||name).slice(0,12),rating:rating,score:rating,
   rank:Number.isFinite(rank)&&rank>0?Math.round(rank):null,baseSkillRating:skill,skillRating:skill,
-  playStyle:STYLES[stage],appearance:app};
+  playStyle:STYLES[stage],appearance:app};profileCache.set(name,result);return result;
 }
 function toMatch(name){var p=profile(name);if(!p)return null;return{id:p.id,name:p.name,nickname:p.nickname,rating:p.rating,
  baseSkillRating:p.baseSkillRating,appearance:p.appearance,playStyle:p.playStyle,personality:p.playStyle,leaderboardRank:p.rank}}
@@ -95,7 +96,7 @@ function hud(){
   var v=String(rating)+(Number.isFinite(Number(rank))&&Number(rank)>0?' · #'+rank:'');
   var pts=box.querySelector('.v125_points');if(!pts){pts=document.createElement('span');pts.className='v125_points';box.appendChild(pts)}
   if(pts.textContent!==v)pts.textContent=v;
-  pts.hidden=false;box.setAttribute('data-rating',String(rating));box.setAttribute('data-rank',rank==null?'':String(rank))
+  if(pts.hidden)pts.hidden=false;var rs=String(rating),ks=rank==null?'':String(rank);if(box.getAttribute('data-rating')!==rs)box.setAttribute('data-rating',rs);if(box.getAttribute('data-rank')!==ks)box.setAttribute('data-rank',ks)
  }
  return true
 }
@@ -112,5 +113,5 @@ function help(){
 }
 function tick(){try{sync();hud();help()}catch(e){}}
 window.BomberIdentity16232={version:VERSION,hash:hash,profile:profile,toMatch:toMatch,apply:apply,sync:sync,hud:hud};
-setInterval(tick,150);tick();
+setInterval(tick,450);tick();
 })();

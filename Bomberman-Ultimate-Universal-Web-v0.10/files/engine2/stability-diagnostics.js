@@ -28,12 +28,13 @@
    p95=d.length?d[Math.min(d.length-1,Math.floor(d.length*.95))]:0;
   var net=global.BomberMultiplayer,inp=global.BomberEngine2Input;
   return {
-   version:'2.1.1',rounds:roundCount,frames:frameCount,
+   version:'2.1.2',rounds:roundCount,frames:frameCount,
    scene:s,lastSampleMs:frameSamples.length?frameSamples[frameSamples.length-1]:0,
    p95FrameWorkMs:Math.round(p95*10)/10,
    maxFrameWorkMs:d.length?Math.round(d[d.length-1]*10)/10:0,
    slowFrameSamples:slowFrames,
    keyboard:inp&&inp.snapshot?inp.snapshot():null,
+   clock:global.BomberEngine2Lifecycle&&global.BomberEngine2Lifecycle.clock?global.BomberEngine2Lifecycle.clock():null,
    render:global.BomberEngine2Render?global.BomberEngine2Render.snapshot():null,
    roundState:global.BomberEngine2Round?global.BomberEngine2Round.snapshot():null,
    network:net?{roundId:net.roundId,roundNumber:net.roundNumber,worldRevision:net.worldRevision,metrics:Object.assign({},net.metrics||{})}:null,
