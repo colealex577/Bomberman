@@ -1,7 +1,7 @@
 {
-  "name": "Bomberman Ultimate Online v2.1.2",
+  "name": "Bomberman Ultimate Online v2.1.1",
   "short_name": "Bomberman",
-  "description": "Bomberman Ultimate Online v2.1.2 with 120 FPS rendering, high-resolution arena, social AI, responsive menus and online multiplayer.",
+  "description": "Bomberman Ultimate Online v2.1.1 with 120 FPS rendering, high-resolution arena, social AI, responsive menus and online multiplayer.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

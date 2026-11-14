@@ -10,7 +10,7 @@ async function run(dir,nodata=false){
  const document={
   getElementById(id){return byId.get(id)||null},
   createElement(tag){return{tag,id:null,src:null,dataset:{},handlers:{},setAttribute(){},addEventListener(event,fn){(this.handlers[event]??=[]).push(fn)}}},
-  head:{appendChild(node){if(node.tag==='link')return;appended.push({id:node.id,src:node.src});byId.set(node.id,node);setImmediate(()=>{if(node.onload)node.onload();for(const f of (node.handlers.load||[]))f()})}},
+  head:{appendChild(node){appended.push({id:node.id,src:node.src});byId.set(node.id,node);setImmediate(()=>{if(node.onload)node.onload();for(const f of (node.handlers.load||[]))f()})}},
   documentElement:null,addEventListener(){},querySelector(){return {textContent:'', id:'dummy'}}
  };
  const storage={getItem(k){return this[k]||null},setItem(k,v){this[k]=v}};

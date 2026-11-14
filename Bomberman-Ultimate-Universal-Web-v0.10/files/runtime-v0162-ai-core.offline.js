@@ -121,7 +121,7 @@ function predicted(targetActor,kickStep,p){
  var out=clone(targetActor&&targetActor.position);if(!out||!p||p.prediction<.22)return out;var d=moveVector(targetActor);if(!d.x&&!d.y)return out;var g=G(),bombFrames=Math.max(5,Math.ceil((g&&g.tileSize||32)/5)),vel=Math.max(1,num(targetActor.velocity,2)),playerFrames=Math.max(5,Math.ceil((g&&g.tileSize||32)/vel)),moves=Math.floor((kickStep*bombFrames/playerFrames)*(.45+p.prediction*.7));moves=Math.min(moves,p.prediction>.9?4:p.prediction>.7?3:2);
  for(var i=0;i<moves;i++){var n=next(out,d);if(material(n)!=='grass'||bombAt(n,null))break;out=n}return out
 }
-function fuseSteps(){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&(window.gGameEngine&&gGameEngine.fps||50))||(g&&g.fps)||50,tile=g&&g.tileSize||32;return Math.max(8,Math.min(24,Math.floor((2*fps)/(Math.max(5,Math.ceil(tile/5))))))}
+function fuseSteps(){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(g&&g.fps)||50,tile=g&&g.tileSize||32;return Math.max(8,Math.min(24,Math.floor((2*fps)/(Math.max(5,Math.ceil(tile/5))))))}
 function travelFuseSteps(){var g=G();if(!g)return 52;var horizontal=Math.max(1,g.tilesX-3),vertical=Math.max(1,g.tilesY-3);return Math.max(40,Math.min(72,2*(horizontal+vertical)+4))}
 function blastHits(bot,origin,tpos){if(!bot||!origin||!tpos||!bot.simulatedBlast)return false;var a=bot.simulatedBlast(origin,bot.bombStrength)||[];for(var i=0;i<a.length;i++)if(same(a[i],tpos))return true;return false}
 function kickCandidate(bot,origin,dir,t,p,pathLen){
@@ -290,7 +290,7 @@ function mobilityBonus(bot,origin,p){
  return bonus
 }
 function maybeKickPickup(bot,p){if(!p.human||bot.escapeMode||!bot.isSafe(bot.position))return false;var finish=easyFinishPriority(bot,p);if(finish){state(bot).lastDecision='finish-kill-over-pickup';return false}var b=kickBonusPath(bot,p);if(!b)return false;bot.setNextTile(b.path[1]);state(bot).lastDecision=b.open?'collect-kick-open':'collect-kick';return true}
-function remainingMovingSteps(bomb){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&(window.gGameEngine&&gGameEngine.fps||50))||(g&&g.fps)||50,tile=g&&g.tileSize||32,speed=Math.max(3,Math.min(8,num(bomb&&bomb.moveSpeed,5))),framesPerTile=Math.max(1,Math.ceil(tile/speed)),remaining=Math.max(1,num(bomb&&bomb.timerMax,2)*fps-num(bomb&&bomb.timer,0));return Math.max(2,Math.min(72,Math.ceil(remaining/framesPerTile)))}
+function remainingMovingSteps(bomb){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(g&&g.fps)||50,tile=g&&g.tileSize||32,speed=Math.max(3,Math.min(8,num(bomb&&bomb.moveSpeed,5))),framesPerTile=Math.max(1,Math.ceil(tile/speed)),remaining=Math.max(1,num(bomb&&bomb.timerMax,2)*fps-num(bomb&&bomb.timer,0));return Math.max(2,Math.min(72,Math.ceil(remaining/framesPerTile)))}
 function movingKickLookahead(p){if(!p)return 10;if(!p.human)return p.difficulty==='expert'?30:p.difficulty==='hard'?22:p.difficulty==='normal'?14:9;return p.rating>=950?34:p.rating>=850?28:p.rating>=700?20:p.rating>=500?14:9}
 function movingKickEscapePath(bot,bad,maxDepth,bomb){
  var start=clone(bot.position),sk=key(start),q=[start],seen={},parent={},depth={};seen[sk]=1;depth[sk]=0;var candidates=[];

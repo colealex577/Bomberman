@@ -1,7 +1,7 @@
 (function () {
  'use strict';
  // v0.16.2.34: round lifecycle and sprite recovery only; historical artificial AI decision throttling removed.
- var VERSION='v2.1.2',round=0,dead=Object.create(null),installed=false,restartHookInstalled=false;
+ var VERSION='v2.1.1',round=0,dead=Object.create(null),installed=false,restartHookInstalled=false;
  var stats={eliminations:0,respawnsBlocked:0,visualRestores:0,rematches:0};
  function G(){return window.gGameEngine||null}
  function actors(g){return(g.players||[]).concat(g.bots||[])}
@@ -20,7 +20,7 @@
  function tier(r){return r<200?'beginner':r<400?'novice':r<600?'intermediate':r<800?'advanced':'expert'}
  function timing(r){return r<200?[580,1050]:r<400?[350,750]:r<600?[190,430]:r<800?[60,210]:[0,0]}
 
- function versionUi(){var badge=document.getElementById('releaseBadge1561');if(!badge)return;var strong=badge.querySelector('strong');if(strong){try{if(strong.textContent!==(window.BomberBuildVersion||VERSION))strong.textContent=(window.BomberBuildVersion||VERSION)}catch(e){}}var label='Bomberman '+(window.BomberBuildVersion||VERSION)+', Remastered by Cole Alexander';if(badge.getAttribute('aria-label')!==label)badge.setAttribute('aria-label',label)}
+ function versionUi(){var badge=document.getElementById('releaseBadge1561');if(!badge)return;var strong=badge.querySelector('strong');if(strong){try{if(strong.textContent!==VERSION)strong.textContent=(window.BomberBuildVersion||VERSION)}catch(e){}}var label='Bomberman '+(window.BomberBuildVersion||VERSION)+', Remastered by Cole Alexander';if(badge.getAttribute('aria-label')!==label)badge.setAttribute('aria-label',label)}
  function install(){if(!G()||!window.GameEngine||!window.Player||!window.Bot)return false;patchRestart();patchDeaths();patchFade();patchBotUpdate();versionUi();if(!installed){installed=true;window.BomberRelease16230={version:VERSION,rating:rating,tier:tier,timing:timing,audit:audit,stats:function(){return{round:round,dead:Object.keys(dead),counters:Object.assign({},stats)}}};if(document.body)document.body.setAttribute('data-v016230','1')}return true}
  var attempts=0,timer=setInterval(function(){if(install()||++attempts>2400)clearInterval(timer)},25);
  setInterval(function(){if(!installed)return;patchRestart();patchDeaths();patchFade();patchBotUpdate();audit();versionUi()},150);

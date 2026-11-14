@@ -306,18 +306,11 @@ GameEngine = Class.extend({
      * Returns tile at given position.
      */
     getTile: function(position) {
-        if (this.__engine2TileIndexActive) {
-            var a=this.tiles, idx=this.__engine2TileIndex;
-            if (!idx || idx.array!==a || idx.length!==a.length) {
-                var map=Object.create(null);
-                for(var i=0;i<a.length;i++){var tile=a[i],key=tile.position.x+','+tile.position.y;if(!map[key])map[key]=tile;}
-                idx=this.__engine2TileIndex={array:a,length:a.length,map:map};
-            }
-            return idx.map[Number(position.x)+','+Number(position.y)];
-        }
         for (var i = 0; i < this.tiles.length; i++) {
             var tile = this.tiles[i];
-            if (tile.position.x == position.x && tile.position.y == position.y) return tile;
+            if (tile.position.x == position.x && tile.position.y == position.y) {
+                return tile;
+            }
         }
     },
 

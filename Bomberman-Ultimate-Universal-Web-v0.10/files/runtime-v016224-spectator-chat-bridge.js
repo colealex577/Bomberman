@@ -10,5 +10,5 @@ function receive(d){var s=S();if(!s||s.role!=='spectator'||!d||typeof d!=='objec
 function wire(c){if(!c||c.__v16224SpectatorChatWire)return;c.__v16224SpectatorChatWire=true;try{c.on('data',receive)}catch(e){}}
 function scan(){var s=S(),m=s&&s.peer&&s.peer.connections,box=s&&s.els&&s.els.chatMessages||document.getElementById('chatMessages');if(box)bindDedupe(box);if(!s||s.role!=='spectator'||!m)return;Object.keys(m).forEach(function(k){(m[k]||[]).forEach(wire)})}
 function install(){scan();window.BomberChatBridge16224={version:VERSION,render:render,scan:scan};if(document.body)document.body.setAttribute('data-v016224-chat-bridge','1')}
-setInterval(scan,400);install();
+setInterval(install,70);install();
 })();

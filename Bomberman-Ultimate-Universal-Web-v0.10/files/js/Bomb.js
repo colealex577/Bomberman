@@ -78,7 +78,7 @@ Bomb = Entity.extend({
         if (this.exploded) { return; }
 
         this.timer++;
-        if (this.timer > this.timerMax * (window.gGameEngine&&gGameEngine.fps||50)) {
+        if (this.timer > this.timerMax * createjs.Ticker.getMeasuredFPS()) {
             this.explode();
         }
     },

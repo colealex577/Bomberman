@@ -1,2 +1,0 @@
-Bomberman v2.1.2 — Public-match performance, tight touch controls, mobile landscape and faster startup.
-The game keeps its 50 Hz simulation, high-refresh renderer, original game assets, AI personalities, matchmaking, spectator features and all previous gameplay mechanics. See ENGINE2_212_RELEASE_NOTES.md at the repository root for details.
