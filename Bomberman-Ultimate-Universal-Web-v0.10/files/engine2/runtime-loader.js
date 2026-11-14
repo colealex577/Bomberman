@@ -233,6 +233,8 @@
    if(k!==roundKey){roundKey=k;d.roundStartedAt=Date.now()}
   },250);
  }
+ var preloaded=Object.create(null);
+ function hintUpcoming(start){if(disabled()||!global.location||!/^https?:$/.test(global.location.protocol))return;for(var j=start;j<Math.min(MANIFEST.length,start+6);j++){var item=MANIFEST[j];if(item.kind!=='script'||preloaded[item.id]||document.getElementById(item.id))continue;preloaded[item.id]=true;var l=document.createElement('link');l.rel='preload';l.as='script';l.href=item.src;(document.head||document.documentElement).appendChild(l)}}
  function run(){
   if(started)return ready;
   started=true;status.state='loading';status.startedAt=Date.now();
@@ -241,7 +243,7 @@
    chain=chain.then(function(){
     if(disabled()&&i>=2)return;
     if(item.id==='runtime-v0160-bomb-kick-loader')dialogueRoundClock();
-    status.index=i;
+    status.index=i;hintUpcoming(i);
     return (item.kind==='packed'?packed(item.id,item.src):script(item.id,item.src))
       .then(function(){status.loaded.push(item.id)});
    });

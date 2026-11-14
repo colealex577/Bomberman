@@ -24,7 +24,7 @@ with sync_playwright() as p:
  try:
   page.set_content(source,wait_until='domcontentloaded',timeout=20000)
   page.wait_for_function("window.BomberEngine2Loader && BomberEngine2Loader.status().state==='ready' && window.gGameEngine && gGameEngine.playerBoyImg",timeout=20000)
-  page.wait_for_timeout(700);assert page.title()=='Bomberman v2.1.1';assert page.evaluate('BomberEngine2Loader.status().loaded.length')==39
+  page.wait_for_timeout(700);assert page.title()=='Bomberman v2.1.2';assert page.evaluate('BomberEngine2Loader.status().loaded.length')==39
   page.locator('#bm211Graphics').click();assert page.locator('#bm211GraphicsDialog').is_visible();page.locator('#bm211FPS').select_option('120');page.locator('#bm211Resolution').select_option('3');assert page.evaluate('BomberEngine2Render.snapshot().width')==1635;page.locator('#bm211Resolution').select_option('2');page.locator('#bm211GraphicsClose').click()
   page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(250);assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');page.locator('#bm211Graphics').click();assert page.locator('#bm211GraphicsDialog').is_visible();page.locator('#bm211GraphicsClose').click();page.set_viewport_size({'width':1280,'height':900});page.wait_for_timeout(250)
   page.locator('#bm210Solo').click();page.wait_for_timeout(900);assert page.evaluate('gGameEngine.players.length===1 && gGameEngine.bots.length===3');print('START',page.evaluate('BomberEngine2Render.snapshot()'),flush=True)

@@ -8,7 +8,8 @@ const baseline=path.resolve(root,'../baseline');
 const changed202=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_202_CHANGED_FILES.json'),'utf8'));
 const changed210=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_210_CHANGED_FILES.json'),'utf8'));
 const changed211=JSON.parse(fs.readFileSync(path.join(root,'ENGINE2_211_CHANGED_FILES.json'),'utf8'));
-const excluded=new Set([...changed211,...changed210,...changed202.map(p=>'Bomberman-Ultimate-Universal-Web-v0.10/'+p),
+const changedRetry=JSON.parse(fs.readFileSync(path.join(root,"ENGINE2_212_CHANGED_FILES.json"),"utf8"));
+const excluded=new Set([...changedRetry,...changed211,...changed210,...changed202.map(p=>'Bomberman-Ultimate-Universal-Web-v0.10/'+p),
   'Bomberman-Ultimate-Universal-Web-v0.10/index.html',
   'Bomberman-Ultimate-Universal-Web-v0.10/sw.js',
   'Bomberman-Ultimate-Universal-Web-v0.10/files/app.js',
@@ -36,7 +37,7 @@ for(const f of old){
  assert.equal(newHash,oldHash,'UNCHANGED FEATURE SOURCE MUTATED: '+f);preserved++;
 }
 const prior202=JSON.parse(fs.readFileSync(path.join(root,'.github/fixtures/engine2-202-manifest.json'),'utf8'));
-const approved210=new Set([...changed210,...changed211]);let preserved202=0;
+const approved210=new Set([...changed210,...changed211,...changedRetry]);let preserved202=0;
 for(const [f,h] of Object.entries(prior202.sha256)){assert.ok(now.includes(f),'MISSING 2.0.2 SOURCE: '+f);if(approved210.has(f))continue;assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex'),h,'UNDECLARED CHANGE: '+f);preserved202++;}
 console.log('2.0.2 BASELINE INVENTORY',JSON.stringify({retained:Object.keys(prior202.sha256).length,byteIdentical:preserved202,declaredChanges:approved210.size}));
 const game=path.join(root,'Bomberman-Ultimate-Universal-Web-v0.10');

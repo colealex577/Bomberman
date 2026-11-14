@@ -1,0 +1,7 @@
+Bomberman v2.1.2 — Feature-preserving public-match and mobile refinements
+
+Based on v2.1.1. Preserves Bomb Kick, leaderboard rank labels, player identities, AI, multiplayer, graphics assets and the 50 Hz simulation clock.
+
+Improvements: exact low-cost leaderboard rank lookups; fewer redundant DOM updates; adaptive drawing in Auto mode; tighter mobile joystick; portrait/landscape spectator layout; non-overlapping observer chat; and startup preload hints that preserve original script execution order.
+
+The simulation tick rate, bomb timers, movement rules, AI decisions and multiplayer update cadence are unchanged.

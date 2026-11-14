@@ -4,7 +4,7 @@ var VERSION='v0.15.6.2',installed=false,latched=false,latchGeneration=null,panel
 function S(){return window.B115||null}
 function G(){return window.gGameEngine||null}
 function $(id){return document.getElementById(id)}
-function desktop(){return window.innerWidth>760}
+function desktop(){return window.innerWidth>760&&!document.body.classList.contains("touch-ui")}
 function publicRole(){var s=S();return!!(s&&s.kind==='public'&&(s.role==='host'||s.role==='guest'||s.role==='simulated'))}
 function evidence(){var s=S(),g=G();if(!publicRole())return false;if(s.role==='guest')return!!s.started;return!!(s.started||(g&&g.playing&&!(g.menu&&g.menu.visible))) }
 function updateLatch(){var s=S();if(!publicRole()){latched=false;latchGeneration=null;return false}var gen=String(s.generation||0)+'|'+s.role+'|'+s.kind;if(latchGeneration!==gen){latchGeneration=gen;latched=false}if(evidence())latched=true;return latched}

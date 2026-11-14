@@ -1,0 +1,40 @@
+/* Mobile-only layout; existing HUD, names, inventory, and actions remain present. */
+#bm212ObserverDock[hidden]{display:none!important}
+html body.touch-ui.v154_mobile_chat #v154MobileChat:not([hidden]){display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;width:min(94vw,545px)!important;box-sizing:border-box;margin:5px auto;padding:6px;position:relative!important;inset:auto!important;transform:none!important}
+html body.touch-ui.v154_mobile_chat #v154MobileChatOverlay:not([hidden]){display:flex!important;position:fixed;inset:0;align-items:flex-end;justify-content:center;background:#10131c99;z-index:12000;padding:8px}
+html body.touch-ui.v154_mobile_chat:not(.bm212-remote-watch) #chatPanel#chatPanel:not(.bm212-keep){display:none!important}
+html body.touch-ui #v154MobileChatPreview{min-width:0;overflow:hidden;font-size:11px}.v154_mobile_chat_line{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html body.touch-ui #v154MobileChatOverlay .v154_mobile_chat_sheet{width:100%;min-width:0;display:flex;flex-direction:column;max-height:70dvh;overflow:hidden}
+html body.touch-ui #v154MobileChatFullMessages{overflow:auto;min-height:0;max-height:40dvh;overscroll-behavior:contain}
+html body.touch-ui.bm212-watch #bm212ObserverDock{display:flex;flex-direction:column;gap:6px;min-width:0;width:min(94vw,545px);margin:0 auto;box-sizing:border-box}
+html body.touch-ui.bm212-watch #bm212ObserverDock #v154MobileChatOverlay:not([hidden]){position:relative!important;inset:auto!important;transform:none!important;padding:0!important;background:none!important;backdrop-filter:none!important;z-index:10!important;width:100%!important;max-width:100%!important}
+html body.touch-ui.bm212-watch #bm212ObserverDock #v152ObserverHud:not([hidden]),html body.touch-ui.bm212-watch #bm212ObserverDock #v157SpectatingBar:not([hidden]){position:relative!important;inset:auto!important;transform:none!important;margin:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box}
+html body.touch-ui.bm212-watch #mobileControls{display:none!important}
+html body.touch-ui.bm212-remote-watch #bm212ObserverDock #chatPanel#chatPanel{display:flex!important;position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;max-height:210px!important;margin:0!important;box-sizing:border-box;z-index:10!important}
+html body.touch-ui.bm212-remote-watch #bm212ObserverDock #v154MobileChat,html body.touch-ui.bm212-remote-watch #bm212ObserverDock #v154MobileChatOverlay{display:none!important}
+html body.touch-ui.bm212-watch #chatMessages{min-height:38px!important;max-height:115px!important;overflow:auto!important}
+@media (orientation:landscape) and (max-height:600px){
+ html body.touch-ui:not(.bm210-home){display:block!important;overflow-x:hidden!important;overflow-y:auto!important}
+ html body.touch-ui:not(.bm210-home)>.container{width:100%!important;max-width:none!important;min-height:100dvh!important;justify-content:flex-start!important;gap:4px!important;padding:4px max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;box-sizing:border-box}
+ html body.touch-ui:not(.bm210-home) .game_toolbar{width:min(94vw,700px)!important;gap:4px!important;margin:0 auto!important;min-height:30px!important}
+ html body.touch-ui:not(.bm210-home) .ultimate_mode_hint{display:none!important}
+ html body.touch-ui:not(.bm210-home) #localStage,html body.touch-ui:not(.bm210-home) #remoteStage{width:min(56vw,calc((100dvh - 112px)*1.3101))!important;max-width:100%;margin:0 auto!important}
+ html body.touch-ui:not(.bm210-home) #game{width:100%!important;max-width:none!important;margin:0!important}
+ html body.touch-ui:not(.bm210-home) #canvas,html body.touch-ui:not(.bm210-home) #remoteVideo{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:545/416;object-fit:contain}
+ html body.touch-ui.qol_round_live:not(.bm212-watch) #mobileControls{display:flex!important;position:fixed!important;inset:auto max(8px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;width:auto!important;max-width:none!important;justify-content:space-between!important;align-items:flex-end!important;gap:0!important;pointer-events:none!important;z-index:3000!important}
+ html body.touch-ui #mobileControls #mobileJoystick,html body.touch-ui #mobileControls #qolDpad{pointer-events:auto!important}
+ html body.touch-ui #mobileControls #mobileJoystick{width:clamp(92px,16vw,132px)!important;height:clamp(92px,16vw,132px)!important}
+ html body.touch-ui #mobileJoystickKnob{width:44px!important;height:44px!important;left:calc(50% - 22px)!important;top:calc(50% - 22px)!important}
+ html body.touch-ui #mobileControls .mobile_action_cluster{display:flex!important;flex-direction:column!important;gap:5px!important;width:clamp(75px,17vw,130px);align-items:center!important;pointer-events:auto!important}
+ html body.touch-ui #mobileControls .touch_btn{width:clamp(48px,10vw,68px)!important;height:clamp(48px,10vw,68px)!important;flex:0 0 auto!important;min-width:0!important;min-height:0!important;font-size:24px!important}
+ html body.touch-ui #mobileControls .mobile_small_actions{display:flex!important;flex-wrap:wrap;justify-content:center;gap:3px!important}
+ html body.touch-ui #mobileControls .touch_small{min-width:42px!important;min-height:32px!important;padding:4px 6px!important;font-size:10px!important}
+ html body.touch-ui #v154MainMenuBtn{top:max(3px,env(safe-area-inset-top))!important;right:max(4px,env(safe-area-inset-right))!important;padding:5px 8px!important;font-size:10px!important}
+ html body.touch-ui.bm212-watch:not(.bm210-home)>.container{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(145px,32vw);grid-template-rows:auto auto;align-items:start!important;justify-items:center!important;column-gap:8px!important;align-content:start!important}
+ html body.touch-ui.bm212-watch .game_toolbar{grid-column:1/-1;grid-row:1}
+ html body.touch-ui.bm212-watch #localStage,html body.touch-ui.bm212-watch #remoteStage{grid-column:1;grid-row:2;width:min(100%,calc((100dvh - 112px)*1.3101))!important}
+ html body.touch-ui.bm212-watch #bm212ObserverDock{grid-column:2;grid-row:2;width:100%!important;max-height:calc(100dvh - 40px);overflow-y:auto;overflow-x:hidden}
+ html body.touch-ui.bm212-watch #v154MobileChat:not([hidden]){width:100%!important;margin:0!important}
+ html body.touch-ui.bm212-watch #v154MobileChatOverlay .v154_mobile_chat_sheet{max-height:45dvh!important}
+ html body.touch-ui.bm212-watch #v152ObserverHud button{font-size:11px!important;min-height:30px!important;padding:5px!important}
+}

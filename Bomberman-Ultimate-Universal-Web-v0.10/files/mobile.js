@@ -51,6 +51,9 @@
             held[action] = false;
         });
         joystickAction = null;
+        joystickPointerId = null;
+        var base=document.getElementById("mobileJoystick"),knob=document.getElementById("mobileJoystickKnob");
+        if(base)base.classList.remove("active");if(knob)knob.style.transform="translate3d(0,0,0)";
     }
 
     function bindBombButton(btn) {
@@ -84,8 +87,7 @@
 
     function bindJoystick(base, knob) {
         if (!base || !knob) return;
-        var maxRadius = 44;
-        var deadZone = 12;
+        var engageZone = 5, releaseZone = 3, switchBias = 1.18;
 
         function updateFromPointer(e) {
             var rect = base.getBoundingClientRect();
@@ -94,23 +96,22 @@
             var dx = e.clientX - cx;
             var dy = e.clientY - cy;
             var dist = Math.sqrt(dx*dx + dy*dy);
-            var scale = dist > maxRadius ? maxRadius / dist : 1;
-            var kx = dx * scale;
-            var ky = dy * scale;
-            knob.style.transform = 'translate3d(' + kx.toFixed(1) + 'px,' + ky.toFixed(1) + 'px,0)';
-
-            if (dist < deadZone) {
-                setJoystickAction(null);
-                return;
-            }
-            // Bomberman moves on a cardinal grid; dominant-axis selection gives a
-            // fluid analog feel while avoiding diagonal collision jitter.
-            if (Math.abs(dx) > Math.abs(dy)) setJoystickAction(dx > 0 ? 'right' : 'left');
-            else setJoystickAction(dy > 0 ? 'down' : 'up');
+            var threshold=joystickAction?releaseZone:engageZone;
+            if(dist<threshold){setJoystickAction(null);knob.style.transform='translate3d(0,0,0)';return;}
+            var ax=Math.abs(dx),ay=Math.abs(dy),next=ax>ay?(dx>0?'right':'left'):(dy>0?'down':'up');
+            // A tiny drag gives full cardinal movement; retain the current axis near a diagonal.
+            if(joystickAction==='left'&&dx<0&&ay<ax*switchBias)next='left';
+            if(joystickAction==='right'&&dx>0&&ay<ax*switchBias)next='right';
+            if(joystickAction==='up'&&dy<0&&ax<ay*switchBias)next='up';
+            if(joystickAction==='down'&&dy>0&&ax<ay*switchBias)next='down';
+            var radius=Math.max(0,Math.min(rect.width,rect.height)/2-knob.offsetWidth/2-4);
+            var kx=next==='left'?-radius:next==='right'?radius:0,ky=next==='up'?-radius:next==='down'?radius:0;
+            knob.style.transform='translate3d('+kx.toFixed(1)+'px,'+ky.toFixed(1)+'px,0)';setJoystickAction(next);
         }
 
         function down(e) {
             e.preventDefault();
+            if(joystickPointerId!==null)return;
             joystickPointerId = e.pointerId;
             try { base.setPointerCapture(e.pointerId); } catch (ignore) {}
             base.classList.add('active');
@@ -159,6 +160,7 @@
 
         document.addEventListener('pointerdown', unlockAudio, {once:true, passive:true});
         window.addEventListener('blur', releaseAll);
+        window.addEventListener('orientationchange', function(){setJoystickAction(null);joystickPointerId=null;var base=document.getElementById('mobileJoystick'),knob=document.getElementById('mobileJoystickKnob');if(base)base.classList.remove('active');if(knob)knob.style.transform='translate3d(0,0,0)';});
         document.addEventListener('visibilitychange', function () { if (document.hidden) releaseAll(); });
 
         var mute = document.getElementById('mobileMuteBtn');

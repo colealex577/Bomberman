@@ -120,7 +120,7 @@ function combinedStandings(){
  for(var i=0;i<all.length;i++)all[i].displayRank=i+1;return all
 }
 function fakeDisplayRank(name){
- var all=combinedStandings();for(var i=0;i<all.length;i++)if(!all[i].you&&all[i].name===name)return all[i].displayRank;return byName[name]?byName[name].rank:null
+ refreshRoster();var p=byName[name];if(!p)return null;var meScore=score(),meName=savedName(),meTie=tieKey(meName),pTie=tieKey(p.name);return p.rank+(meScore>p.score||(meScore===p.score&&(meTie<pTie||(meTie===pTie&&meName.localeCompare(p.name)<0)))?1:0)
 }
 function profile(name){refreshRoster();var p=byName[name];if(!p)return null;var c=clone(p);c.displayRank=fakeDisplayRank(name);return c}
 
@@ -204,7 +204,7 @@ function renderLeaderboard(){
   html+='<div class="v127_lb_row '+(j<3?'top3 ':'')+(r.you?'you':'')+'"><span class="rank">#'+(j+1)+'</span><span class="name">'+escapeHtml(r.name)+(r.you?' (You)':'')+'</span><span class="score">'+r.score+'</span><span>'+((rw+rl)?(rr*100).toFixed(1)+'%':'—')+'</span><span>'+rw+'–'+rl+'</span></div>'
  }list.innerHTML=html
 }
-function decorateHudRanks(){var g=G(),hud=$('qolStatHud');if(!g||!hud)return;var slots=g.getContestantsByStatSlot?g.getContestantsByStatSlot():[],lp=S.role==='guest'?g.players&&g.players[1]:g.players&&g.players[0];for(var i=0;i<4;i++){var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box||!e)continue;var rank=null;if(e===lp)rank=localRank();else if(e.simulatedHuman||e===g.simulatedOpponent&&S.role==='simulated'){var p=profile(e.displayName||S.remoteName);rank=p&&(p.displayRank||p.rank)}else if(!(e instanceof Bot)&&isFinite(Number(e.rating)))rank=playerRankAt(e.rating,e.displayName);box.setAttribute('data-rank',rank?String(rank):'')}}
+function decorateHudRanks(){var g=G(),hud=$('qolStatHud');if(!g||!hud)return;var slots=g.getContestantsByStatSlot?g.getContestantsByStatSlot():[],lp=S.role==='guest'?g.players&&g.players[1]:g.players&&g.players[0];for(var i=0;i<4;i++){var box=hud.querySelector('.qol_stat_box[data-slot="'+i+'"]'),e=slots[i];if(!box||!e)continue;var rank=null;if(e===lp)rank=localRank();else if(e.simulatedHuman||e===g.simulatedOpponent&&S.role==='simulated'){var p=profile(e.displayName||S.remoteName);rank=p&&(p.displayRank||p.rank)}else if(!(e instanceof Bot)&&isFinite(Number(e.rating)))rank=playerRankAt(e.rating,e.displayName);var rankValue=rank?String(rank):'';if(box.getAttribute('data-rank')!==rankValue)box.setAttribute('data-rank',rankValue)}}
 function syncTiles(){
  var g=G(),lb=ensureLeaderboard(),cust=$('mainCustomizeTile'),settings=$('mainSettingsTile'),panel=$('v127LeaderboardPanel'),sp=$('v127SettingsPanel'),cp=$('characterPanel');if(!g||!g.menu||!lb)return;
  var show=!!(g.menu.visible&&!g.lobbyOpen&&(!panel||panel.hidden)&&(!sp||sp.hidden)&&(!cp||cp.hidden));lb.style.display=show?'flex':'none';if(settings&&panel&&!panel.hidden)settings.style.display='none';if(cust&&panel&&!panel.hidden)cust.style.display='none';if(!show)return;
