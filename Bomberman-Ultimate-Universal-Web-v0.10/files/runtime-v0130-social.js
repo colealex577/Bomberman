@@ -39,17 +39,19 @@ function scoreLocal(delta,reason){
  }
  return actual
 }
-function scoreSim(delta){
- var g=G(),e=g&&g.simulatedOpponent;
+function scoreSim(delta,actor){
+ var g=G(),e=actor||g&&g.simulatedOpponent;
  if(!e||!window.BomberLeaderboard127)return 0;
- var p=BomberLeaderboard127.recordResult(S.remoteName,delta);
- if(p){e.rating=p.score;g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating}
+ var name=e===g.simulatedOpponent?S.remoteName:e.displayName;
+ if(!name||!BomberLeaderboard127.profile(name))return 0;
+ var p=BomberLeaderboard127.recordResult(name,delta);
+ if(p){e.rating=p.score;e.humanRating=p.score;if(e===g.simulatedOpponent){g.simulatedRating=p.score||Number.MIN_VALUE;S.simulatedRating=g.simulatedRating}}
  return delta
 }
 function scoreActor(actor,delta,reason){
  var g=G();if(!g||!actor||!authoritative())return 0;
  if(actor===g.players[0])return scoreLocal(delta,reason);
- if(S.role==='simulated'&&actor===g.simulatedOpponent)return scoreSim(delta);
+ if(actor.simulatedHuman&&(S.role==='simulated'||isHost()))return scoreSim(delta,actor);
  if(isHost()&&actor===g.players[1]){
    sendSide({type:'v130Score',seq:++scoreEventSerial,round:roundId(),delta:delta,reason:reason||''});return delta
  }
@@ -58,6 +60,8 @@ function scoreActor(actor,delta,reason){
 function creditDamage(victim,bomb){
  if(!authoritative()||!bomb||!victim)return 0;
  var returned=bomb.__v16221ReturnSender,attacker=returned&&returned.originalOwner===victim?returned.redirector:(bomb.__v16211TravelOwner||bomb.__v16221LaunchOwner||bomb.owner);
+ // Taking a hit costs the same as dealing one. Self damage also costs points.
+ scoreActor(victim,-5,'Nonlethal bomb damage taken');
  if(!attacker||attacker===victim)return 0;
  return scoreActor(attacker,5,'Nonlethal bomb damage')
 }
@@ -123,7 +127,15 @@ function announceDeath(e){
  var b=killerBomb(e),mark=b&&b.__v16221ReturnSender,returned=!!(mark&&mark.originalOwner===e&&mark.redirector&&mark.redirector!==e);
  var attacker=b&&(returned?mark.redirector:(b.__v16211TravelOwner||b.__v16221LaunchOwner||b.owner)),kk=entityKey(attacker),victim=entityName(e),text='';
  var thrown=!!(b&&(b.__v16211TravelStartedAt||b.__v16221LaunchOwner||b.__v160Moving||b.__v16211Redirected||returned));
+ // Authoritative attribution for contextual chat only; does not alter scoring.
+ e.__v220DeathContext={setup:G().__setupSerial||0,attacker:attacker||null,returned:returned};
+ var rankedVictim=e===G().simulatedOpponent||G().players.indexOf(e)>=0||e.simulatedHuman;
+ // Elimination, including self-elimination, costs the ranked victim the base award.
+ // Throw and return bonuses are mirrored only when an opponent actually gets credit.
+ if(rankedVictim)scoreActor(e,-10,'Eliminated');
  if(attacker&&attacker!==e){
+   if(rankedVictim&&thrown)scoreActor(e,-5,'Eliminated by traveling bomb');
+   if(rankedVictim&&returned)scoreActor(e,-10,'Return to sender received');
    text=entityName(attacker)+' eliminated '+victim;
    if(kk==='p0'||kk==='p1'||kk==='sim')stat(kk).kills++;
    scoreActor(attacker,e===G().simulatedOpponent||G().players.indexOf(e)>=0||e.simulatedHuman?10:5,'Elimination');
@@ -137,19 +149,14 @@ function announceDeath(e){
 function defenseCounts(e){return [Number(e&&e.hearts)||0,Number(e&&e.bonusCounts&&e.bonusCounts.heart)||0,Number(e&&e.extraHearts)||0,Number(e&&e.health)||0,Number(e&&e.hp)||0,Number(e&&e.hitPoints)||0]}
 function lostDefense(before,after){return before.some(function(n,i){return n>after[i]})}
 function patchDeaths(){if(Player.prototype.__v130DeathStats)return;Player.prototype.__v130DeathStats=true;
- var pd=Player.prototype.die;
- Player.prototype.die=function(){if(this.alive===false)return;var before=defenseCounts(this),wasAlive=this.alive!==false,r=pd.apply(this,arguments);
-   if(wasAlive&&this.alive===false)announceDeath(this);
-   else if(wasAlive&&lostDefense(before,defenseCounts(this)))creditDamage(this,killerBomb(this));
-   return r
- };
- if(window.Bot){var bd=Bot.prototype.die;
-   Bot.prototype.die=function(){if(this.alive===false)return;var before=defenseCounts(this),wasAlive=this.alive!==false,r=bd.apply(this,arguments);
-     if(wasAlive&&this.alive===false)announceDeath(this);
-     else if(wasAlive&&lostDefense(before,defenseCounts(this)))creditDamage(this,killerBomb(this));
-     return r
-   }
- }
+ function wrap(base){return function(){if(this.alive===false)return;var outer=!this.__v214DeathDepth,before=outer?defenseCounts(this):null,wasAlive=this.alive!==false,r;this.__v214DeathDepth=(this.__v214DeathDepth||0)+1;
+  try{r=base.apply(this,arguments)}finally{this.__v214DeathDepth--;}
+  if(outer&&wasAlive&&this.alive===false)announceDeath(this);
+  else if(outer&&wasAlive&&lostDefense(before,defenseCounts(this)))creditDamage(this,killerBomb(this));
+  return r;
+ }}
+ Player.prototype.die=wrap(Player.prototype.die);
+ if(window.Bot)Bot.prototype.die=wrap(Bot.prototype.die);
 }
 function patchPickups(){if(Player.prototype.__v130PickupStats)return;Player.prototype.__v130PickupStats=true;var old=Player.prototype.handleBonusCollision;Player.prototype.handleBonusCollision=function(){if(!authoritative()||!stats)return old.apply(this,arguments);var g=G(),before=g?g.bonuses.length:0,k=entityKey(this),r=old.apply(this,arguments),after=g?g.bonuses.length:before;if((k==='p0'||k==='p1'||k==='sim')&&after<before)stat(k).pickups+=before-after;return r}}
 function remainingMs(b){if(!b||b.exploded)return Infinity;if(Number.isFinite(b.endTime))return b.endTime-Date.now();var fps=(window.createjs&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(G()&&G().fps)||50;return Math.max(0,((Number(b.timerMax)||2)*fps-(Number(b.timer)||0))*1000/fps)}

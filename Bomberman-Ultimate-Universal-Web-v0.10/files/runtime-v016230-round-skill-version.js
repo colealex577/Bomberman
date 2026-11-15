@@ -1,7 +1,7 @@
 (function () {
  'use strict';
  // v0.16.2.34: round lifecycle and sprite recovery only; historical artificial AI decision throttling removed.
- var VERSION='v2.1.3',round=0,dead=Object.create(null),installed=false,restartHookInstalled=false;
+ var VERSION='v2.2.0',round=0,dead=Object.create(null),installed=false,restartHookInstalled=false;
  var stats={eliminations:0,respawnsBlocked:0,visualRestores:0,rematches:0};
  function G(){return window.gGameEngine||null}
  function actors(g){return(g.players||[]).concat(g.bots||[])}

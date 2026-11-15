@@ -213,7 +213,36 @@ function defensiveKickEscapePath(bot,bomb,dir,p){
  while(q.length){var cur=q.shift(),ck=key(cur),d=depth[ck]||0,off=dir.x?Math.abs(cur.y-start.y):Math.abs(cur.x-start.x);if(d>0&&off>0&&!hazard[ck]){var safe=true;try{safe=bot.isSafe(cur)}catch(e){}if(safe)cands.push({k:ck,p:clone(cur),d:d,off:off,score:d*6-off*24-dist(cur,bomb.position)*2})}if(d>=maxDepth)continue;for(var z=0;z<DIRS.length;z++){var n=next(cur,DIRS[z]),nk=key(n),blocking=bombAt(n,bomb);if(seen[nk]||!bot.inBounds(n)||material(n)!=='grass'||blocking||actorAt(n,bot))continue;seen[nk]=1;parent[nk]=ck;depth[nk]=d+1;q.push(n)}}
  if(!cands.length)return null;cands.sort(function(a,b){return a.score-b.score});var walk=cands[0].k,path=[];while(walk){var a=walk.split(',');path.push({x:Number(a[0]),y:Number(a[1])});if(walk===sk)break;walk=parent[walk]}path.reverse();return path
 }
-function followMovingKickEscape(bot){var st=state(bot),path=st.activeMovingKickEscape;if(!path||path.length<2)return false;if(now()>st.activeMovingKickEscapeUntil){st.activeMovingKickEscape=null;return false}var goal=path[path.length-1];if(same(bot.position,goal)){st.activeMovingKickEscape=null;st.defensiveKickBomb=null;return false}var route=pathBetween(bot,bot.position,goal);if(!route||route.length<2){st.activeMovingKickEscape=null;return false}var n=route[1],blocking=bombAt(n,null);if(material(n)!=='grass'||actorAt(n,bot)){st.activeMovingKickEscape=null;return false}if(blocking){if(st.defensiveKickBomb===blocking&&blocking.__v160Moving){st.lastDecision='kick-escape-wait-clear';return true}st.activeMovingKickEscape=null;return false}bot.setNextTile(n);st.lastDecision=st.defensiveKickBomb?'kick-escape-lateral-follow':'moving-kick-escape-follow';return true}
+function kickAware(p){return !!p&&(p.human?p.rating>=300:p.difficulty!=='easy')}
+function movingOrigin(b){try{if(window.BomberFix16219&&BomberFix16219.actualTile)return BomberFix16219.actualTile(b)}catch(e){}return clone(b.position)}
+function movingDir(b){return b.__v16215Dir||b.moveDirection}
+function movingThreatMap(bot,p){var g=G(),bad={},sources=[],look=movingKickLookahead(p);if(!g)return {bad:bad,sources:sources};
+ for(var i=0;i<(g.bombs||[]).length;i++){var b=g.bombs[i],d=b&&movingDir(b);if(!b||b.exploded||!b.__v160Moving||!d)continue;
+  if(b.owner===bot&&b!==state(bot).defensiveKickBomb&&Number(b.__v161WallInteractions||0)<1)continue;
+  var origin=movingOrigin(b),sim=simulateKick(origin,d,Math.min(remainingMovingSteps(b),look)),speed=Math.max(.5,num(b.__v16215Speed,num(b.moveSpeed,5))),frames=(g.tileSize||32)/speed;
+  function add(pos,t){var k=key(pos);bad[k]=Math.min(bad[k]==null?Infinity:bad[k],t)}
+  add(origin,0);for(var j=0;j<sim.route.length;j++)add(sim.route[j].position,Math.max(0,(sim.route[j].step-1)*frames));
+  if(sim.final&&bot.simulatedBlast){var blast=bot.simulatedBlast(sim.final,b.strength||bot.bombStrength)||[];for(var z=0;z<blast.length;z++)add(blast[z],Math.max(0,(sim.route.length-1)*frames))}
+  sources.push(b);
+ }return{bad:bad,sources:sources}
+}
+function clearMovementCommitment(bot){var m=bot.__v140Motion;if(m){m.route=null;m.routeUntil=0;m.routeReason='';m.lastMovedAt=now()}try{var a=window.BomberAI150&&BomberAI150.state&&BomberAI150.state(bot);if(a){a.intent=null;a.waitUntil=0}}catch(e){}}
+function idleTactical(bot,decision){var st=state(bot);if(bot.__v140Motion)bot.__v140Motion.lastMovedAt=now();try{bot.setNextTile(clone(bot.position));bot.animate('idle')}catch(e){}st.lastDecision=decision;return true}
+function followMovingKickEscape(bot){
+ var st=state(bot),path=st.activeMovingKickEscape;if(!path||path.length<2)return false;
+ if(now()>st.activeMovingKickEscapeUntil){st.activeMovingKickEscape=null;return false}
+ var p=profile(bot),haz=movingThreatMap(bot,p),idx=path.findIndex(function(q){return same(q,bot.position)}),goal=path[path.length-1];
+ if(same(bot.position,goal)){
+  // Remain in cover while the relevant bomb passes. Never immediately chase back
+  // into the same lane; a new hazard can still force a different escape.
+  if(haz.bad[key(bot.position)]==null&&haz.sources.length&&now()<(st.movingKickHoldUntil||0)&&bot.isSafe(bot.position))return idleTactical(bot,'moving-kick-hold-cover');
+  st.activeMovingKickEscape=null;st.defensiveKickBomb=null;return false;
+ }
+ if(idx<0||idx>=path.length-1){st.activeMovingKickEscape=null;return false}
+ var n=path[idx+1],blocking=bombAt(n,null),deadline=haz.bad[key(n)],frames=Math.ceil((G().tileSize||32)/Math.max(1,bot.velocity||2));
+ if(material(n)!=='grass'||actorAt(n,bot)||blocking||deadline!=null&&deadline<=frames+3){st.activeMovingKickEscape=null;return false}
+ bot.setNextTile(n);st.lastDecision='moving-kick-escape-follow';return true
+}
 function immediateEscapeWeak(bot){try{var e=bot.findEscapePath(null,null);return !e||e.length<2}catch(e){return true}}
 function tryEmergencyKick(bot,p){
  if(!bot||!(bot.bombKickCharges>0)||now()-state(bot).lastEmergency<180)return false;var emergency=false;try{emergency=!bot.isSafe(bot.position)||immediateEscapeWeak(bot)}catch(e){emergency=true}if(!emergency)return false;
@@ -244,7 +273,7 @@ function eliteInterceptPlan(bot,p){
  return best
 }
 function authorizeTravelKick(bot,arm){
- if(!bot||!arm||arm.kind!=='travel'||!(bot.bombKickCharges>0))return false;var p=profile(bot),plan=arm.plan||{};if(plan.eliteIntercept){var b=plan.interceptBomb;if(!b||b.exploded||!b.__v160Moving||!b.moveDirection||b.owner===bot)return false;var hit=interceptGeometry(bot,b,arm.dir);return !!(hit&&dist(hit.position,plan.interceptPosition)<=1)}
+ if(!bot||!arm||arm.kind!=='travel'||!(bot.bombKickCharges>0))return false;var p=profile(bot),plan=arm.plan||{};if(plan.defensiveIntercept){var api=window.BomberFix16222,d=api&&api.debug,b=plan.interceptBomb;if(!b||b.exploded||!b.__v160Moving||b.owner===bot||!d)return false;var t=d.threat(bot,b),c=t&&d.intercept(bot,t);return !!(c&&same(c.dir,arm.dir))}if(plan.eliteIntercept){var b=plan.interceptBomb;if(!b||b.exploded||!b.__v160Moving||!b.moveDirection||b.owner===bot)return false;var hit=interceptGeometry(bot,b,arm.dir);return !!(hit&&dist(hit.position,plan.interceptPosition)<=1)}
  var t=plan.target;if(!t||t.alive===false||!sameOpenRegion(bot,bot.position,t.position))return false;var c=kickCandidate(bot,bot.position,arm.dir,t,p,0);if(!c.confirmedHit||c.score<p.kickThreshold)return false;if(c.woodTerminated&&!c.direct&&(!p.human||p.rating>=300))return false;return kickOpportunityAllowed(bot,c,p)
 }
 function tryEliteBombIntercept(bot,p){var plan=eliteInterceptPlan(bot,p);if(!plan)return false;var st=state(bot),arm=armKickIntent(bot,'travel',{dir:plan.dir,target:plan.target&&plan.target.position,score:plan.score,escapePath:plan.escapePath,plan:plan,reason:'elite-bomb-intercept'});if(!arm||!authorizeTravelKick(bot,arm)){clearKickArm(bot,'elite-intercept-invalid');return false}st.forcedKick=plan;var b=bot.plantBomb();if(!b){clearKickArm(bot,'elite-intercept-placement-failed');st.forcedKick=null;return false}if(plan.escapePath&&plan.escapePath.length>1)try{bot.setNextTile(plan.escapePath[1])}catch(e){}st.lastEliteIntercept=now();st.lastDecision='elite-kick-intercept';return true}
@@ -290,7 +319,7 @@ function mobilityBonus(bot,origin,p){
  return bonus
 }
 function maybeKickPickup(bot,p){if(!p.human||bot.escapeMode||!bot.isSafe(bot.position))return false;var finish=easyFinishPriority(bot,p);if(finish){state(bot).lastDecision='finish-kill-over-pickup';return false}var b=kickBonusPath(bot,p);if(!b)return false;bot.setNextTile(b.path[1]);state(bot).lastDecision=b.open?'collect-kick-open':'collect-kick';return true}
-function remainingMovingSteps(bomb){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(g&&g.fps)||50,tile=g&&g.tileSize||32,speed=Math.max(3,Math.min(8,num(bomb&&bomb.moveSpeed,5))),framesPerTile=Math.max(1,Math.ceil(tile/speed)),remaining=Math.max(1,num(bomb&&bomb.timerMax,2)*fps-num(bomb&&bomb.timer,0));return Math.max(2,Math.min(72,Math.ceil(remaining/framesPerTile)))}
+function remainingMovingSteps(bomb){var g=G(),fps=(window.createjs&&createjs.Ticker&&createjs.Ticker.getMeasuredFPS&&createjs.Ticker.getMeasuredFPS())||(g&&g.fps)||50,tile=g&&g.tileSize||32,speed=Math.max(.5,num(bomb&&bomb.__v16215Speed,num(bomb&&bomb.moveSpeed,5))),framesPerTile=Math.max(1,Math.ceil(tile/speed)),remaining=Math.max(1,num(bomb&&bomb.timerMax,2)*fps-num(bomb&&bomb.timer,0));return Math.max(2,Math.min(72,Math.ceil(remaining/framesPerTile)))}
 function movingKickLookahead(p){if(!p)return 10;if(!p.human)return p.difficulty==='expert'?30:p.difficulty==='hard'?22:p.difficulty==='normal'?14:9;return p.rating>=950?34:p.rating>=850?28:p.rating>=700?20:p.rating>=500?14:9}
 function movingKickEscapePath(bot,bad,maxDepth,bomb){
  var start=clone(bot.position),sk=key(start),q=[start],seen={},parent={},depth={};seen[sk]=1;depth[sk]=0;var candidates=[];
@@ -298,17 +327,168 @@ function movingKickEscapePath(bot,bad,maxDepth,bomb){
   for(var i=0;i<DIRS.length;i++){var n=next(cur,DIRS[i]),nk=key(n);if(seen[nk]||!bot.inBounds(n)||material(n)!=='grass'||bombAt(n,null)||actorAt(n,bot)||bad[nk])continue;seen[nk]=1;parent[nk]=ck;depth[nk]=d+1;q.push(n)}}
  if(!candidates.length)return null;candidates.sort(function(a,b){return a.score-b.score});var walk=candidates[0].k,path=[];while(walk){var a=walk.split(',');path.push({x:Number(a[0]),y:Number(a[1])});if(walk===sk)break;walk=parent[walk]}path.reverse();return path
 }
+function timedMovingRefuge(bot,haz,maxDepth){
+ var start=clone(bot.position),sk=key(start),q=[{p:start,path:[start]}],seen={};seen[sk]=1;var best=null,frames=Math.ceil((G().tileSize||32)/Math.max(1,bot.velocity||2));
+ for(var i=0;i<q.length&&i<120;i++){var item=q[i],cur=item.p,depth=item.path.length-1,ck=key(cur),deadline=haz.bad[ck];
+  if(depth&&deadline==null&&bot.isSafe(cur)){var score=depth*10+(stReverse(bot,item.path[1])?4:0);if(!best||score<best.score)best={path:item.path,score:score};continue}
+  if(depth>=maxDepth||best&&depth*10>=best.score)continue;
+  for(var j=0;j<DIRS.length;j++){var n=next(cur,DIRS[j]),nk=key(n),t=haz.bad[nk];if(seen[nk]||!bot.inBounds(n)||material(n)!=='grass'||bombAt(n,null)||actorAt(n,bot))continue;
+   if(t!=null&&t<=(depth+1)*frames+4)continue;
+   // A stationary blast must not be traded for a moving-bomb escape.
+   if(!bot.isSafe(n)&&t==null)continue;seen[nk]=1;q.push({p:n,path:item.path.concat([n])})
+  }
+ }return best&&best.path;
+}
+function stReverse(bot,n){var st=state(bot);return same(n,st.lastSpacingTile)||same(n,st.lastEscapeTile)}
 function avoidMovingKick(bot,p){
- var g=G();if(!g||!bot||bot.alive===false)return false;if(p.human&&p.rating<300&&Math.random()<.10)return false;var threatened=null,look=movingKickLookahead(p);
- for(var i=0;i<(g.bombs||[]).length;i++){
-  var b=g.bombs[i];if(!b||b.exploded||!b.__v160Moving||!b.moveDirection)continue;var own=b.owner===bot;if(own&&b!==state(bot).defensiveKickBomb&&Number(b.__v161WallInteractions||0)<1)continue;var sim=simulateKick(b.position,b.moveDirection,Math.min(remainingMovingSteps(b),look)),hit=99,hazard={};
-  for(var j=0;j<sim.route.length;j++){hazard[key(sim.route[j].position)]=sim.route[j].step;if(same(sim.route[j].position,bot.position)||same(sim.route[j].position,bot.targetPosition)){hit=Math.min(hit,sim.route[j].step)}}
-  var impact=sim.final||sim.impact;if(impact&&bot.simulatedBlast){var blast=bot.simulatedBlast(impact,b.strength||bot.bombStrength)||[],impactStep=Math.max(1,sim.route.length);for(var z=0;z<blast.length;z++){hazard[key(blast[z])]=Math.min(hazard[key(blast[z])]||99,impactStep);if(same(blast[z],bot.position)||same(blast[z],bot.targetPosition))hit=Math.min(hit,impactStep)}}
-  if(hit<99&&(!threatened||hit<threatened.hit))threatened={bomb:b,sim:sim,hit:hit,hazard:hazard}
+ var g=G();if(!g||!bot||bot.alive===false)return false;if(p.human&&p.rating<300&&Math.random()<.10)return false;
+ var haz=movingThreatMap(bot,p),st=state(bot),cur=haz.bad[key(bot.position)],goal=haz.bad[key(bot.targetPosition)];
+ if(cur==null&&goal==null)return false;
+ var path=timedMovingRefuge(bot,haz,kickAware(p)?7:4);if(!path||path.length<2)return false;
+ clearMovementCommitment(bot);st.activeMovingKickEscape=path;st.activeMovingKickEscapeUntil=now()+Math.max(2600,path.length*600);st.movingKickHoldUntil=now()+Math.max(1800,path.length*480+800);st.lastEscapeTile=clone(bot.position);bot.setNextTile(path[1]);st.lastMovingKickAvoid=now();st.lastDecision='avoid-moving-kick';return true
+}
+// Evaluate every armed opponent, not only the current hunting target. Walls and
+// wood shield a firing lane. Distance alone is not sufficient on an open board.
+function clearKickLane(a,b){if(!a||!b||a.x!==b.x&&a.y!==b.y)return false;var d={x:Math.sign(b.x-a.x),y:Math.sign(b.y-a.y)},n=dist(a,b);if(!n)return true;for(var i=1;i<n;i++)if(material({x:a.x+d.x*i,y:a.y+d.y*i})!=='grass')return false;return true}
+function armedFoes(bot){return living(bot).filter(function(a){return Math.max(num(a.bombKickCharges,0),num(a.bonusCounts&&a.bonusCounts.kick,0))>0&&a.position})}
+function closeRoute(a,b,max){if(same(a,b))return true;var q=[{p:a,d:0}],seen={};seen[key(a)]=1;for(var i=0;i<q.length;i++){var v=q[i];if(v.d>=max)continue;for(var j=0;j<DIRS.length;j++){var n=next(v.p,DIRS[j]),k=key(n);if(seen[k]||material(n)!=='grass')continue;if(same(n,b))return true;seen[k]=1;q.push({p:n,d:v.d+1})}}return false}
+// v2.2.0: armed-player lanes are tactical exposure, not impassable tiles.
+// Use the real managed throw velocity and conservative sprite clearance. The
+// prospective shot is not an actual bomb: never insert it into the danger map.
+function lanePolicy(bot,p,foes){
+ var raw=String(bot.playStyle||bot.personality||p.style||'').toLowerCase(),style=raw+' '+String(p.style||'');
+ var aggressive=/aggress|hunter|wildcard/.test(style),cautious=/cautious|collector/.test(style),g=G(),wood=0;
+ for(var i=0;i<(g&&g.tiles||[]).length;i++)if(g.tiles[i].material==='wood')wood++;
+ var late=living(bot).length<=1||wood<=8||!!bot.hyperAggressive;
+ var bold=clamp((p.risk||.5)*.55+(aggressive?.35:0)-(cautious?.18:0)+(late?.25:0),0,1);
+ return{bold:bold,late:late,aggressive:aggressive,cautious:cautious,spacing:late||aggressive?2:(p.human&&p.rating>=750||p.difficulty==='expert'?4:3),buffer:Math.round(8-5*bold),weight:1.5-0.8*bold};
+}
+function laneArrival(foe,pos){
+ if(!clearKickLane(foe.position,pos))return Infinity;
+ // Throw starts just beyond the launcher's sprite. Contact can happen before
+ // bomb/target centers overlap (48px actor + 28px bomb + 2px launch gap).
+ var tile=(G().tileSize||32),speed=Math.max(.5,num(foe.velocity,2)),body=Math.max(num(foe.size&&foe.size.w,48),num(foe.size&&foe.size.h,48));
+ return Math.max(0,(dist(foe.position,pos)*tile-body-28-2)/speed);
+}
+function laneFoes(pos,foes){return foes.filter(function(a){return clearKickLane(a.position,pos)})}
+// A moving bomb's 28px sprite and a 48px actor can overlap even when
+// their tile centers are one tile apart. For crossings, account for that
+// clearance explicitly rather than treating the next tile as shelter.
+function exposureArrival(foe,pos){
+ var a=foe.position,tile=G().tileSize||32,half=(Math.max(num(foe.size&&foe.size.w,48),num(foe.size&&foe.size.h,48))+28)/2-2,best=Infinity;
+ if(Math.abs(pos.y-a.y)*tile<half){var q={x:pos.x,y:a.y};if(material(q)==='grass'&&clearKickLane(a,q))best=Math.min(best,laneArrival(foe,q))}
+ if(Math.abs(pos.x-a.x)*tile<half){var r={x:a.x,y:pos.y};if(material(r)==='grass'&&clearKickLane(a,r))best=Math.min(best,laneArrival(foe,r))}
+ return best;
+}
+function crossingClear(pos,foes){return foes.every(function(a){return !isFinite(exposureArrival(a,pos))})}
+function spacingRisk(bot,pos,foes,p,policy){policy=policy||lanePolicy(bot,p,foes);var risk=0;for(var i=0;i<foes.length;i++){var a=foes[i],d=dist(pos,a.position),lane=clearKickLane(a.position,pos);if(lane)risk+=Math.max(1,9-laneArrival(a,pos)/8)*policy.weight;if(d<policy.spacing&&(lane||d<=1||closeRoute(pos,a.position,policy.spacing-1)))risk+=(policy.spacing-d)*4*policy.weight}return risk}
+function laneStepSafe(bot,pos,haz,step){
+ if(!bot.inBounds(pos)||material(pos)!=='grass'||bombAt(pos,null)||actorAt(pos,bot))return false;
+ var frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2)),t=haz.bad[key(pos)];
+ return bot.isSafe(pos)&&(t==null||t>step*frames+frames+4);
+}
+function lanePathSafe(bot,path,foes,policy,haz,allowCurrent){
+ var frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2));
+ for(var i=1;i<path.length;i++){
+  if(!laneStepSafe(bot,path[i],haz,i))return false;
+  var lanes=foes.filter(function(a){return allowCurrent?clearKickLane(a.position,path[i]):isFinite(exposureArrival(a,path[i]))});
+  for(var j=0;j<lanes.length;j++){
+   var a=lanes[j],end=i;
+   while(end+1<path.length&&(allowCurrent?clearKickLane(a.position,path[end+1]):isFinite(exposureArrival(a,path[end+1]))))end++;
+   // A crossing must actually leave the axis. The extra tile-time includes
+   // sprite clearance after the center crosses the lane, plus a safety margin.
+   if(end===path.length-1)return false;
+   var clearAt=(end+1)*frames+Math.ceil(frames*.30)+policy.buffer;
+   if((allowCurrent?laneArrival(a,path[i]):exposureArrival(a,path[i]))<=clearAt)return false;
+   if(!allowCurrent&&dist(path[i],a.position)<=1)return false;
+  }
  }
- var st=state(bot);if(!threatened){st.activeMovingKickEscape=null;return false}var trigger=p.skill>=.9?look:p.skill>=.72?Math.min(18,look):Math.min(11,look);if(threatened.hit>trigger)return false;
- var bad={};Object.keys(threatened.hazard).forEach(function(k){if(threatened.hazard[k]<=Math.max(7,threatened.hit+5))bad[k]=1});
- var path=movingKickEscapePath(bot,bad,p.skill>=.9?7:p.skill>=.72?6:4,threatened.bomb);if(!path||path.length<2)return false;st.activeMovingKickEscape=path;st.activeMovingKickEscapeUntil=now()+2200;bot.setNextTile(path[1]);st.lastMovingKickAvoid=now();st.lastDecision='avoid-moving-kick';return true
+ return true;
+}
+function routeGoal(bot,proposed){var a=bot.__v150AI,m=bot.__v140Motion,it=a&&a.intent;if(it){if(it.target&&it.target.alive!==false&&it.target.position)return it.target.position;if(it.goal&&!same(it.goal,bot.position))return it.goal}if(m&&m.route&&m.route.length>1)return m.route[m.route.length-1];return proposed||bot.position}
+function plannedContinuation(bot,proposed){
+ var m=bot.__v140Motion,a=bot.__v150AI,paths=[m&&m.route,a&&a.reservedPath];
+ for(var i=0;i<paths.length;i++){var path=paths[i];if(!path||path.length<2)continue;var idx=path.findIndex(function(x){return same(x,bot.position)});if(idx>=0&&same(path[idx+1],proposed))return path.slice(idx,idx+6).map(clone);if(same(path[0],proposed))return [clone(bot.position)].concat(path.slice(0,5).map(clone))}return null;
+}
+function crossingPath(bot,proposed,foes,policy,haz){
+ var start=clone(bot.position),lane=laneFoes(proposed,foes);if(!lane.length)return null;
+ var frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2)),planned=plannedContinuation(bot,proposed),dir={x:proposed.x-start.x,y:proposed.y-start.y},goal=routeGoal(bot,proposed),q=[],seen={};
+ // Prefer the route chosen by the ordinary AI. If it stops in the lane, try
+ // continuing straight rather than reversing at the very next decision.
+ function prefix(path){if(!path)return null;for(var k=2;k<path.length;k++){if(!crossingClear(path[k],foes))continue;var candidate=path.slice(0,k+1);if(lanePathSafe(bot,candidate,foes,policy,haz,false))return candidate}return null}
+ var path=prefix(planned);if(path)return path;
+ var straight=[start,clone(proposed)];for(var z=0;z<3;z++)straight.push(next(straight[straight.length-1],dir));path=prefix(straight);if(path)return path;
+ // A corner or another armed player's lane may require a short turn. Never
+ // turn back to the entry tile; that is the exact oscillation we are removing.
+ q.push([start,clone(proposed)]);seen[key(start)]=1;seen[key(proposed)]=1;var best=null;
+ for(var i=0;i<q.length&&i<36;i++){var v=q[i],last=v[v.length-1];if(v.length>=3&&crossingClear(last,foes)&&lanePathSafe(bot,v,foes,policy,haz,false)){var score=v.length*3+dist(last,goal);if(!best||score<best.score)best={path:v,score:score};continue}if(v.length>=5)continue;for(var j=0;j<DIRS.length;j++){var n=next(last,DIRS[j]),k=key(n);if(seen[k]||!laneStepSafe(bot,n,haz,v.length))continue;seen[k]=1;q.push(v.concat([n]))}}
+ return best&&best.path;
+}
+function laneEdgePenalty(bot,from,to,cost,ttl){var a=window.BomberAI150,st=a&&a.state&&a.state(bot);if(st&&st.edgePenalties)st.edgePenalties[key(from)+'>'+key(to)+'|']={cost:cost,until:now()+ttl}}
+function crossingLiveSafe(bot,path,haz){
+ if(!haz.sources.length)return true;
+ var frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2));
+ // The live-bomb route is more important than a speculative shot. Expand
+ // the projected contact envelope by one tile to allow for sprite width.
+ function deadline(pos){var t=haz.bad[key(pos)],best=t==null?Infinity:t;for(var j=0;j<DIRS.length;j++){var n=next(pos,DIRS[j]),v=haz.bad[key(n)];if(v!=null)best=Math.min(best,v)}return best}
+ for(var i=0;i<path.length;i++){var t=deadline(path[i]);if(i===path.length-1){if(isFinite(t))return false}else if(t<=(i+1)*frames+6)return false}
+ return true;
+}
+function commitLanePath(bot,path,kind){
+ var st=state(bot),frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2));
+ bot.__v152Arrival=null;st.lanePlan={path:path.map(clone),kind:kind,until:now()+Math.max(1800,path.length*frames*22+1000),index:0};
+ st.lastSpacingTile=clone(bot.position);if(bot.__v150AI)bot.__v150AI.reservedPath=path.slice(0,5).map(clone);bot.setNextTile(path[1]);st.lastDecision=kind;return true;
+}
+function followLanePlan(bot,p){
+ var st=state(bot),plan=st.lanePlan;if(!plan)return false;
+ if(now()>plan.until||bot.escapeMode||!bot.isSafe(bot.position)){st.lanePlan=null;return false}
+ var path=plan.path,idx=path.findIndex(function(q){return same(q,bot.position)});
+ if(idx<0||idx>=path.length-1){if(idx===path.length-1&&plan.kind==='kick-lane-cross'){st.recentLaneExit={from:clone(path[0]),back:clone(path[idx-1]),until:now()+1100};laneEdgePenalty(bot,bot.position,path[idx-1],12,1100)}st.lanePlan=null;return false}
+ var foes=armedFoes(bot),haz=movingThreatMap(bot,p),n=path[idx+1],frames=Math.ceil((G().tileSize||32)/Math.max(.5,bot.velocity||2));
+ if(!laneStepSafe(bot,n,haz,1)||(plan.kind==='kick-lane-cross'?!crossingLiveSafe(bot,path.slice(idx),haz):haz.bad[key(bot.position)]!=null)){st.lanePlan=null;return false}
+ // A real incoming bomb/obstruction wins over commitment. For potential
+ // shots, recheck the remaining route, but once in a lane prefer clearing it
+ // forward over an about-face just because an opponent moved or gained a kick.
+ if(plan.kind==='kick-lane-cross'&&!laneFoes(bot.position,foes).length&&!lanePathSafe(bot,path.slice(idx),foes,lanePolicy(bot,p,foes),haz,false)){st.lanePlan=null;return false}
+ if(plan.kind!=='kick-lane-cross'&&laneFoes(n,foes).length&&!lanePathSafe(bot,path.slice(idx),foes,lanePolicy(bot,p,foes),haz,false)){st.lanePlan=null;return false}
+ plan.index=idx;if(bot.__v150AI)bot.__v150AI.reservedPath=path.slice(idx,idx+5).map(clone);bot.setNextTile(n);st.lastDecision=plan.kind+'-follow';return true;
+}
+function kickAwareSpacing(bot,p,proposed){
+ if(!authority()||!kickAware(p)||bot.escapeMode||bot.tutorialDummy||!bot.isSafe(bot.position))return false;
+ var foes=armedFoes(bot);if(!foes.length)return false;var st=state(bot),start=clone(bot.position),policy=lanePolicy(bot,p,foes),goal=routeGoal(bot,proposed),cur=spacingRisk(bot,start,foes,p,policy);
+ if(st.lanePlan&&followLanePlan(bot,p))return true;
+ var moving=proposed&&!same(start,proposed),nextRisk=moving?spacingRisk(bot,proposed,foes,p,policy):cur,entry=moving&&laneFoes(proposed,foes).length,currentLane=laneFoes(start,foes).length;
+ // Don't run a refuge search on every ordinary tile. Let the planner hunt,
+ // farm, attack, and cross harmless spaces normally.
+ if(!cur&&!nextRisk)return false;
+ var haz=movingThreatMap(bot,p);if(haz.bad[key(start)]!=null)return false;
+ if(moving&&entry){
+  var cross=crossingPath(bot,proposed,foes,policy,haz);if(cross){var m=bot.__v140Motion;if(m){m.route=null;m.routeUntil=0;m.routeReason='';m.lastMovedAt=now()}return commitLanePath(bot,cross,'kick-lane-cross')}
+  // If already exposed, accept a step that immediately gets away from the
+  // shooter or exits the axis. A dangerous lane entry from cover is different.
+  if(!currentLane)laneEdgePenalty(bot,start,proposed,18,3000)
+  if(currentLane&&nextRisk<cur&&laneStepSafe(bot,proposed,haz,1)&&foes.every(function(a){return !clearKickLane(a.position,proposed)||dist(proposed,a.position)>dist(start,a.position)}))return false;
+ }else if(moving&&nextRisk<=cur&&laneStepSafe(bot,proposed,haz,1))return false;
+ // Close tailing is discouraged, not forbidden. Aggressive/late-game bots
+ // will press a non-lane attack, or a quick safe crossing, more readily.
+ if(!entry&&moving&&!currentLane&&nextRisk<=(policy.bold>.65?5:2)&&laneStepSafe(bot,proposed,haz,1))return false;
+ if(!entry&&!currentLane&&cur<2&&!moving)return false;
+ var q=[{p:start,path:[start]}],seen={};seen[key(start)]=1;var best=null;
+ for(var i=0;i<q.length&&i<65;i++){var v=q[i],depth=v.path.length-1,rr=spacingRisk(bot,v.p,foes,p,policy);
+  if(depth&&laneFoes(v.p,foes).length===0&&rr<Math.max(cur,nextRisk,1)&&lanePathSafe(bot,v.path,foes,policy,haz,true)){
+   var score=depth*2.1+dist(v.p,goal)*1.8+rr*1.4+(stReverse(bot,v.path[1])?7:0);
+   if(!best||score<best.score)best={path:v.path,score:score,risk:rr};
+  }
+  if(depth>=4)continue;for(var j=0;j<DIRS.length;j++){var n=next(v.p,DIRS[j]),nk=key(n);if(seen[nk]||!laneStepSafe(bot,n,haz,depth+1))continue;seen[nk]=1;q.push({p:n,path:v.path.concat([n])})}
+ }
+ if(best){clearMovementCommitment(bot);return commitLanePath(bot,best.path,'kick-lane-detour')}
+ if(moving&&entry&&!currentLane){
+  // Only wait when there really is no safe approach. Suppress repeating the
+  // same blocked edge, so the ordinary planner can choose another route.
+  laneEdgePenalty(bot,start,proposed,18,2000);
+  clearMovementCommitment(bot);return idleTactical(bot,'kick-lane-wait');
+ }
+ return false;
 }
 
 function breakTacticalLoop(bot){
@@ -325,11 +505,15 @@ function preChoose(bot){
  if(!authority()||!bot||bot.alive===false||bot.tutorialDummy)return false;var p=profile(bot),st=state(bot),preNow=now();if(st.inPreChoose||preNow-st.lastPreChooseAt<8)return false;st.lastPreChooseAt=preNow;st.inPreChoose=true;
  try{
   st.profileSig=bot.__v162ProfileSig;
-  if(tryEmergencyKick(bot,p)){if(st.lastDecision!=='kick-escape-lateral')st.lastDecision='kick-escape';return true}
-  if(followMovingKickEscape(bot))return true;
-  if(followKickEscape(bot))return true;
-  if(avoidMovingKick(bot,p))return true;
-  if(bot.escapeMode)return false;
+  if(followMovingKickEscape(bot)){st.lanePlan=null;return true}
+  // A safe, already-committed crossing can finish even after a distant shot
+  // launches. If the live route closes the timing window, escape takes over.
+  if(st.lanePlan&&st.lanePlan.kind==='kick-lane-cross'&&followLanePlan(bot,p))return true;
+  if(avoidMovingKick(bot,p)){st.lanePlan=null;return true}
+  if(tryEmergencyKick(bot,p)){st.lanePlan=null;if(st.lastDecision!=='kick-escape-lateral')st.lastDecision='kick-escape';return true}
+  if(followKickEscape(bot)){st.lanePlan=null;return true;}
+  if(bot.escapeMode){st.lanePlan=null;return false;}
+  if(followLanePlan(bot,p))return true;
   // Strong opponents capitalize on a verified Kick opportunity before legacy loop
   // recovery can turn a clean shot into needless corridor wandering. Elite human-like
   // opponents may also deliberately intercept/deflect an enemy travelling bomb.
@@ -339,10 +523,10 @@ function preChoose(bot){
   if(st.loopBreakUntil>now())return false;
   // Low/average simulated humans occasionally need an extra beat to decide. This is
   // a safe reaction delay, not random danger blindness; elite humans almost never do it.
-  if(p.human){var t=now();if(st.pauseUntil>t){if(bot.__v140Motion)bot.__v140Motion.lastMovedAt=t;try{bot.animate('idle')}catch(e){}return true}if(t>=st.nextHumanPause&&p.execution<.80){st.nextHumanPause=t+1800+Math.floor((.4+p.execution)*2200);var safe=true;try{safe=bot.isSafe(bot.position)}catch(e){}if(safe&&Math.random()<(.20*(1-p.execution))){st.pauseUntil=t+70+Math.floor((1-p.execution)*430);st.lastDecision='human-hesitation';if(bot.__v140Motion)bot.__v140Motion.lastMovedAt=t;try{bot.animate('idle')}catch(e){}return true}}}
+  if(p.human&&!laneFoes(bot.position,armedFoes(bot)).length){var t=now();if(st.pauseUntil>t){if(bot.__v140Motion)bot.__v140Motion.lastMovedAt=t;try{bot.animate('idle')}catch(e){}return true}if(t>=st.nextHumanPause&&p.execution<.80){st.nextHumanPause=t+1800+Math.floor((.4+p.execution)*2200);var safe=true;try{safe=bot.isSafe(bot.position)}catch(e){}if(safe&&Math.random()<(.20*(1-p.execution))){st.pauseUntil=t+70+Math.floor((1-p.execution)*430);st.lastDecision='human-hesitation';if(bot.__v140Motion)bot.__v140Motion.lastMovedAt=t;try{bot.animate('idle')}catch(e){}return true}}}
   // Existing human fumbles/micro-movements remain in the legacy chain; this layer only takes over for valuable tactical kick opportunities.
   if(p.skill<.72){if(tryStrategicPushKick(bot,p))return true;if(maybeKickAttack(bot,p))return true}
-  if((bot.bombKickCharges||0)===0&&maybeKickPickup(bot,p))return true;
+  if((bot.bombKickCharges||0)===0&&maybeKickPickup(bot,p)){kickAwareSpacing(bot,p,bot.targetPosition);return true;}
   return false
  }finally{st.inPreChoose=false}
 }
@@ -354,12 +538,12 @@ function patch(){
  Bot.prototype.init=function(){var r=oldInit.apply(this,arguments);this.__v162AI=null;this.__v162Profile=null;this.__v162ProfileSig='';this.__v162KickReady=false;this.__v162KickReadyKind='';return r};
  Bot.prototype.scoreBombPlacement=function(origin){var base=num(oldScore.apply(this,arguments),0),p=profile(this);return base+mobilityBonus(this,origin,p)};
  Bot.prototype.shouldPlantStrategicBomb=function(op){var base=!!oldShould.apply(this,arguments),p=profile(this);if(this.simulatedHuman){if(base&&Math.random()<p.error*.35)return false;if(base)return true;if(!op||this.activeBombCount()>=this.bombsMax||this.hasBomb(this.position))return false;var s=this.scoreBombPlacement(this.position),threshold=54-p.attack*34-p.trap*12;if(s>=threshold)return Math.random()<p.offenseChance;return false}if(p.difficulty==='easy')return base&&Math.random()<.62;if(p.difficulty==='normal')return base;if(base)return true;if(!op||p.attack<.7||this.activeBombCount()>=this.bombsMax||this.hasBomb(this.position))return false;var score=this.scoreBombPlacement(this.position),th=p.difficulty==='expert'?8:13;return score>=th&&Math.random()<p.offenseChance};
- Bot.prototype.chooseNextAction=function(){if(preChoose(this))return;return oldChoose.apply(this,arguments)};
+ Bot.prototype.chooseNextAction=function(){if(preChoose(this))return;var r=oldChoose.apply(this,arguments);if(authority()&&this.alive!==false&&!this.escapeMode&&!this.tutorialDummy)kickAwareSpacing(this,profile(this),this.targetPosition);return r};
  return true
 }
 function install(){
  if(installed)return true;if(!window.Bot||!window.BomberAI150||!window.BomberKick160||!G())return false;patchRatingBreadth();if(!patch())return false;installed=true;
- window.BomberAI162={version:VERSION,profile:profile,state:state,adjustIntentScore:adjustIntentScore,preChoose:preChoose,planTravelKick:planTravelKick,onTravelKickUsed:onTravelKickUsed,shouldAutoKick:shouldAutoKick,authorizeTravelKick:authorizeTravelKick,authorizePushKick:authorizePushKick,armKickIntent:armKickIntent,hasArmedKick:hasArmedKick,armedKick:armedKick,commitArmedKick:commitArmedKick,clearKickArm:clearKickArm,findKickAttack:findKickAttack,simulateKick:simulateKick,randomSimRating:randomSimRating,mobilityBonus:mobilityBonus,breakTacticalLoop:breakTacticalLoop,debug:{profile:profile,state:state,adjustIntentScore:adjustIntentScore,findKickAttack:findKickAttack,simulateKick:simulateKick,kickCandidate:kickCandidate,kickOpportunityAllowed:kickOpportunityAllowed,kickRefuge:kickRefuge,pushOpportunity:pushOpportunity,kickBonusPath:kickBonusPath,maybeKickPickup:maybeKickPickup,easyFinishPriority:easyFinishPriority,avoidMovingKick:avoidMovingKick,movingKickLookahead:movingKickLookahead,movingKickEscapePath:movingKickEscapePath,defensiveKickEscapePath:defensiveKickEscapePath,followMovingKickEscape:followMovingKickEscape,sameOpenRegion:sameOpenRegion,boardPhase:boardPhase,predicted:predicted,reachable:reachable,breakTacticalLoop:breakTacticalLoop,tryEmergencyKick:tryEmergencyKick,tryStrategicPushKick:tryStrategicPushKick,eliteInterceptPlan:eliteInterceptPlan,tryEliteBombIntercept:tryEliteBombIntercept,interceptGeometry:interceptGeometry,authorizeTravelKick:authorizeTravelKick,authorizePushKick:authorizePushKick,armKickIntent:armKickIntent,armedKick:armedKick,commitArmedKick:commitArmedKick,clearKickArm:clearKickArm,planTravelKick:planTravelKick,followKickEscape:followKickEscape}};
+ window.BomberAI162={version:VERSION,profile:profile,state:state,adjustIntentScore:adjustIntentScore,preChoose:preChoose,planTravelKick:planTravelKick,onTravelKickUsed:onTravelKickUsed,shouldAutoKick:shouldAutoKick,authorizeTravelKick:authorizeTravelKick,authorizePushKick:authorizePushKick,armKickIntent:armKickIntent,hasArmedKick:hasArmedKick,armedKick:armedKick,commitArmedKick:commitArmedKick,clearKickArm:clearKickArm,findKickAttack:findKickAttack,simulateKick:simulateKick,randomSimRating:randomSimRating,mobilityBonus:mobilityBonus,breakTacticalLoop:breakTacticalLoop,debug:{crossingLiveSafe:crossingLiveSafe,lanePolicy:lanePolicy,laneArrival:laneArrival,crossingPath:crossingPath,followLanePlan:followLanePlan,lanePathSafe:lanePathSafe,kickAware:kickAware,clearKickLane:clearKickLane,kickAwareSpacing:kickAwareSpacing,spacingRisk:spacingRisk,movingThreatMap:movingThreatMap,timedMovingRefuge:timedMovingRefuge,profile:profile,state:state,adjustIntentScore:adjustIntentScore,findKickAttack:findKickAttack,simulateKick:simulateKick,kickCandidate:kickCandidate,kickOpportunityAllowed:kickOpportunityAllowed,kickRefuge:kickRefuge,pushOpportunity:pushOpportunity,kickBonusPath:kickBonusPath,maybeKickPickup:maybeKickPickup,easyFinishPriority:easyFinishPriority,avoidMovingKick:avoidMovingKick,movingKickLookahead:movingKickLookahead,movingKickEscapePath:movingKickEscapePath,defensiveKickEscapePath:defensiveKickEscapePath,followMovingKickEscape:followMovingKickEscape,sameOpenRegion:sameOpenRegion,boardPhase:boardPhase,predicted:predicted,reachable:reachable,breakTacticalLoop:breakTacticalLoop,tryEmergencyKick:tryEmergencyKick,tryStrategicPushKick:tryStrategicPushKick,eliteInterceptPlan:eliteInterceptPlan,tryEliteBombIntercept:tryEliteBombIntercept,interceptGeometry:interceptGeometry,authorizeTravelKick:authorizeTravelKick,authorizePushKick:authorizePushKick,armKickIntent:armKickIntent,armedKick:armedKick,commitArmedKick:commitArmedKick,clearKickArm:clearKickArm,planTravelKick:planTravelKick,followKickEscape:followKickEscape}};
  return true
 }
 var tries=0,t=setInterval(function(){patchRatingBreadth();if(install()||++tries>1200)clearInterval(t)},25);

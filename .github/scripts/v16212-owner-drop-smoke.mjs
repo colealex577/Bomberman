@@ -50,5 +50,10 @@ assert.equal(BomberFix16212.ownerImpactProtected(moving,owner),false,'redirect p
 other.position={x:1,y:1};engine.players=[other];const hostile=new Bomb();Object.assign(hostile,{owner,__v160Moving:true,__v16211TravelOwner:owner,__v16211TravelStartedAt:fakeNow,__v16211Outbound:true});hostile.update();assert.equal(hostile.hitActor,other,'another player must still trigger impact immediately');
 
 engine.players=[];const heart=new Bonus({x:3,y:3},3),kick=new Bonus({x:4,y:3},4);assert.equal(heart.type,'heart');assert.equal(kick.type,'kick');assert.deepEqual(Bonus.prototype.types,['speed','bomb','fire','heart','kick']);
-const ge=new GameEngine();Object.assign(ge,{tiles:[],bonuses:[],ultimateMode:true,bonusesPercent:100,stage:engine.stage,kickBonusImg:'kick.png',moveToFront(){}});for(let i=0;i<20;i++)ge.tiles.push({material:'wood',position:{x:i+1,y:1},bmp:{}});globalThis.gGameEngine=ge;ge.drawBonuses();const counts=ge.bonuses.reduce((m,b)=>(m[b.type]=(m[b.type]||0)+1,m),{});assert.ok((counts.heart||0)>0,'heart must remain in the normal drop pool');assert.equal(counts.kick,2,'20 drops should contain only two random Kick pickups');assert.equal(ge.bombKickMaxDrops,4);assert.equal(BomberFix16212.kickCount(50),4);
-console.log('v0.16.2.12 owner/drop smoke: PASS',counts);
+const ge=new GameEngine();Object.assign(ge,{tilesX:17,tilesY:13,tiles:[],bonuses:[],ultimateMode:true,bonusesPercent:100,stage:engine.stage,kickBonusImg:'kick.png',moveToFront(){}});
+for(const [ox,oy] of [[1,1],[9,1],[1,7],[9,7]])for(let i=0;i<5;i++)ge.tiles.push({material:'wood',position:{x:ox+i,y:oy},bmp:{}});
+globalThis.gGameEngine=ge;ge.drawBonuses();const counts=ge.bonuses.reduce((m,b)=>(m[b.type]=(m[b.type]||0)+1,m),{});
+assert.ok((counts.heart||0)>0,'heart must remain in the normal drop pool');assert.equal(counts.kick,12);assert.equal(ge.bombKickMaxDrops,12);assert.deepEqual(ge.__v216KickAllocation.quadrants,[3,3,3,3]);
+assert.equal(BomberFix16212.kickCount(50,16),4);assert.equal(BomberFix16212.kickCount(50,100),12);assert.equal(BomberFix16212.targetKickCount(50),7);
+ge.ultimateMode=false;ge.bonusesPercent=16;ge.bonuses=[];const oldRandom=Math.random;Math.random=()=>.9999;try{ge.drawBonuses()}finally{Math.random=oldRandom};assert.equal(ge.bonuses.length,4);assert.ok(ge.bonuses.every(b=>b.type==='kick'));assert.deepEqual(ge.__v216KickAllocation.quadrants,[1,1,1,1]);
+console.log('Owner/drop smoke: PASS',counts);

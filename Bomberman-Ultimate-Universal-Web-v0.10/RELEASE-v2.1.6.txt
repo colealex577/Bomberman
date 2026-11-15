@@ -1,0 +1,2 @@
+Bomberman v2.1.6 — Balanced Kick drops and stable max-rating HUD
+Four Kick pickups at 16%, scaling to twelve at 100%; balanced quadrant allocation at map generation. The max rating label is 1000 MAX with leaderboard rank retained. Local development candidate; no GitHub changes.

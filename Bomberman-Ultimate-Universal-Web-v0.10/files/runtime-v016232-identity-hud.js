@@ -91,11 +91,11 @@ function hud(){
   }else if(!e.isBot&&g.players&&g.players.indexOf(e)>=0&&isFinite(Number(e.rating))){
    rating=clamp(e.rating);rank=l.rank(rating,clean(e.displayName)||'Player')
   }
-  if(rating===null)continue;
-  var v=String(rating)+(Number.isFinite(Number(rank))&&Number(rank)>0?' · #'+rank:'');
+  if(rating===null){var stale=box.querySelector('.v125_points');if(stale){stale.hidden=true;if(stale.textContent)stale.textContent='';stale.removeAttribute('data-max-rating')}continue}
+  var v=(rating>=1000?'1000 MAX':String(rating))+(Number.isFinite(Number(rank))&&Number(rank)>0?' · #'+rank:'');
   var pts=box.querySelector('.v125_points');if(!pts){pts=document.createElement('span');pts.className='v125_points';box.appendChild(pts)}
   if(pts.textContent!==v)pts.textContent=v;
-  pts.hidden=false;box.setAttribute('data-rating',String(rating));box.setAttribute('data-rank',rank==null?'':String(rank))
+  pts.hidden=false;pts.toggleAttribute('data-max-rating',rating>=1000);box.setAttribute('data-rating',String(rating));box.setAttribute('data-rank',rank==null?'':String(rank))
  }
  return true
 }

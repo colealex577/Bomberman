@@ -1,4 +1,4 @@
-/* v2.1.3: layout only. No game actor, rank, input or network state is modified. */
+/* v2.2.0: layout only. No game actor, rank, input or network state is modified. */
 (function(w){'use strict';
  var doc=w.document, dock=null, moved=new Map();
  function $(id){return doc.getElementById(id)}

@@ -1,0 +1,2 @@
+Bomberman v2.1.5 — Committed Kick-lane crossings
+Local development candidate. Safe, timed lane crossings; committed detours; personality/late-match spacing; actual bomb hazards retain priority. Retains v2.1.4 rating balance and defensive return behavior, v2.1.3 startup integrity, ranks and all existing features. See ENGINE2_215_RELEASE_NOTES.md.

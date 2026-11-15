@@ -28,7 +28,7 @@
    p95=d.length?d[Math.min(d.length-1,Math.floor(d.length*.95))]:0;
   var net=global.BomberMultiplayer,inp=global.BomberEngine2Input;
   return {
-   version:'2.1.3',rounds:roundCount,frames:frameCount,
+   version:'2.2.0',rounds:roundCount,frames:frameCount,
    scene:s,lastSampleMs:frameSamples.length?frameSamples[frameSamples.length-1]:0,
    p95FrameWorkMs:Math.round(p95*10)/10,
    maxFrameWorkMs:d.length?Math.round(d[d.length-1]*10)/10:0,
