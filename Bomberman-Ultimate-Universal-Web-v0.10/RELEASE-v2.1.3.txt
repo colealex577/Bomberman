@@ -1,0 +1,2 @@
+Bomberman v2.1.3 — Startup integrity
+Wait for essential modules, preserve Bomb Kick and external power-up HUD, unify release cache version, guard social resize. Local test release. See ENGINE2_213_RELEASE_NOTES.md.

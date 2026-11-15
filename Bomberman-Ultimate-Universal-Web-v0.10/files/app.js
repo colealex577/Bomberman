@@ -12,10 +12,10 @@ function loadCompatibility(){return BomberEngine2Loader.run()}
 function loadScript(id,src,cb){var p=BomberEngine2Loader.script(id,src);if(cb)p.then(cb).catch(function(err){console.error(err)});return p}
 function loadPackedScript(id,src,cb){if(!window.BomberPackedLoader)return Promise.reject(new Error('Packed runtime loader missing'));var p=BomberPackedLoader.load(id,src);if(cb)p.then(function(){cb()}).catch(function(err){console.error(err)});return p}
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
- window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js?v=211').catch(function(){})});
+ window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js?v=213').catch(function(){})});
 }
 document.addEventListener('DOMContentLoaded',function(){
- loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=211');
- loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=211');
+ var legacy=window.BomberLegacyReady||Promise.resolve();
+ legacy.then(function(){return loadScript('runtime-v016225-friends-protocol-isolation-loader','./files/runtime-v016225-friends-protocol-isolation.js?v=213')}).then(function(){return loadScript('runtime-v016225-friends-game-routing-loader','./files/runtime-v016225-friends-game-routing.js?v=213')}).catch(function(e){console.error(e)});
  loadCompatibility();GUILocalization();gGameEngine.load();
 });

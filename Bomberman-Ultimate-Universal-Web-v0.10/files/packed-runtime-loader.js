@@ -37,11 +37,8 @@ function markLoaded(id){
 }
 function load(id,url,cb){
   if(!jobs[id]){
-    var job=(location.protocol==='file:'?expandedScript(url):
-      packedScript(url).catch(function(err){
-        console.warn('[Bomberman packed runtime] loading expanded script:',id,err);
-        return expandedScript(url);
-      }));
+    /* Expanded files are the same runtime as the packed payload. Never evaluate twice after a partial failure. */
+    var job=expandedScript(url);
     jobs[id]=job.then(function(){return markLoaded(id)}).catch(function(err){
       delete jobs[id];console.error('[Bomberman packed runtime]',id,err);throw err
     });

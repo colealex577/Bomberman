@@ -1,4 +1,4 @@
-/* Bomberman 2.1.2: independent, display-paced rendering. The CreateJS
+/* Bomberman 2.1.3: independent, display-paced rendering. The CreateJS
  * simulation ticker and all game/network timing remain untouched. */
 (function(w){
  'use strict';
@@ -38,5 +38,5 @@
  function syncControls(){var f=w.document.getElementById('bm211FPS'),s=w.document.getElementById('bm211Resolution');if(f)f.value=String(cfg.fps);if(s)s.value=String(cfg.scale)}
  function bind(){var btn=w.document.getElementById('bm211Graphics'),dialog=w.document.getElementById('bm211GraphicsDialog'),close=w.document.getElementById('bm211GraphicsClose'),f=w.document.getElementById('bm211FPS'),s=w.document.getElementById('bm211Resolution');if(!btn||!dialog)return;syncControls();btn.addEventListener('click',function(){syncControls();if(dialog.showModal)dialog.showModal();else dialog.setAttribute('open','')});close.addEventListener('click',function(){if(dialog.close)dialog.close();else dialog.removeAttribute('open')});f.addEventListener('change',function(){configure({fps:f.value==='auto'?'auto':Number(f.value)})});s.addEventListener('change',function(){configure({scale:Number(s.value)})});}
  if(w.document.readyState==='loading')w.document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
- w.BomberEngine2Render=Object.freeze({version:'2.1.2',attach:attach,configure:configure,settings:settings,snapshot:snapshot});
+ w.BomberEngine2Render=Object.freeze({version:'2.1.3',attach:attach,configure:configure,settings:settings,snapshot:snapshot});
 })(window);
